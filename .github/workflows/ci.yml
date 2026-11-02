@@ -45,15 +45,16 @@ concurrency:
   cancel-in-progress: true
 
 # Runner labels (contract §4.3, O-10): repository variables CP_LINUX_RUNNER and CP_WINDOWS_RUNNER name the runners;
-# unset, the jobs run where they always have (GitHub's ubuntu-latest and windows-latest). Changing them is the owner's
-# runner decision, not this file's.
+# unset, the jobs run on GitHub's ubuntu-24.04 and windows-latest. Linux is pinned to Ubuntu 24.04, the supported Linux
+# platform: `ubuntu-latest` moves to Ubuntu 26.04 from 2026-10-19 (GitHub's announced migration), which CodeParley does
+# not yet support. Changing the variables is the owner's runner decision, not this file's.
 jobs:
   # CI verifies its own input (contract §4.2 step 4): the commit under test is the expected one (a pull request's head,
   # a manual run's expected_sha, a push's commit) and it is signed by the owner's key committed in
   # .github/ci/commit-signing-key.asc. Every other job tests exactly the commit this job verified.
   identity:
     name: Commit identity
-    runs-on: ${{ vars.CP_LINUX_RUNNER || 'ubuntu-latest' }}
+    runs-on: ${{ vars.CP_LINUX_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 5
     outputs:
       sha: ${{ steps.verify.outputs.sha }}
@@ -83,7 +84,7 @@ jobs:
   test:
     name: ${{ matrix.platform }} · Node ${{ matrix.node }}
     needs: identity
-    runs-on: ${{ matrix.platform == 'windows' && (vars.CP_WINDOWS_RUNNER || 'windows-latest') || (vars.CP_LINUX_RUNNER || 'ubuntu-latest') }}
+    runs-on: ${{ matrix.platform == 'windows' && (vars.CP_WINDOWS_RUNNER || 'windows-latest') || (vars.CP_LINUX_RUNNER || 'ubuntu-24.04') }}
     # Windows: an estimated 50 to 55 minutes in all (`npm test` was cut off at 40 minutes with 64 of 136 files done and
     # none failing, on the 2-core hosted runner), so 90 allows for a slower runner. Linux: about 15 minutes. A limit
     # keeps a hung run from burning Actions minutes; it does not make a slow test pass.
@@ -172,6 +173,13 @@ jobs:
       - name: Custodian self-tests (Linux)
         if: runner.os == 'Linux'
         run: node scripts/ci/custodian-selftests.mjs --host linux --exe custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
+
+      # Staging diagnostic (TD decision, F-2): the real custodian's run corpus on its own, with the custodian built above
+      # (the one the full suite uses), before the full suite. In the first staging run it stalled inside `npm test` on
+      # Windows; this tells an effect of the image from one of the suite's concurrency. A failure here fails the job.
+      - name: Custodian run corpus alone (Windows diagnostic)
+        if: runner.os == 'Windows'
+        run: npx vitest run test/custodian-run.contract.test.ts
 
       - name: Test
         run: npm test

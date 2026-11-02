@@ -32,7 +32,7 @@
 // changed build never reuses a stale cached copy; `node plugin/verify-plugin.mjs <dir>` checks any copy
 // a host runs against its record and against the intended build.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync, execSync } from "node:child_process";
 import { dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -165,7 +165,13 @@ function build(o) {
       const placeholder = join(o.scenarioDir, "codex-placeholder", process.platform === "win32" ? "codex.exe" : "codex");
       mkdirSync(dirname(placeholder), { recursive: true });
       if (process.platform === "win32") writeFileSync(placeholder, "");
-      else cpSync("/bin/true", placeholder);
+      else {
+        // A regular-file copy of what /bin/true resolves to: it may be a symbolic link (a multicall coreutils), which
+        // cpSync would copy as a link, so a second build into the same scenario folder found source and destination the
+        // same file. Remove first, so a repeated build never writes through an older placeholder.
+        rmSync(placeholder, { force: true });
+        copyFileSync("/bin/true", placeholder);
+      }
       launch.push("--codex", placeholder);
     }
     serverEntry = "${CLAUDE_PLUGIN_ROOT}/test/server-fake-codex.mjs";
