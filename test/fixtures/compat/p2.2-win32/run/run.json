@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "run_id": "01a11350-3aad-79f9-8d5f-67f3d4360176",
+  "created_at": "2026-10-06T22:23:07.585Z",
+  "repository_root": "<REPO>",
+  "root_commit": "e02737ef5a988413ffe8f7148231cfc70dd75cfc",
+  "versions": {
+    "tool": "0.2.0"
+  },
+  "scope": {
+    "allowed_snapshot": [
+      "<REPO>"
+    ],
+    "client_roots_snapshot": [],
+    "client_roots_consulted": false,
+    "client_roots_warning": null
+  },
+  "target": {
+    "kind": "uncommitted"
+  },
+  "envelope": {
+    "goal": "Fix add() (compatibility fixture)"
+  },
+  "verification_floor": {
+    "required": [
+      {
+        "check": "unit",
+        "source": "trusted_config",
+        "via": "default",
+        "definition_digest": "29ff04b0d7c4d2ffa996090269b048d0c39b80a0221977c130978bfe2aac56fe"
+      }
+    ],
+    "no_required_checks": false,
+    "approval_digest": "5299f94bb649e3bb5db0109985913f9af0dfd7d07fada86c5e633761c4af803a"
+  },
+  "budgets": {}
+}

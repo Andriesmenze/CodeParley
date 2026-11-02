@@ -1,0 +1,199 @@
+{
+  "items": [
+    {
+      "id": "01a11350-583b-7fd1-8dc2-a153b41ac77d",
+      "item_kind": "finding",
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+      "round": 2,
+      "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+      "review_input_id": "96a16c5cf779483fe86cde70d61935948a29107153c971f96f920b5981851f6a",
+      "title": "overflow for large ints",
+      "claim_type": "defect",
+      "severity": "critical",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [
+        {
+          "kind": "code_reference",
+          "detail": "a + b",
+          "path": "src/math.js",
+          "start_line": 2,
+          "end_line": 2,
+          "version": "current",
+          "in_scope": true,
+          "validation": "valid"
+        }
+      ],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "established_defect",
+      "basis": "reviewer_evidence",
+      "policy_notes": [
+        "established per reviewer evidence (not engine-verified)"
+      ],
+      "status": "open",
+      "related_prior_id": null,
+      "supersedes": [
+        "01a11350-4cfa-7e79-a391-4fd4ac6e11b7"
+      ],
+      "superseded_by": null,
+      "assessments": [],
+      "created_at": "2026-10-06T22:23:15.003Z"
+    }
+  ],
+  "proposed_updates": [
+    {
+      "id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+      "item_kind": "finding",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "add() subtracts",
+      "claim_type": "defect",
+      "severity": "high",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [
+        {
+          "kind": "code_reference",
+          "detail": "return a - b",
+          "path": "src/math.js",
+          "start_line": 1,
+          "end_line": 1,
+          "version": "current",
+          "in_scope": true,
+          "validation": "valid"
+        }
+      ],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "established_defect",
+      "basis": "reviewer_evidence",
+      "policy_notes": [
+        "established per reviewer evidence (not engine-verified)"
+      ],
+      "status": "reported_resolved",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": null,
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "apparently_resolved",
+          "note": "now adds",
+          "effect": "status:reported_resolved"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z"
+    },
+    {
+      "id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "item_kind": "finding",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "overflow risk",
+      "claim_type": "risk",
+      "severity": "high",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "serious_concern",
+      "basis": "reviewer_evidence",
+      "policy_notes": [],
+      "status": "superseded",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": "01a11350-583b-7fd1-8dc2-a153b41ac77d",
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "superseded",
+          "note": "more precise",
+          "effect": "status:superseded_by:01a11350-583b-7fd1-8dc2-a153b41ac77d"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z"
+    },
+    {
+      "id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+      "item_kind": "question",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "Should add() accept strings?",
+      "claim_type": null,
+      "severity": null,
+      "category": null,
+      "impacts": [],
+      "consequence": "",
+      "confidence": null,
+      "evidence": [],
+      "investigation": "",
+      "recommended_change": "",
+      "triage": "blocking_question",
+      "basis": "reviewer_evidence",
+      "policy_notes": [],
+      "status": "open",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": null,
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "still_present",
+          "note": "",
+          "effect": "kept_open"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z",
+      "related_finding_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120"
+    }
+  ],
+  "proposed_replies": [
+    {
+      "reply_id": "01a11350-583c-7372-bab8-375726226617",
+      "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+      "round": 2,
+      "stance": "maintain",
+      "reply": "P22-REPLY callers outside this module are not bounded",
+      "new_information": "not_applicable",
+      "answers": {
+        "response_id": "01a11350-52a8-711f-8965-d5841008c182"
+      },
+      "assessment": "superseded",
+      "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+      "notes": [],
+      "recorded_by": {
+        "role": "reviewer",
+        "channel": "codex"
+      },
+      "recorded_at": "2026-10-06T22:23:15.003Z"
+    }
+  ],
+  "replies_missing": []
+}

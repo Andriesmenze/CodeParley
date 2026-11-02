@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Phase 5 (contract §4.1, D5-A): the portable custodian core — protocol, dispatcher, ledgers, records, digests,
+       recovery, helper frames and the shared corpus runners. It targets plain net10.0 and uses no Windows or Linux API;
+       the hosts (CodeParley.Custodian on Windows, CodeParley.Custodian.Linux) set its seams (Platform.cs) at start. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CodeParley.Custodian</RootNamespace>
+    <AssemblyName>CodeParley.Custodian.Core</AssemblyName>
+    <!-- ICU: the content-key normalization must reproduce the engine's Unicode mapping exactly (see the host project). -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- A Windows-only API in the core is a build error, not a warning: the core must run on Linux. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CodeParley.Custodian" />
+    <InternalsVisibleTo Include="codeparley-custodian" />
+  </ItemGroup>
+
+</Project>

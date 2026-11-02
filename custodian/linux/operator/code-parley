@@ -1,0 +1,5 @@
+#!/bin/sh
+# The implementer's `code-parley` command on Linux, installed root-owned 0755 at /usr/local/bin/code-parley. It runs the
+# installed engine through the current link, so it follows upgrades and rollbacks. The operator never uses it: operator
+# commands go through /usr/local/sbin/code-parley-operator, which clears the environment.
+exec /opt/codeparley/engine/current/node /opt/codeparley/engine/current/dist/cli/main.js "$@"

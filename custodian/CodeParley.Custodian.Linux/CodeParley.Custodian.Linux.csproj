@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Phase 5 (contract §4.1, D5-A): the Linux host of the portable custodian core — systemd socket activation, SO_PEERCRED
+       caller classification, the openat2 / name_to_handle_at / birth-time repository identity, the /proc process table,
+       the rename+fsync durable store, boot_id recovery and the host checks. No NuGet dependency; published self-contained
+       for linux-x64 (Ubuntu 24.04, D5-E). The libc interop is the reviewed P3.1B broker's, copied and extended. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>codeparley-custodian</AssemblyName>
+    <RootNamespace>CodeParley.Custodian.Linux</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- ICU: the content-key normalization must reproduce the engine's Unicode mapping (see the core project). -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- A Windows-only API in the Linux host is a build error. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CodeParley.Custodian.Core\CodeParley.Custodian.Core.csproj" />
+  </ItemGroup>
+
+</Project>

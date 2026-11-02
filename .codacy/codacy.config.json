@@ -1,0 +1,3443 @@
+{
+  "version": 1,
+  "metadata": {
+    "source": "auto",
+    "provider": null,
+    "organization": null,
+    "autoFilters": "Critical,High,Warning,Minor,AllSecurity,ErrorProne,Performance,BestPractice,UnusedCode,Compatibility,Complexity,Comprehensibility,CodeStyle,Documentation",
+    "repositoryId": null,
+    "repositoryName": null,
+    "createdAt": "2026-10-04T23:28:26.853Z",
+    "updatedAt": "2026-10-04T23:28:26.853Z",
+    "languages": [
+      "JSON",
+      "Javascript",
+      "Markdown",
+      "TypeScript",
+      "YAML"
+    ]
+  },
+  "tools": [
+    {
+      "toolId": "jackson",
+      "patterns": [
+        {
+          "patternId": "jackson_duplicate-keys"
+        },
+        {
+          "patternId": "jackson_parse-error"
+        }
+      ]
+    },
+    {
+      "toolId": "markdownlint",
+      "patterns": [
+        {
+          "patternId": "markdownlint_MD001"
+        },
+        {
+          "patternId": "markdownlint_MD003"
+        },
+        {
+          "patternId": "markdownlint_MD004"
+        },
+        {
+          "patternId": "markdownlint_MD005"
+        },
+        {
+          "patternId": "markdownlint_MD007"
+        },
+        {
+          "patternId": "markdownlint_MD010"
+        },
+        {
+          "patternId": "markdownlint_MD011"
+        },
+        {
+          "patternId": "markdownlint_MD012"
+        },
+        {
+          "patternId": "markdownlint_MD014"
+        },
+        {
+          "patternId": "markdownlint_MD018"
+        },
+        {
+          "patternId": "markdownlint_MD019"
+        },
+        {
+          "patternId": "markdownlint_MD020"
+        },
+        {
+          "patternId": "markdownlint_MD021"
+        },
+        {
+          "patternId": "markdownlint_MD022"
+        },
+        {
+          "patternId": "markdownlint_MD023"
+        },
+        {
+          "patternId": "markdownlint_MD024"
+        },
+        {
+          "patternId": "markdownlint_MD025"
+        },
+        {
+          "patternId": "markdownlint_MD026"
+        },
+        {
+          "patternId": "markdownlint_MD027"
+        },
+        {
+          "patternId": "markdownlint_MD028"
+        },
+        {
+          "patternId": "markdownlint_MD029"
+        },
+        {
+          "patternId": "markdownlint_MD030"
+        },
+        {
+          "patternId": "markdownlint_MD032"
+        },
+        {
+          "patternId": "markdownlint_MD033"
+        },
+        {
+          "patternId": "markdownlint_MD034"
+        },
+        {
+          "patternId": "markdownlint_MD035"
+        },
+        {
+          "patternId": "markdownlint_MD036"
+        },
+        {
+          "patternId": "markdownlint_MD037"
+        },
+        {
+          "patternId": "markdownlint_MD038"
+        },
+        {
+          "patternId": "markdownlint_MD039"
+        },
+        {
+          "patternId": "markdownlint_MD042"
+        },
+        {
+          "patternId": "markdownlint_MD044"
+        },
+        {
+          "patternId": "markdownlint_MD045"
+        },
+        {
+          "patternId": "markdownlint_MD046"
+        },
+        {
+          "patternId": "markdownlint_MD048"
+        },
+        {
+          "patternId": "markdownlint_MD049"
+        },
+        {
+          "patternId": "markdownlint_MD050"
+        },
+        {
+          "patternId": "markdownlint_MD051"
+        },
+        {
+          "patternId": "markdownlint_MD052"
+        },
+        {
+          "patternId": "markdownlint_MD053"
+        },
+        {
+          "patternId": "markdownlint_MD054"
+        },
+        {
+          "patternId": "markdownlint_MD055"
+        },
+        {
+          "patternId": "markdownlint_MD056"
+        }
+      ],
+      "exclude": [
+        "DESIGN.MD"
+      ]
+    },
+    {
+      "toolId": "Trivy",
+      "patterns": [
+        {
+          "patternId": "Trivy_malicious_packages"
+        },
+        {
+          "patternId": "Trivy_secret"
+        },
+        {
+          "patternId": "Trivy_vulnerability_critical"
+        },
+        {
+          "patternId": "Trivy_vulnerability_high"
+        },
+        {
+          "patternId": "Trivy_vulnerability_medium"
+        },
+        {
+          "patternId": "Trivy_vulnerability_minor"
+        }
+      ]
+    },
+    {
+      "toolId": "Semgrep",
+      "patterns": [
+        {
+          "patternId": "Semgrep_ai.typescript.detect-gemini.detect-gemini"
+        },
+        {
+          "patternId": "Semgrep_codacy.generic.security.detect-invisible-unicode"
+        },
+        {
+          "patternId": "Semgrep_codacy.javascript.security.hard-coded-password"
+        },
+        {
+          "patternId": "Semgrep_generic_injection_rule-BiDiTrojanSource"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.adafruit-api-key.adafruit-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.adobe-client-id.adobe-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.adobe-client-secret.adobe-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.age-secret-key.age-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.airtable-api-key.airtable-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.algolia-api-key.algolia-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.alibaba-access-key-id.alibaba-access-key-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.alibaba-secret-key.alibaba-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.asana-client-id.asana-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.asana-client-secret.asana-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.atlassian-api-token.atlassian-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.authress-service-client-access-key.authress-service-client-access-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.aws-access-token.aws-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.beamer-api-token.beamer-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.bitbucket-client-id.bitbucket-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.bitbucket-client-secret.bitbucket-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.bittrex-access-key.bittrex-access-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.bittrex-secret-key.bittrex-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.clojars-api-token.clojars-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.cloudflare-api-key.cloudflare-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.cloudflare-global-api-key.cloudflare-global-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.cloudflare-origin-ca-key.cloudflare-origin-ca-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.codecov-access-token.codecov-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.coinbase-access-token.coinbase-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.confluent-access-token.confluent-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.confluent-secret-key.confluent-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.contentful-delivery-api-token.contentful-delivery-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.databricks-api-token.databricks-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.datadog-access-token.datadog-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.defined-networking-api-token.defined-networking-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.digitalocean-access-token.digitalocean-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.digitalocean-pat.digitalocean-pat"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.digitalocean-refresh-token.digitalocean-refresh-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.discord-api-token.discord-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.discord-client-id.discord-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.discord-client-secret.discord-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.doppler-api-token.doppler-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.droneci-access-token.droneci-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.dropbox-api-token.dropbox-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.dropbox-long-lived-api-token.dropbox-long-lived-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.dropbox-short-lived-api-token.dropbox-short-lived-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.duffel-api-token.duffel-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.dynatrace-api-token.dynatrace-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.easypost-api-token.easypost-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.easypost-test-api-token.easypost-test-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.etsy-access-token.etsy-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.facebook-access-token.facebook-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.facebook.facebook"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.facebook-page-access-token.facebook-page-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.facebook-secret.facebook-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.fastly-api-token.fastly-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.finicity-api-token.finicity-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.finicity-client-secret.finicity-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.finnhub-access-token.finnhub-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.flickr-access-token.flickr-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.flutterwave-encryption-key.flutterwave-encryption-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.flutterwave-public-key.flutterwave-public-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.flutterwave-secret-key.flutterwave-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.frameio-api-token.frameio-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.freshbooks-access-token.freshbooks-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gcp-api-key.gcp-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.generic-api-key.generic-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.github-app-token.github-app-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.github-fine-grained-pat.github-fine-grained-pat"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.github-oauth.github-oauth"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.github-pat.github-pat"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.github-refresh-token.github-refresh-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gitlab-pat.gitlab-pat"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gitlab-ptt.gitlab-ptt"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gitlab-rrt.gitlab-rrt"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gitter-access-token.gitter-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.gocardless-api-token.gocardless-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.grafana-api-key.grafana-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.grafana-cloud-api-token.grafana-cloud-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.grafana-service-account-token.grafana-service-account-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.harness-api-key.harness-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.hashicorp-tf-api-token.hashicorp-tf-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.hashicorp-tf-password.hashicorp-tf-password"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.heroku-api-key.heroku-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.hubspot-api-key.hubspot-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.huggingface-access-token.huggingface-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.huggingface-organization-api-token.huggingface-organization-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.infracost-api-token.infracost-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.intercom-api-key.intercom-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.intra42-client-secret.intra42-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.jfrog-api-key.jfrog-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.jfrog-identity-token.jfrog-identity-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.jwt-base64.jwt-base64"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.jwt.jwt"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.kraken-access-token.kraken-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.kucoin-access-token.kucoin-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.kucoin-secret-key.kucoin-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.launchdarkly-access-token.launchdarkly-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.linear-api-key.linear-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.linear-client-secret.linear-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.linkedin-client-id.linkedin-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.linkedin-client-secret.linkedin-client-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.lob-api-key.lob-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.lob-pub-api-key.lob-pub-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mailchimp-api-key.mailchimp-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mailgun-private-api-token.mailgun-private-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mailgun-pub-key.mailgun-pub-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mailgun-signing-key.mailgun-signing-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mapbox-api-token.mapbox-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.mattermost-access-token.mattermost-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.messagebird-api-token.messagebird-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.messagebird-client-id.messagebird-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.microsoft-teams-webhook.microsoft-teams-webhook"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.netlify-access-token.netlify-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.new-relic-browser-api-token.new-relic-browser-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.new-relic-insert-key.new-relic-insert-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.new-relic-user-api-id.new-relic-user-api-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.new-relic-user-api-key.new-relic-user-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.npm-access-token.npm-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.nytimes-access-token.nytimes-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.okta-access-token.okta-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.openai-api-key.openai-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.plaid-api-token.plaid-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.plaid-client-id.plaid-client-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.plaid-secret-key.plaid-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.planetscale-api-token.planetscale-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.planetscale-oauth-token.planetscale-oauth-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.planetscale-password.planetscale-password"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.postman-api-token.postman-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.prefect-api-token.prefect-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.private-key.private-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.pulumi-api-token.pulumi-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.pypi-upload-token.pypi-upload-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.rapidapi-access-token.rapidapi-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.readme-api-token.readme-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.rubygems-api-token.rubygems-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.scalingo-api-token.scalingo-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sendbird-access-id.sendbird-access-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sendbird-access-token.sendbird-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sendgrid-api-token.sendgrid-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sendinblue-api-token.sendinblue-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sentry-access-token.sentry-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.shippo-api-token.shippo-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.shopify-access-token.shopify-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.shopify-custom-access-token.shopify-custom-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.shopify-private-app-access-token.shopify-private-app-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.shopify-shared-secret.shopify-shared-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sidekiq-secret.sidekiq-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sidekiq-sensitive-url.sidekiq-sensitive-url"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-app-token.slack-app-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-bot-token.slack-bot-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-config-access-token.slack-config-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-config-refresh-token.slack-config-refresh-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-legacy-bot-token.slack-legacy-bot-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-legacy-token.slack-legacy-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-legacy-workspace-token.slack-legacy-workspace-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-user-token.slack-user-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.slack-webhook-url.slack-webhook-url"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.snyk-api-token.snyk-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.square-access-token.square-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.squarespace-access-token.squarespace-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.stripe-access-token.stripe-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sumologic-access-id.sumologic-access-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.sumologic-access-token.sumologic-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.telegram-bot-api-token.telegram-bot-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.travisci-access-token.travisci-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twilio-api-key.twilio-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitch-api-token.twitch-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitter-access-secret.twitter-access-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitter-access-token.twitter-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitter-api-key.twitter-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitter-api-secret.twitter-api-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.twitter-bearer-token.twitter-bearer-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.typeform-api-token.typeform-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.vault-batch-token.vault-batch-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.vault-service-token.vault-service-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.yandex-access-token.yandex-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.yandex-api-key.yandex-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.yandex-aws-access-token.yandex-aws-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.gitleaks.zendesk-secret-key.zendesk-secret-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-amazon-mws-auth-token.detected-amazon-mws-auth-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-artifactory-password.detected-artifactory-password"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-artifactory-token.detected-artifactory-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-aws-access-key-id-value.detected-aws-access-key-id-value"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-aws-account-id.detected-aws-account-id"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-aws-appsync-graphql-key.detected-aws-appsync-graphql-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-aws-secret-access-key.detected-aws-secret-access-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-aws-session-token.detected-aws-session-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-codeclimate.detected-codeclimate"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-etc-shadow.detected-etc-shadow"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-facebook-access-token.detected-facebook-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-facebook-oauth.detected-facebook-oauth"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-generic-api-key.detected-generic-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-generic-secret.detected-generic-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-github-token.detected-github-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-google-api-key.detected-google-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-google-cloud-api-key.detected-google-cloud-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-google-gcm-service-account.detected-google-gcm-service-account"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-google-oauth-access-token.detected-google-oauth-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-google-oauth.detected-google-oauth-url"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-heroku-api-key.detected-heroku-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-hockeyapp.detected-hockeyapp"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-jwt-token.detected-jwt-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-kolide-api-key.detected-kolide-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-mailchimp-api-key.detected-mailchimp-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-mailgun-api-key.detected-mailgun-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-npm-registry-auth-token.detected-npm-registry-auth-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-onfido-live-api-token.detected-onfido-live-api-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-outlook-team.detected-outlook-team"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-paypal-braintree-access-token.detected-paypal-braintree-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-pgp-private-key-block.detected-pgp-private-key-block"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-picatic-api-key.detected-picatic-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-private-key.detected-private-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-sauce-token.detected-sauce-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-sendgrid-api-key.detected-sendgrid-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-slack-token.detected-slack-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-slack-webhook.detected-slack-webhook"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-snyk-api-key.detected-snyk-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-softlayer-api-key.detected-softlayer-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-sonarqube-docs-api-key.detected-sonarqube-docs-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-square-access-token.detected-square-access-token"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-square-oauth-secret.detected-square-oauth-secret"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-ssh-password.detected-ssh-password"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-stripe-api-key.detected-stripe-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-stripe-restricted-api-key.detected-stripe-restricted-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-telegram-bot-api-key.detected-telegram-bot-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-twilio-api-key.detected-twilio-api-key"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.detected-username-and-password-in-uri.detected-username-and-password-in-uri"
+        },
+        {
+          "patternId": "Semgrep_generic.secrets.security.google-maps-apikeyleak.google-maps-apikeyleak"
+        },
+        {
+          "patternId": "Semgrep_generic.unicode.security.bidi.contains-bidirectional-characters"
+        },
+        {
+          "patternId": "Semgrep_javascript.audit.detect-replaceall-sanitization.detect-replaceall-sanitization"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-buffer-noassert-read"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-buffer-noassert-write"
+        },
+        {
+          "patternId": "Semgrep_javascript_buf_rule-detect-new-buffer"
+        },
+        {
+          "patternId": "Semgrep_javascript_crypto_rule-NodeLibcurlSSLVerificationDisable"
+        },
+        {
+          "patternId": "Semgrep_javascript_dos_rule-non-literal-regexp"
+        },
+        {
+          "patternId": "Semgrep_javascript_eval_rule-eval-with-expression"
+        },
+        {
+          "patternId": "Semgrep_javascript_exec_rule-child-process"
+        },
+        {
+          "patternId": "Semgrep_javascript.fbjs.security.audit.insecure-createnodesfrommarkup.insecure-createnodesfrommarkup"
+        },
+        {
+          "patternId": "Semgrep_javascript.grpc.security.grpc-nodejs-insecure-connection.grpc-nodejs-insecure-connection"
+        },
+        {
+          "patternId": "Semgrep_javascript.jwt-simple.security.jwt-simple-noverify.jwt-simple-noverify"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.code-string-concat.code-string-concat"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.dangerous-spawn-shell.dangerous-spawn-shell"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-non-literal-fs-filename.detect-non-literal-fs-filename"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-non-literal-regexp.detect-non-literal-regexp"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-non-literal-require.detect-non-literal-require"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.detect-redos.detect-redos"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.hardcoded-hmac-key.hardcoded-hmac-key"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.incomplete-sanitization.incomplete-sanitization"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.md5-used-as-password.md5-used-as-password"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.prototype-pollution.prototype-pollution-assignment.prototype-pollution-assignment"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.prototype-pollution.prototype-pollution-loop.prototype-pollution-loop"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.spawn-shell-true.spawn-shell-true"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-knex-sqli.node-knex-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-mssql-sqli.node-mssql-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-mysql-sqli.node-mysql-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.sqli.node-postgres-sqli.node-postgres-sqli"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.unknown-value-with-script-tag.unknown-value-with-script-tag"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.unsafe-dynamic-method.unsafe-dynamic-method"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-buffer-noassert.detect-buffer-noassert"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-child-process.detect-child-process"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-disable-mustache-escape.detect-disable-mustache-escape"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-eval-with-expression.detect-eval-with-expression"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-insecure-websocket.detect-insecure-websocket"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-no-csrf-before-method-override.detect-no-csrf-before-method-override"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.detect-pseudorandombytes.detect-pseudorandombytes"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.html-in-template-string.html-in-template-string"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.insecure-object-assign.insecure-object-assign"
+        },
+        {
+          "patternId": "Semgrep_javascript.lang.security.spawn-git-clone.spawn-git-clone"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.aead-no-final.aead-no-final"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.create-de-cipher-no-iv.create-de-cipher-no-iv"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-crypto.security.gcm-no-tag-length.gcm-no-tag-length"
+        },
+        {
+          "patternId": "Semgrep_javascript.node-expat.security.audit.expat-xxe.expat-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript.passport-jwt.security.passport-hardcode.hardcoded-passport-secret"
+        },
+        {
+          "patternId": "Semgrep_javascript_pathtraversal_rule-non-literal-fs-filename"
+        },
+        {
+          "patternId": "Semgrep_javascript.phantom.security.audit.phantom-injection.phantom-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript_random_rule-pseudo-random-bytes"
+        },
+        {
+          "patternId": "Semgrep_javascript_require_rule-non-literal-require"
+        },
+        {
+          "patternId": "Semgrep_javascript.sandbox.security.audit.sandbox-code-injection.sandbox-code-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.sax.security.audit.sax-xxe.sax-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript.serialize-javascript.security.audit.unsafe-serialize-javascript.unsafe-serialize-javascript"
+        },
+        {
+          "patternId": "Semgrep_javascript.shelljs.security.shelljs-exec-injection.shelljs-exec-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.thenify.security.audit.multiargs-code-execution.multiargs-code-execution"
+        },
+        {
+          "patternId": "Semgrep_javascript_timing_rule-possible-timing-attacks"
+        },
+        {
+          "patternId": "Semgrep_javascript.wkhtmltoimage.security.audit.wkhtmltoimage-injection.wkhtmltoimage-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.wkhtmltopdf.security.audit.wkhtmltopdf-injection.wkhtmltopdf-injection"
+        },
+        {
+          "patternId": "Semgrep_javascript.xml2json.security.audit.xml2json-xxe.xml2json-xxe"
+        },
+        {
+          "patternId": "Semgrep_javascript_xss_rule-mustache-escape"
+        },
+        {
+          "patternId": "Semgrep_json.npm.security.package-dependencies-check.package-dependencies-check"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.bypass-tls-verification.bypass-tls-verification"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.disallow-old-tls-versions1.disallow-old-tls-versions1"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.disallow-old-tls-versions2.disallow-old-tls-versions2"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.ftp-request.ftp-request"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.http-request.http-request"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.rest-http-client-support.rest-http-client-support"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.telnet-request.telnet-request"
+        },
+        {
+          "patternId": "Semgrep_problem-based-packs.insecure-transport.js-node.using-http-server.using-http-server"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-aes-ecb"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-aes-noiv"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-insecure-random-generator"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-md5"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-sha1"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-timing-attack"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-tls-reject"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_crypto_rule-node-weak-crypto"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_database_rule-node-knex-sqli-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_database_rule-node-nosqli-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_database_rule-node-nosqli-js-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_database_rule-node-sqli-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_dos_rule-layer7-object-dos"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_dos_rule-regex-dos"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-eval-nodejs"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-eval-require"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-grpc-insecure-connection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-node-deserialize"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-sandbox-code-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-serializetojs-deserialize"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-server-side-template-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm2-code-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm2-context-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm-code-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm-compilefunction-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm-runincontext-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-vm-runinnewcontext-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_eval_rule-yaml-deserialize"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_exec_rule-shelljs-os-command-exec"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-default"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-domain"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-httponly"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-maxage"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-path"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-samesite"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-cookie-session-no-secure"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-express-cors"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-generic-cors"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-generic-header-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-header-xss-generic"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-header-xss-lusca"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-helmet-feature-disabled"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_headers_rule-host-header-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-hardcoded-jwt-secret"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-jwt-exposed-credentials"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-jwt-exposed-data"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-jwt-express-hardcoded"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-jwt-not-revoked"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_jwt_rule-node-jwt-none-algorithm"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_redirect_rule-express-open-redirect"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_redirect_rule-express-open-redirect2"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-node-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-phantom-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-playwright-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-puppeteer-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-wkhtmltoimage-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_ssrf_rule-wkhtmltopdf-ssrf"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-admzip-path-overwrite"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-express-lfr"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-express-lfr-warning"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-generic-path-traversal"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-join-resolve-path-traversal"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-tar-path-overwrite"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_traversal_rule-zip-path-overwrite"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_xml_rule-node-entity-expansion"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_xml_rule-node-xpath-injection"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_xml_rule-node-xxe"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_xml_rule-xxe-expat"
+        },
+        {
+          "patternId": "Semgrep_rules_lgpl_javascript_xss_rule-xss-serialize-javascript"
+        },
+        {
+          "patternId": "Semgrep_typescript.lang.security.audit.cors-regex-wildcard.cors-regex-wildcard"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.allowed-unsecure-commands.allowed-unsecure-commands"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.audit.unsafe-add-mask-workflow-command.unsafe-add-mask-workflow-command"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.curl-eval.curl-eval"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.github-script-injection.github-script-injection"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.pull-request-target-code-checkout.pull-request-target-code-checkout"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.run-shell-injection.run-shell-injection"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.third-party-action-not-pinned-to-commit-sha.third-party-action-not-pinned-to-commit-sha"
+        },
+        {
+          "patternId": "Semgrep_yaml.github-actions.security.workflow-run-target-code-checkout.workflow-run-target-code-checkout"
+        }
+      ]
+    },
+    {
+      "toolId": "ESLint9",
+      "patterns": [
+        {
+          "patternId": "ESLint9_constructor-super"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_fixer-return"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-deprecated-context-methods"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-deprecated-report-api"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-identical-tests"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-missing-message-ids"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-missing-placeholders"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-only-tests"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-unused-message-ids"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-unused-placeholders"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_no-useless-token-range"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_prefer-message-ids"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_prefer-object-rule"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_prefer-output-null"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_require-meta-fixable"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_require-meta-has-suggestions"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_require-meta-schema"
+        },
+        {
+          "patternId": "ESLint9_eslint-plugin_require-meta-type"
+        },
+        {
+          "patternId": "ESLint9_for-direction"
+        },
+        {
+          "patternId": "ESLint9_getter-return"
+        },
+        {
+          "patternId": "ESLint9_@lwc_lwc_no-inner-html"
+        },
+        {
+          "patternId": "ESLint9_meteor_audit-argument-checks"
+        },
+        {
+          "patternId": "ESLint9_n_no-restricted-require"
+        },
+        {
+          "patternId": "ESLint9_no-async-promise-executor"
+        },
+        {
+          "patternId": "ESLint9_no-buffer-constructor"
+        },
+        {
+          "patternId": "ESLint9_no-case-declarations"
+        },
+        {
+          "patternId": "ESLint9_no-class-assign"
+        },
+        {
+          "patternId": "ESLint9_no-compare-neg-zero"
+        },
+        {
+          "patternId": "ESLint9_no-cond-assign"
+        },
+        {
+          "patternId": "ESLint9_no-constant-binary-expression"
+        },
+        {
+          "patternId": "ESLint9_no-constant-condition"
+        },
+        {
+          "patternId": "ESLint9_no-const-assign"
+        },
+        {
+          "patternId": "ESLint9_no-control-regex"
+        },
+        {
+          "patternId": "ESLint9_no-debugger"
+        },
+        {
+          "patternId": "ESLint9_no-delete-var"
+        },
+        {
+          "patternId": "ESLint9_no-dupe-args"
+        },
+        {
+          "patternId": "ESLint9_no-dupe-class-members"
+        },
+        {
+          "patternId": "ESLint9_no-dupe-else-if"
+        },
+        {
+          "patternId": "ESLint9_no-dupe-keys"
+        },
+        {
+          "patternId": "ESLint9_no-duplicate-case"
+        },
+        {
+          "patternId": "ESLint9_no-empty"
+        },
+        {
+          "patternId": "ESLint9_no-empty-character-class"
+        },
+        {
+          "patternId": "ESLint9_no-empty-pattern"
+        },
+        {
+          "patternId": "ESLint9_no-empty-static-block"
+        },
+        {
+          "patternId": "ESLint9_no-eval"
+        },
+        {
+          "patternId": "ESLint9_no-ex-assign"
+        },
+        {
+          "patternId": "ESLint9_no-extra-boolean-cast"
+        },
+        {
+          "patternId": "ESLint9_no-fallthrough"
+        },
+        {
+          "patternId": "ESLint9_no-func-assign"
+        },
+        {
+          "patternId": "ESLint9_no-global-assign"
+        },
+        {
+          "patternId": "ESLint9_no-implied-eval"
+        },
+        {
+          "patternId": "ESLint9_no-import-assign"
+        },
+        {
+          "patternId": "ESLint9_no-invalid-regexp"
+        },
+        {
+          "patternId": "ESLint9_no-irregular-whitespace"
+        },
+        {
+          "patternId": "ESLint9_no-loss-of-precision"
+        },
+        {
+          "patternId": "ESLint9_no-misleading-character-class"
+        },
+        {
+          "patternId": "ESLint9_no-new-native-nonconstructor"
+        },
+        {
+          "patternId": "ESLint9_no-nonoctal-decimal-escape"
+        },
+        {
+          "patternId": "ESLint9_no-obj-calls"
+        },
+        {
+          "patternId": "ESLint9_no-octal"
+        },
+        {
+          "patternId": "ESLint9_no-prototype-builtins"
+        },
+        {
+          "patternId": "ESLint9_no-redeclare"
+        },
+        {
+          "patternId": "ESLint9_no-regex-spaces"
+        },
+        {
+          "patternId": "ESLint9_no-script-url"
+        },
+        {
+          "patternId": "ESLint9_no-self-assign"
+        },
+        {
+          "patternId": "ESLint9_no-setter-return"
+        },
+        {
+          "patternId": "ESLint9_no-shadow-restricted-names"
+        },
+        {
+          "patternId": "ESLint9_no-sparse-arrays"
+        },
+        {
+          "patternId": "ESLint9_no-this-before-super"
+        },
+        {
+          "patternId": "ESLint9_no-unexpected-multiline"
+        },
+        {
+          "patternId": "ESLint9_no-unreachable"
+        },
+        {
+          "patternId": "ESLint9_no-unsafe-finally"
+        },
+        {
+          "patternId": "ESLint9_no-unsafe-negation"
+        },
+        {
+          "patternId": "ESLint9_no-unsafe-optional-chaining"
+        },
+        {
+          "patternId": "ESLint9_no-unused-labels"
+        },
+        {
+          "patternId": "ESLint9_no-unused-private-class-members"
+        },
+        {
+          "patternId": "ESLint9_no-unused-vars"
+        },
+        {
+          "patternId": "ESLint9_no-useless-backreference"
+        },
+        {
+          "patternId": "ESLint9_no-useless-catch"
+        },
+        {
+          "patternId": "ESLint9_no-useless-escape"
+        },
+        {
+          "patternId": "ESLint9_no-with"
+        },
+        {
+          "patternId": "ESLint9_regexp_no-super-linear-move"
+        },
+        {
+          "patternId": "ESLint9_require-yield"
+        },
+        {
+          "patternId": "ESLint9_security_detect-bidi-characters"
+        },
+        {
+          "patternId": "ESLint9_security_detect-buffer-noassert"
+        },
+        {
+          "patternId": "ESLint9_security_detect-child-process"
+        },
+        {
+          "patternId": "ESLint9_security_detect-disable-mustache-escape"
+        },
+        {
+          "patternId": "ESLint9_security_detect-eval-with-expression"
+        },
+        {
+          "patternId": "ESLint9_security_detect-new-buffer"
+        },
+        {
+          "patternId": "ESLint9_security_detect-no-csrf-before-method-override"
+        },
+        {
+          "patternId": "ESLint9_security_detect-non-literal-fs-filename"
+        },
+        {
+          "patternId": "ESLint9_security_detect-non-literal-regexp"
+        },
+        {
+          "patternId": "ESLint9_security_detect-non-literal-require"
+        },
+        {
+          "patternId": "ESLint9_security_detect-object-injection"
+        },
+        {
+          "patternId": "ESLint9_security_detect-possible-timing-attacks"
+        },
+        {
+          "patternId": "ESLint9_security_detect-pseudoRandomBytes"
+        },
+        {
+          "patternId": "ESLint9_security_detect-unsafe-regex"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-absence-of-name-option-in-exrpress-session"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-buffer-unsafe-allocation"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-child-process"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-crlf"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-dangerous-redirects"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-eval-with-expr"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-html-injection"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-improper-exception-handling"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-insecure-randomness"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-non-literal-require-calls"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-nosql-injection"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-option-multiplestatements-in-mysql"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-option-rejectunauthorized-in-nodejs-httpsrequest"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-option-unsafe-in-serialize-javascript-npm-package"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-possible-timing-attacks"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-runinthiscontext-method-in-nodes-vm"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-security-missconfiguration-cookie"
+        },
+        {
+          "patternId": "ESLint9_security-node_detect-sql-injection"
+        },
+        {
+          "patternId": "ESLint9_security-node_disable-ssl-across-node-server"
+        },
+        {
+          "patternId": "ESLint9_security-node_non-literal-reg-expr"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-apigateway-public-api"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-ec2-rds-dms-public"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-ec2-unencrypted-ebs-volume"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-efs-unencrypted"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-iam-all-privileges"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-iam-all-resources-accessible"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-iam-privilege-escalation"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-iam-public-access"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-opensearchservice-domain"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-rds-unencrypted-databases"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-restricted-ip-admin-access"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-s3-bucket-granted-access"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-s3-bucket-insecure-http"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-s3-bucket-public-access"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-s3-bucket-versioning"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-sagemaker-unencrypted-notebook"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-sns-unencrypted-topics"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_aws-sqs-unencrypted-queue"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_code-eval"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_confidential-information-logging"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_content-length"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_content-security-policy"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_cookie-no-httponly"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_cors"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_csrf"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_disabled-auto-escaping"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_disabled-resource-integrity"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_encryption-secure-mode"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_file-permissions"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_file-uploads"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_frame-ancestors"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_hashing"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_hidden-files"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_insecure-cookie"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_insecure-jwt-token"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_link-with-target-blank"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-angular-bypass-sanitization"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-clear-text-protocols"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-hardcoded-ip"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-hardcoded-passwords"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-hardcoded-secrets"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-intrusive-permissions"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-ip-forward"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-mime-sniff"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-mixed-content"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-os-command-from-path"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-referrer-policy"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-unsafe-unzip"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-weak-cipher"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_no-weak-keys"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_os-command"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_post-message"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_production-debug"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_pseudo-random"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_publicly-writable-directories"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_session-regeneration"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_slow-regex"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_sql-queries"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_strict-transport-security"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_unverified-certificate"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_unverified-hostname"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_weak-ssl"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_xml-parser-xxe"
+        },
+        {
+          "patternId": "ESLint9_sonarjs_x-powered-by"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_adjacent-overload-signatures"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_array-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_await-thenable"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_ban-ts-comment"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_ban-tslint-comment"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_class-literal-property-style"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_class-methods-use-this"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_consistent-generic-constructors"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_consistent-indexed-object-style"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_consistent-return"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_consistent-type-assertions"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_consistent-type-exports"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_default-param-last"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_explicit-module-boundary-types"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_member-ordering"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-array-constructor"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-array-delete"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-base-to-string"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-confusing-non-null-assertion"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-confusing-void-expression"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-deprecated"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-dupe-class-members"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-duplicate-enum-values"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-duplicate-type-constituents"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-dynamic-delete"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-empty-function"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-empty-interface"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-empty-object-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-explicit-any"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-extraneous-class"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-extra-non-null-assertion"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-floating-promises"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-for-in-array"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-implied-eval"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-import-type-side-effects"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-inferrable-types"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-invalid-this"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-invalid-void-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-loop-func"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-loss-of-precision"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-meaningless-void-operator"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-misused-new"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-misused-promises"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-misused-spread"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-mixed-enums"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-namespace"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_non-nullable-type-assertion-style"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-non-null-asserted-nullish-coalescing"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-non-null-asserted-optional-chain"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-non-null-assertion"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-redeclare"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-redundant-type-constituents"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-require-imports"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-restricted-imports"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-restricted-types"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-shadow"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-this-alias"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-boolean-literal-compare"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-condition"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-parameter-property-assignment"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-qualifier"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-template-expression"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-type-arguments"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-type-assertion"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-type-constraint"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unnecessary-type-parameters"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-argument"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-assignment"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-call"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-declaration-merging"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-enum-comparison"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-function-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-member-access"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-return"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-type-assertion"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unsafe-unary-minus"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unused-expressions"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-unused-vars"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-useless-constructor"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-useless-empty-export"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-var-requires"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_no-wrapper-object-types"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_only-throw-error"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-as-const"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-enum-initializers"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-find"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-for-of"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-function-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-includes"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-literal-enum-member"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-namespace-keyword"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-nullish-coalescing"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-optional-chain"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-promise-reject-errors"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-readonly"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-reduce-type-parameter"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-regexp-exec"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-return-this-type"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-string-starts-ends-with"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_prefer-ts-expect-error"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_promise-function-async"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_related-getter-setter-pairs"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_require-array-sort-compare"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_require-await"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_restrict-plus-operands"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_restrict-template-expressions"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_return-await"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_switch-exhaustiveness-check"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_triple-slash-reference"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_typedef"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_unbound-method"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_unified-signatures"
+        },
+        {
+          "patternId": "ESLint9_@typescript-eslint_use-unknown-in-catch-callback-variable"
+        },
+        {
+          "patternId": "ESLint9_unicorn_require-post-message-target-origin"
+        },
+        {
+          "patternId": "ESLint9_use-isnan"
+        },
+        {
+          "patternId": "ESLint9_valid-typeof"
+        },
+        {
+          "patternId": "ESLint9_@vitest_consistent-test-filename"
+        },
+        {
+          "patternId": "ESLint9_@vitest_consistent-test-it"
+        },
+        {
+          "patternId": "ESLint9_@vitest_expect-expect"
+        },
+        {
+          "patternId": "ESLint9_@vitest_max-expects"
+        },
+        {
+          "patternId": "ESLint9_@vitest_max-nested-describe"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-alias-methods"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-commented-out-tests"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-conditional-expect"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-conditional-in-test"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-conditional-tests"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-disabled-tests"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-duplicate-hooks"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-focused-tests"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-hooks"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-identical-title"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-import-node-test"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-interpolation-in-snapshots"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-large-snapshots"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-mocks-import"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-restricted-matchers"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-restricted-vi-methods"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-standalone-expect"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-test-prefixes"
+        },
+        {
+          "patternId": "ESLint9_@vitest_no-test-return-statement"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-called-with"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-comparison-matcher"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-describe-function-title"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-each"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-equality-matcher"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-expect-assertions"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-expect-resolves"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-hooks-in-order"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-hooks-on-top"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-lowercase-title"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-mock-promise-shorthand"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-snapshot-hint"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-spy-on"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-strict-boolean-matchers"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-strict-equal"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-be"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-be-falsy"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-be-object"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-be-truthy"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-contain"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-todo"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-to-have-length"
+        },
+        {
+          "patternId": "ESLint9_@vitest_prefer-vi-mocked"
+        },
+        {
+          "patternId": "ESLint9_@vitest_require-hook"
+        },
+        {
+          "patternId": "ESLint9_@vitest_require-local-test-context-for-concurrent-snapshots"
+        },
+        {
+          "patternId": "ESLint9_@vitest_require-mock-type-parameters"
+        },
+        {
+          "patternId": "ESLint9_@vitest_require-top-level-describe"
+        },
+        {
+          "patternId": "ESLint9_@vitest_require-to-throw-message"
+        },
+        {
+          "patternId": "ESLint9_@vitest_valid-describe-callback"
+        },
+        {
+          "patternId": "ESLint9_@vitest_valid-expect"
+        },
+        {
+          "patternId": "ESLint9_@vitest_valid-expect-in-promise"
+        },
+        {
+          "patternId": "ESLint9_@vitest_valid-title"
+        },
+        {
+          "patternId": "ESLint9_xss_no-location-href-assign"
+        }
+      ]
+    },
+    {
+      "toolId": "Checkov",
+      "patterns": [
+        {
+          "patternId": "Checkov_CKV2_GHA_1"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_1"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_2"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_3"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_4"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_5"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_6"
+        },
+        {
+          "patternId": "Checkov_CKV_GHA_7"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_1"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_11"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_12"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_13"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_14"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_15"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_16"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_17"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_18"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_19"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_2"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_3"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_4"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_5"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_6"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_7"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_8"
+        },
+        {
+          "patternId": "Checkov_CKV_SECRET_9"
+        }
+      ]
+    },
+    {
+      "toolId": "Lizard",
+      "patterns": [
+        {
+          "patternId": "Lizard_ccn-medium",
+          "parameters": {
+            "threshold": "15"
+          }
+        },
+        {
+          "patternId": "Lizard_file-nloc-medium"
+        },
+        {
+          "patternId": "Lizard_nloc-medium",
+          "parameters": {
+            "threshold": "100"
+          }
+        },
+        {
+          "patternId": "Lizard_parameter-count-medium"
+        }
+      ]
+    },
+    {
+      "toolId": "Biome",
+      "patterns": [
+        {
+          "patternId": "Biome_lint_a11y_noAccessKey"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noAriaHiddenOnFocusable"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noAriaUnsupportedElements"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noAutofocus"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noDistractingElements"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noHeaderScope"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noInteractiveElementToNoninteractiveRole"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noLabelWithoutControl"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noNoninteractiveElementToInteractiveRole"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noNoninteractiveTabindex"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noPositiveTabindex"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noRedundantAlt"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noRedundantRoles"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noStaticElementInteractions"
+        },
+        {
+          "patternId": "Biome_lint_a11y_noSvgWithoutTitle"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useAltText"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useAnchorContent"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useAriaActivedescendantWithTabindex"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useAriaPropsForRole"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useAriaPropsSupportedByRole"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useButtonType"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useFocusableInteractive"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useGenericFontNames"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useHeadingContent"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useHtmlLang"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useIframeTitle"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useKeyWithClickEvents"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useKeyWithMouseEvents"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useMediaCaption"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useSemanticElements"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidAnchor"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidAriaProps"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidAriaRole"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidAriaValues"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidAutocomplete"
+        },
+        {
+          "patternId": "Biome_lint_a11y_useValidLang"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noAdjacentSpacesInRegex"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noArguments"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noBannedTypes"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noCommaOperator"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noEmptyTypeParameters"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noExtraBooleanCast"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noFlatMapIdentity"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noImportantStyles"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noStaticOnlyClass"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noThisInStatic"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessCatch"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessConstructor"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessContinue"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessEmptyExport"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessEscapeInRegex"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessFragments"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessLabel"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessLoneBlockStatements"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessRename"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessStringRaw"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessSwitchCase"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessTernary"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessThisAlias"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessTypeConstraint"
+        },
+        {
+          "patternId": "Biome_lint_complexity_noUselessUndefinedInitialization"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useArrowFunction"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useDateNow"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useFlatMap"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useIndexOf"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useNumericLiterals"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useOptionalChain"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useRegexLiterals"
+        },
+        {
+          "patternId": "Biome_lint_complexity_useSimpleNumberKeys"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noConstantCondition"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noConstantMathMinMaxClamp"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noConstAssign"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noConstructorReturn"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noEmptyCharacterClassInRegex"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noEmptyPattern"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noGlobalObjectCalls"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInnerDeclarations"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidBuiltinInstantiation"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidConstructorSuper"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidDirectionInLinearGradient"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidGridAreas"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidPositionAtImportRule"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noInvalidUseBeforeDeclaration"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noMissingVarFunction"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noNonoctalDecimalEscape"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noPrecisionLoss"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noPrivateImports"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noSelfAssign"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noSetterReturn"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noStringCaseMismatch"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noSwitchDeclarations"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownFunction"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownMediaFeatureName"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownProperty"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownPseudoClass"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownPseudoElement"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownTypeSelector"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnknownUnit"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnmatchableAnbSelector"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnreachable"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnreachableSuper"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnsafeFinally"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnsafeOptionalChaining"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnusedFunctionParameters"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnusedImports"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnusedLabels"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnusedPrivateClassMembers"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noUnusedVariables"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noVoidElementsWithChildren"
+        },
+        {
+          "patternId": "Biome_lint_correctness_noVoidTypeReturn"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useGraphqlNamedOperations"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useIsNan"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useParseIntRadix"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useValidForDirection"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useValidTypeof"
+        },
+        {
+          "patternId": "Biome_lint_correctness_useYield"
+        },
+        {
+          "patternId": "Biome_lint_nursery_noDrizzleDeleteWithoutWhere"
+        },
+        {
+          "patternId": "Biome_lint_nursery_noDrizzleUpdateWithoutWhere"
+        },
+        {
+          "patternId": "Biome_lint_nursery_noImpliedEval"
+        },
+        {
+          "patternId": "Biome_lint_nursery_noScriptUrl"
+        },
+        {
+          "patternId": "Biome_lint_performance_noAccumulatingSpread"
+        },
+        {
+          "patternId": "Biome_lint_performance_noDynamicNamespaceImportAccess"
+        },
+        {
+          "patternId": "Biome_lint_security_noBlankTarget"
+        },
+        {
+          "patternId": "Biome_lint_security_noGlobalEval"
+        },
+        {
+          "patternId": "Biome_lint_style_noDescendingSpecificity"
+        },
+        {
+          "patternId": "Biome_lint_style_useArrayLiterals"
+        },
+        {
+          "patternId": "Biome_lint_style_useConst"
+        },
+        {
+          "patternId": "Biome_lint_style_useExponentiationOperator"
+        },
+        {
+          "patternId": "Biome_lint_style_useExportType"
+        },
+        {
+          "patternId": "Biome_lint_style_useImportType"
+        },
+        {
+          "patternId": "Biome_lint_style_useLiteralEnumMembers"
+        },
+        {
+          "patternId": "Biome_lint_style_useNodejsImportProtocol"
+        },
+        {
+          "patternId": "Biome_lint_style_useShorthandFunctionType"
+        },
+        {
+          "patternId": "Biome_lint_style_useTemplate"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noApproximativeNumericConstant"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noAssignInExpressions"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noAsyncPromiseExecutor"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noBiomeFirstException"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noCatchAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noClassAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noCommentText"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noCompareNegZero"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noConfusingLabels"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noConfusingVoidType"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noConstEnum"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noControlCharactersInRegex"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDebugger"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDocumentCookie"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDoubleEquals"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateAtImportRules"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateCase"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateClassMembers"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateCustomProperties"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateElseIf"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateFontNames"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateJsxProps"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateObjectKeys"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateParameters"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateProperties"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateSelectorsKeyframeBlock"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noDuplicateTestHooks"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noEmptyBlock"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noEmptyInterface"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noExplicitAny"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noExportsInTest"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noExtraNonNullAssertion"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noFallthroughSwitchClause"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noFocusedTests"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noFunctionAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noGlobalAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noGlobalIsFinite"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noGlobalIsNan"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noImplicitAnyLet"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noImportantInKeyframe"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noImportAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noIrregularWhitespace"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noLabelVar"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noMisleadingCharacterClass"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noMisleadingInstantiator"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noMisrefactoredShorthandAssign"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noNonNullAssertedOptionalChain"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noOctalEscape"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noPrototypeBuiltins"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noQuickfixBiome"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noRedeclare"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noRedundantUseStrict"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noSelfCompare"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noShadowRestrictedNames"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noShorthandPropertyOverrides"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noSparseArray"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noSuspiciousSemicolonInJsx"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noTemplateCurlyInString"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noThenProperty"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noTsIgnore"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noUnknownAtRules"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noUnsafeDeclarationMerging"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noUnsafeNegation"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noUselessEscapeInString"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noUselessRegexBackrefs"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_noWith"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useAdjacentOverloadSignatures"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useBiomeIgnoreFolder"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useDefaultSwitchClauseLast"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useGetterReturn"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useGoogleFontDisplay"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useIsArray"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useIterableCallbackReturn"
+        },
+        {
+          "patternId": "Biome_lint_suspicious_useNamespaceKeyword"
+        }
+      ]
+    },
+    {
+      "toolId": "Agentlinter",
+      "patterns": [
+        {
+          "patternId": "Agentlinter_blueprint_constraints-defined"
+        },
+        {
+          "patternId": "Agentlinter_blueprint_coverage"
+        },
+        {
+          "patternId": "Agentlinter_blueprint_identity-defined"
+        },
+        {
+          "patternId": "Agentlinter_clarity_actionable-instructions"
+        },
+        {
+          "patternId": "Agentlinter_clarity_action-without-context"
+        },
+        {
+          "patternId": "Agentlinter_clarity_ambiguous-pronoun"
+        },
+        {
+          "patternId": "Agentlinter_clarity_compound-instruction"
+        },
+        {
+          "patternId": "Agentlinter_clarity_duplicate-content"
+        },
+        {
+          "patternId": "Agentlinter_clarity_english-config-files"
+        },
+        {
+          "patternId": "Agentlinter_clarity_escape-hatch-missing"
+        },
+        {
+          "patternId": "Agentlinter_clarity_has-examples"
+        },
+        {
+          "patternId": "Agentlinter_clarity_instruction-density"
+        },
+        {
+          "patternId": "Agentlinter_clarity_naked-conditional"
+        },
+        {
+          "patternId": "Agentlinter_clarity_no-contradictions"
+        },
+        {
+          "patternId": "Agentlinter_clarity_no-vague-instructions"
+        },
+        {
+          "patternId": "Agentlinter_clarity_obvious-statements"
+        },
+        {
+          "patternId": "Agentlinter_clarity_priority-signal-missing"
+        },
+        {
+          "patternId": "Agentlinter_clarity_sentence-complexity"
+        },
+        {
+          "patternId": "Agentlinter_clarity_token-budget-range"
+        },
+        {
+          "patternId": "Agentlinter_clarity_token-efficiency-score"
+        },
+        {
+          "patternId": "Agentlinter_clarity_undefined-term"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_agent-focus"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_descriptive-ratio"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_hooks-structure"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_instruction-count"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_progressive-disclosure"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_relevance-trap"
+        },
+        {
+          "patternId": "Agentlinter_claude-code_skills-vs-commands"
+        },
+        {
+          "patternId": "Agentlinter_completeness_command-coverage"
+        },
+        {
+          "patternId": "Agentlinter_completeness_freshness-file-paths"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-boundaries"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-error-handling"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-identity"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-output-format"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-priorities"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-tools"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-user-context"
+        },
+        {
+          "patternId": "Agentlinter_completeness_has-workflow"
+        },
+        {
+          "patternId": "Agentlinter_completeness_session-learning-hooks"
+        },
+        {
+          "patternId": "Agentlinter_completeness_verification-criteria-required"
+        },
+        {
+          "patternId": "Agentlinter_consistency_circular-dependency"
+        },
+        {
+          "patternId": "Agentlinter_consistency_identity-alignment"
+        },
+        {
+          "patternId": "Agentlinter_consistency_language-mixing"
+        },
+        {
+          "patternId": "Agentlinter_consistency_naming-convention"
+        },
+        {
+          "patternId": "Agentlinter_consistency_no-duplicate-instructions"
+        },
+        {
+          "patternId": "Agentlinter_consistency_outdated-cross-references"
+        },
+        {
+          "patternId": "Agentlinter_consistency_permission-conflict"
+        },
+        {
+          "patternId": "Agentlinter_consistency_priority-conflict"
+        },
+        {
+          "patternId": "Agentlinter_consistency_referenced-files-exist"
+        },
+        {
+          "patternId": "Agentlinter_consistency_stale-date"
+        },
+        {
+          "patternId": "Agentlinter_consistency_stale-file-reference"
+        },
+        {
+          "patternId": "Agentlinter_consistency_stale-package-reference"
+        },
+        {
+          "patternId": "Agentlinter_consistency_timezone-locale-drift"
+        },
+        {
+          "patternId": "Agentlinter_consistency_tone-voice-alignment"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-context-window-awareness"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-file-based-notes"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-handoff-protocol"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-learning-loop"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-memory-strategy"
+        },
+        {
+          "patternId": "Agentlinter_memory_has-state-tracking"
+        },
+        {
+          "patternId": "Agentlinter_memory_no-mental-notes"
+        },
+        {
+          "patternId": "Agentlinter_remote-ready_env-vars-documented"
+        },
+        {
+          "patternId": "Agentlinter_remote-ready_model-settings-specified"
+        },
+        {
+          "patternId": "Agentlinter_remote-ready_workspace-path-specified"
+        },
+        {
+          "patternId": "Agentlinter_runtime_auth-mode"
+        },
+        {
+          "patternId": "Agentlinter_runtime_config-exists"
+        },
+        {
+          "patternId": "Agentlinter_runtime_config-secrets"
+        },
+        {
+          "patternId": "Agentlinter_runtime_dm-policy"
+        },
+        {
+          "patternId": "Agentlinter_runtime_gateway-bind"
+        },
+        {
+          "patternId": "Agentlinter_runtime_group-policy"
+        },
+        {
+          "patternId": "Agentlinter_runtime_token-strength"
+        },
+        {
+          "patternId": "Agentlinter_security_api-key-exposure"
+        },
+        {
+          "patternId": "Agentlinter_security_env-var-references"
+        },
+        {
+          "patternId": "Agentlinter_security_has-injection-defense"
+        },
+        {
+          "patternId": "Agentlinter_security_has-permission-boundaries"
+        },
+        {
+          "patternId": "Agentlinter_security_no-injection-defense"
+        },
+        {
+          "patternId": "Agentlinter_security_no-pii-exposure"
+        },
+        {
+          "patternId": "Agentlinter_security_no-secrets"
+        },
+        {
+          "patternId": "Agentlinter_security_prompt-injection-vulnerability"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_dangerous-commands"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_data-exfiltration"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_excessive-permissions"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_has-metadata"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_injection-vectors"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_sensitive-paths"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_skill-description-when-to-use"
+        },
+        {
+          "patternId": "Agentlinter_skill-safety_skill-name-match-dir"
+        },
+        {
+          "patternId": "Agentlinter_structure_circular-import"
+        },
+        {
+          "patternId": "Agentlinter_structure_dead-import"
+        },
+        {
+          "patternId": "Agentlinter_structure_file-size"
+        },
+        {
+          "patternId": "Agentlinter_structure_has-file-map"
+        },
+        {
+          "patternId": "Agentlinter_structure_has-main-file"
+        },
+        {
+          "patternId": "Agentlinter_structure_has-sections"
+        },
+        {
+          "patternId": "Agentlinter_structure_has-version-or-update-date"
+        },
+        {
+          "patternId": "Agentlinter_structure_heading-hierarchy"
+        },
+        {
+          "patternId": "Agentlinter_structure_modular-files"
+        },
+        {
+          "patternId": "Agentlinter_structure_no-empty-sections"
+        },
+        {
+          "patternId": "Agentlinter_structure_position-risk-warning"
+        },
+        {
+          "patternId": "Agentlinter_token-budget_compressible-padding"
+        },
+        {
+          "patternId": "Agentlinter_token-budget_section-weight"
+        },
+        {
+          "patternId": "Agentlinter_token-budget_total-tokens"
+        },
+        {
+          "patternId": "Agentlinter_token-budget_under-150-tokens"
+        }
+      ]
+    }
+  ],
+  "exclude": []
+}

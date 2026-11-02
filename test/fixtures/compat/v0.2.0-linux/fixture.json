@@ -1,0 +1,20 @@
+{
+  "tag": "v0.2.0",
+  "platform": "linux",
+  "node": "v24.21.0",
+  "generated_at": "2026-10-05T18:46:14.083Z",
+  "run_id": "01a10d63-474c-791b-ab0d-6e4dce93e986",
+  "files": [
+    "exports/01a10d63-48a6-74a0-9b98-efe40017c114/review/manifest.json",
+    "exports/01a10d63-4c2e-7478-83a7-0001b39592ea/review/manifest.json",
+    "ops/01a10d63-4759-7738-ac92-813d55ae0496/capture.json",
+    "ops/01a10d63-48a6-74a0-9b98-efe40017c114/capture.json",
+    "ops/01a10d63-48a6-74a0-9b98-efe40017c114/review/items.json",
+    "ops/01a10d63-48a6-74a0-9b98-efe40017c114/review/output.json",
+    "ops/01a10d63-4c2e-7478-83a7-0001b39592ea/capture.json",
+    "ops/01a10d63-4c2e-7478-83a7-0001b39592ea/review/items.json",
+    "ops/01a10d63-4c2e-7478-83a7-0001b39592ea/review/output.json",
+    "run.json",
+    "state.json"
+  ]
+}

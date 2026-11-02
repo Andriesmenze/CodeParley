@@ -1,0 +1,188 @@
+[
+ {
+  "kind": "clarification",
+  "text": "",
+  "content_key": "clarification\u0000",
+  "bytes": 0
+ },
+ {
+  "kind": "clarification",
+  "text": "   ",
+  "content_key": "clarification\u0000",
+  "bytes": 3
+ },
+ {
+  "kind": "clarification",
+  "text": "Prefer an explicit loop over recursion",
+  "content_key": "clarification\u0000prefer an explicit loop over recursion",
+  "bytes": 38
+ },
+ {
+  "kind": "clarification",
+  "text": "Prefer  an   explicit\tloop\nover recursion",
+  "content_key": "clarification\u0000prefer an explicit loop over recursion",
+  "bytes": 41
+ },
+ {
+  "kind": "clarification",
+  "text": "  Prefer an explicit loop over recursion  ",
+  "content_key": "clarification\u0000prefer an explicit loop over recursion",
+  "bytes": 42
+ },
+ {
+  "kind": "scope",
+  "text": "Prefer an explicit loop over recursion",
+  "content_key": "scope\u0000prefer an explicit loop over recursion",
+  "bytes": 38
+ },
+ {
+  "kind": "constraint",
+  "text": "Focus the review on error handling",
+  "content_key": "constraint\u0000focus the review on error handling",
+  "bytes": 34
+ },
+ {
+  "kind": "priority",
+  "text": "FOCUS THE REVIEW ON ERROR HANDLING",
+  "content_key": "priority\u0000focus the review on error handling",
+  "bytes": 34
+ },
+ {
+  "kind": "acceptance-criteria",
+  "text": "tabs\t\tand\r\nnewlines here",
+  "content_key": "acceptance-criteria\u0000tabs and newlines here",
+  "bytes": 26
+ },
+ {
+  "kind": "clarification",
+  "text": "non break space　cjk﻿bom",
+  "content_key": "clarification\u0000non break space cjk bom",
+  "bytes": 30
+ },
+ {
+  "kind": "clarification",
+  "text": "nelstays",
+  "content_key": "clarification\u0000nelstays",
+  "bytes": 10
+ },
+ {
+  "kind": "clarification",
+  "text": "Café vs Café (NFC)",
+  "content_key": "clarification\u0000café vs café (nfc)",
+  "bytes": 21
+ },
+ {
+  "kind": "clarification",
+  "text": "CAFÉ",
+  "content_key": "clarification\u0000café",
+  "bytes": 5
+ },
+ {
+  "kind": "clarification",
+  "text": "straße and STRASSE and ẞ",
+  "content_key": "clarification\u0000straße and strasse and ß",
+  "bytes": 27
+ },
+ {
+  "kind": "clarification",
+  "text": "İstanbul and ISTANBUL and i̇",
+  "content_key": "clarification\u0000i̇stanbul and istanbul and i̇",
+  "bytes": 30
+ },
+ {
+  "kind": "clarification",
+  "text": "Diyarbakır",
+  "content_key": "clarification\u0000diyarbakır",
+  "bytes": 11
+ },
+ {
+  "kind": "clarification",
+  "text": "ΟΔΟΣ",
+  "content_key": "clarification\u0000οδος",
+  "bytes": 8
+ },
+ {
+  "kind": "clarification",
+  "text": "ΣΟΦΟΣ and ΑΣ and Σ",
+  "content_key": "clarification\u0000σοφος and ας and σ",
+  "bytes": 26
+ },
+ {
+  "kind": "clarification",
+  "text": "ΑΣΒ",
+  "content_key": "clarification\u0000ασβ",
+  "bytes": 6
+ },
+ {
+  "kind": "clarification",
+  "text": "ПРИВЕТ world",
+  "content_key": "clarification\u0000привет world",
+  "bytes": 18
+ },
+ {
+  "kind": "clarification",
+  "text": "ligature ﬀ and titlecase ǅ and roman Ⅷ",
+  "content_key": "clarification\u0000ligature ﬀ and titlecase ǆ and roman ⅷ",
+  "bytes": 43
+ },
+ {
+  "kind": "withdrawal",
+  "text": "it's a co·op decision.",
+  "content_key": "withdrawal\u0000it's a co·op decision.",
+  "bytes": 23
+ },
+ {
+  "kind": "clarification",
+  "text": "emoji 😀 astral 𠀀 cjk",
+  "content_key": "clarification\u0000emoji 😀 astral 𠀀 cjk",
+  "bytes": 26
+ },
+ {
+  "kind": "clarification",
+  "text": "math bold 𝐀𝐚 letters",
+  "content_key": "clarification\u0000math bold 𝐀𝐚 letters",
+  "bytes": 26
+ },
+ {
+  "kind": "clarification",
+  "text": "reorder ọ́ vs ọ́",
+  "content_key": "clarification\u0000reorder ọ́ vs ọ́",
+  "bytes": 22
+ },
+ {
+  "kind": "clarification",
+  "text": "stacked á̂̃ marks",
+  "content_key": "clarification\u0000stacked á̂̃ marks",
+  "bytes": 21
+ },
+ {
+  "kind": "scope",
+  "text": "   leading\u000bvtab\fff trailing   ",
+  "content_key": "scope\u0000leading vtab ff trailing",
+  "bytes": 30
+ },
+ {
+  "kind": "priority",
+  "text": "Αάσσος",
+  "content_key": "priority\u0000αάσσος",
+  "bytes": 12
+ },
+ {
+  "kind": "constraint",
+  "text": "CYRILLIC ДА text",
+  "content_key": "constraint\u0000cyrillic да text",
+  "bytes": 18
+ },
+ {
+  "kind": "clarification",
+  "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "content_key": "clarification\u0000xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "bytes": 2000
+ },
+ {
+  "kind": "clarification",
+  "text": "a word then Σ",
+  "content_key": "clarification\u0000a word then σ",
+  "bytes": 14
+ }
+]

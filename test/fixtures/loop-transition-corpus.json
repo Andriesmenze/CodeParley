@@ -1,0 +1,265 @@
+{
+  "version": 2,
+  "about": "P3.4C-2 loop_transition contract corpus. ONE observable behaviour for the real custodian (custodian self-test-loop-corpus) and the simulated custodian (test/custodian-loop.contract.test.ts). Each scenario runs on a fresh store with an 8-loop operator grant for one repository. Steps: mint (consume_loop), t (loop_transition), replay (re-send an earlier step's exact request), list (list_user_records loop section), advance (move the clock). Placeholders: $nonce (the run's bind-nonce preimage), $wrongNonce, $claude (a pid the custodian verifies as an ancestor of the connected process), $unrelated (a pid it does not), $handle (the loop's current operation handle), $previousHandle (the one before it), $inventedHandle, $inventedClaim, $claim:<name> (a claim captured with capture.claim). epoch/rev default to the loop's current values; +N / -N are relative to them. spend_continuation, wake_arm and wake_consume carry the session_id of the asking hook (the custodian compares it with its binding). client (optional): the process connected to the pipe for that step, an OS fact independent of every field: absent = the bound session's hook helper (a descendant of $claude); outsider = a process outside $claude's tree; ended = $claude has exited; reused = $claude's pid now names a later-created process. expect: ok, code (when ok is false), data (partial match on the result), absent (keys that must not appear anywhere in the result), recordKeys (the exact key set of a list step's record). P3.4C-5 Increment 3 (version 2): every continuation or wake is decided on the custodian's own derivation (contract §5.2) — a step that names no derivation_id is asked on a fresh one with moved progress unless it says \"derivation\": \"none\"; derive serves the corpus's synthetic derivation (its route and progress fingerprint) and names it for $der:<alias>; measurement sets what the custodian measures from then on (N5-17). The implementer projection carries progress.",
+  "scenarios": [
+    {
+      "name": "mint: atomic consume+mint, idempotent replay, one loop per run, no resurrection",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true, "data": { "runId": "r1", "loopEpoch": 1, "loopRevision": 1, "loopsUsed": 1, "loopsTotal": 8 }, "present": ["bindNonce"] } },
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true, "data": { "loopsUsed": 1 }, "absent": ["bindNonce"] } },
+        { "op": "mint", "run": "r1", "requestId": "m1-other", "expect": { "ok": false, "code": "RUN_ALREADY_HAS_LOOP" } },
+        { "op": "mint", "run": "r2", "requestId": "m2", "expect": { "ok": true, "data": { "loopsUsed": 2 } } },
+        { "op": "t", "run": "r2", "kind": "end", "fields": { "status": "cancelled", "reason": "stop" }, "expect": { "ok": true, "data": { "status": "cancelled" } } },
+        { "op": "mint", "run": "r2", "requestId": "m2-again", "expect": { "ok": false, "code": "LOOP_TERMINAL" } }
+      ]
+    },
+    {
+      "name": "bind: one-time nonce, first bind wins, custodian-verified identity, operation handle #1 at bind",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$wrongNonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "BIND_NONCE_INVALID" } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude", "verified": true } }, "expect": { "ok": false, "code": "MALFORMED_REQUEST" } },
+        { "op": "t", "run": "r1", "kind": "bind", "requestId": "b1", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true, "data": { "status": "active", "epoch": 1, "loopRevision": 2, "binding": { "state": "live", "verified": true } }, "present": ["operationHandle"] } },
+        { "op": "replay", "of": "b1", "expect": { "ok": true, "data": { "status": "active", "loopRevision": 2 } } },
+        { "op": "t", "run": "r1", "kind": "bind", "requestId": "b1", "fields": { "bindNonce": "$nonce", "session_id": "s-other", "process": { "pid": "$claude" } }, "epoch": 1, "rev": 1, "expect": { "ok": false, "code": "REQUEST_ID_CONFLICT" } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-2", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "protected": true, "loopRevision": 2, "record": { "status": "active", "epoch": 1, "binding": { "state": "live", "verified": true } } }, "absent": ["s-1", "sessionId", "process", "bindNonce", "events"], "recordKeys": ["binding", "deadlineAt", "ended", "epoch", "grantId", "grantUse", "limits", "loopId", "loopRevision", "operations", "pause", "progress", "remaining", "resumedAt", "startedAt", "status", "used", "wakeClaims"] } }
+      ]
+    },
+    {
+      "name": "bind: an expired nonce is refused; an unverified identity binds but automates nothing",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "advance", "seconds": 61 },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "BIND_NONCE_INVALID" } },
+        { "op": "mint", "run": "r2", "requestId": "m2", "expect": { "ok": true } },
+        { "op": "t", "run": "r2", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-2", "process": { "pid": "$unrelated" } }, "expect": { "ok": true, "data": { "status": "active", "binding": { "verified": false } } } },
+        { "op": "t", "run": "r2", "kind": "spend_continuation", "fields": { "session_id": "s-2" }, "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r2", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-2" }, "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } }
+      ]
+    },
+    {
+      "name": "spend_continuation: reduce-only, a new handle each, stale refusals, the budget ends the loop",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "rev": "-1", "expect": { "ok": false, "code": "STALE_LOOP_STATE" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "epoch": "+1", "expect": { "ok": false, "code": "STALE_LOOP_EPOCH" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "requestId": "s1", "fields": { "session_id": "s-1" }, "expect": { "ok": true, "data": { "continuationsUsed": 1, "continuationsLimit": 2, "loopRevision": 3 }, "present": ["operationHandle"] } },
+        { "op": "replay", "of": "s1", "expect": { "ok": true, "data": { "continuationsUsed": 1, "loopRevision": 3 } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true, "data": { "continuationsUsed": 2 } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": false, "code": "LOOP_BUDGET_EXHAUSTED" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "protected": true, "loopRevision": 5, "record": { "status": "budget_exhausted", "ended": { "status": "budget_exhausted", "reason": "continuations" } } } } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "LOOP_TERMINAL" } },
+        { "op": "t", "run": "r1", "kind": "resume", "caller": "operator", "fields": {}, "expect": { "ok": false, "code": "LOOP_TERMINAL" } }
+      ]
+    },
+    {
+      "name": "wake: the current handle only, both budgets, at most one dispatch authorization",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$inventedHandle", "session_id": "s-1" }, "expect": { "ok": false, "code": "UNKNOWN_OPERATION_HANDLE" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "c1" }, "expect": { "ok": true, "data": { "wakesUsedOperation": 1, "wakesUsedRun": 1 }, "present": ["claimId"] } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "expect": { "ok": false, "code": "LOOP_BUDGET_EXHAUSTED" } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "requestId": "w1", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": true, "consumed": true } } },
+        { "op": "replay", "of": "w1", "expect": { "ok": true, "data": { "dispatchAuthorized": false, "replayed": true } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "consumed": true, "refusal": "WAKE_ALREADY_CONSUMED" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$inventedClaim", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "UNKNOWN_WAKE_CLAIM" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "epoch": "+3", "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "STALE_LOOP_EPOCH" } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$previousHandle", "session_id": "s-1" }, "expect": { "ok": false, "code": "UNKNOWN_OPERATION_HANDLE" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "c2" }, "expect": { "ok": true, "data": { "wakesUsedRun": 2 } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c2", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "UNKNOWN_OPERATION_HANDLE" } } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "expect": { "ok": false, "code": "LOOP_BUDGET_EXHAUSTED" } }
+      ]
+    },
+    {
+      "name": "wake: a claim is epoch-bound (a rebind makes it stale) and a rebind resets no counter",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "c1" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true, "data": { "status": "active", "epoch": 2 } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "STALE_LOOP_EPOCH" } } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "expect": { "ok": false, "code": "LOOP_BUDGET_EXHAUSTED" } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "user_interrupt" }, "expect": { "ok": true, "data": { "status": "paused" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false } } }
+      ]
+    },
+    {
+      "name": "operator_action_required: no implementer sequence clears the pause; the operator's resume does",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "operator_action_required", "detail": "incident" }, "expect": { "ok": true, "data": { "status": "paused", "pauseReason": "operator_action_required" } } },
+        { "op": "t", "run": "r1", "kind": "resume", "fields": {}, "expect": { "ok": false, "code": "CALLER_NOT_AUTHORIZED" } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true, "data": { "status": "paused", "pauseReason": "operator_action_required", "epoch": 2 } } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "user_interrupt" }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true, "data": { "status": "paused", "epoch": 3 } } },
+        { "op": "t", "run": "r1", "kind": "resume", "fields": {}, "expect": { "ok": false, "code": "CALLER_NOT_AUTHORIZED" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "record": { "status": "paused", "pause": { "reason": "operator_action_required" } } } } },
+        { "op": "t", "run": "r1", "kind": "resume", "caller": "operator", "fields": {}, "expect": { "ok": true, "data": { "status": "active", "resumedFrom": "operator_action_required" } } }
+      ]
+    },
+    {
+      "name": "user_decision_required: the same protection; other pauses the implementer may resume",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "user_decision_required" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "resume", "fields": {}, "expect": { "ok": false, "code": "CALLER_NOT_AUTHORIZED" } },
+        { "op": "t", "run": "r1", "kind": "resume", "caller": "operator", "fields": {}, "expect": { "ok": true, "data": { "status": "active" } } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "user_interrupt" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "resume", "fields": {}, "expect": { "ok": true, "data": { "status": "active", "resumedFrom": "user_interrupt" } } },
+        { "op": "t", "run": "r1", "kind": "resume", "fields": {}, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } }
+      ]
+    },
+    {
+      "name": "rebind: same session and a re-verified identity only; never from unbound",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "user_interrupt" }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-intruder", "process": { "pid": "$claude" } }, "expect": { "ok": false, "code": "INVALID_LOOP_TRANSITION" } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$unrelated" } }, "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r1", "kind": "rebind", "fields": { "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true, "data": { "status": "active", "epoch": 2 } } }
+      ]
+    },
+    {
+      "name": "end and the deadline: terminal, irreversible, custodian-derived expiry",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "end", "fields": { "status": "expired" }, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "end", "fields": { "status": "ready" }, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "end", "fields": { "status": "run_ended", "reason": "run closed" }, "expect": { "ok": true, "data": { "status": "run_ended", "endReason": "run closed" } } },
+        { "op": "t", "run": "r1", "kind": "end", "fields": { "status": "cancelled" }, "expect": { "ok": false, "code": "LOOP_TERMINAL" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "protected": true, "record": { "status": "run_ended" } } } },
+        { "op": "mint", "run": "r2", "requestId": "m2", "expect": { "ok": true } },
+        { "op": "t", "run": "r2", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-2", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "advance", "seconds": 901 },
+        { "op": "t", "run": "r2", "kind": "spend_continuation", "fields": { "session_id": "s-2" }, "expect": { "ok": false, "code": "LOOP_TERMINAL" } },
+        { "op": "list", "run": "r2", "view": "implementer", "expect": { "ok": true, "data": { "record": { "status": "expired", "ended": { "status": "expired", "reason": "run_seconds" } } } } },
+        { "op": "t", "run": "r2", "kind": "wake_consume", "fields": { "claimId": "$inventedClaim", "session_id": "s-2" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "LOOP_TERMINAL" } } },
+        { "op": "list", "run": "r-none", "view": "implementer", "expect": { "ok": true, "data": { "protected": false, "loopRevision": 0, "record": null } } }
+      ]
+    },
+    {
+      "name": "validation: closed kinds, allowlisted fields, safe ids, the minting request id",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "promote", "fields": {}, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "end", "fields": { "status": "cancelled", "epoch": 9 }, "expect": { "ok": false, "code": "MALFORMED_REQUEST" } },
+        { "op": "t", "run": "r1", "kind": "pause", "fields": { "reason": "vacation" }, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "requestId": "m1", "fields": { "session_id": "s-1" }, "expect": { "ok": false, "code": "REQUEST_ID_CONFLICT" } },
+        { "op": "t", "run": "r1", "kind": "resume", "loopId": "00000000-0000-4000-8000-000000000000", "fields": {}, "expect": { "ok": false, "code": "UNKNOWN_LOOP" } }
+      ]
+    },
+    {
+      "name": "automation requests come from the bound session and its process only (TD decision on the Inc 9 escalation)",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-other" }, "expect": { "ok": false, "code": "SESSION_NOT_BOUND" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "client": "outsider", "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "client": "ended", "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "client": "reused", "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": {}, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-other" }, "expect": { "ok": false, "code": "SESSION_NOT_BOUND" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "client": "outsider", "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle" }, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "c1" }, "expect": { "ok": true, "data": { "wakesUsedRun": 1 } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-other" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "consumed": false, "refusal": "SESSION_NOT_BOUND" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "client": "outsider", "expect": { "ok": true, "data": { "dispatchAuthorized": false, "consumed": false, "refusal": "PROCESS_IDENTITY_UNVERIFIED" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "client": "reused", "expect": { "ok": true, "data": { "dispatchAuthorized": false, "consumed": false, "refusal": "PROCESS_IDENTITY_UNVERIFIED" } } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1" }, "expect": { "ok": false, "code": "INVALID_ARGUMENT" } },
+        { "op": "t", "run": "r1", "kind": "wake_consume", "fields": { "claimId": "$claim:c1", "session_id": "s-1" }, "expect": { "ok": true, "data": { "dispatchAuthorized": true, "consumed": true } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true, "data": { "continuationsUsed": 1 } } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "record": { "status": "active", "used": { "continuations": 1, "wakes": 1 } } }, "absent": ["s-1", "s-other"] } }
+      ]
+    },
+    {
+      "name": "past the budget only the bound session ends the loop: another caller is refused before anything changes",
+      "steps": [
+        { "op": "mint", "run": "r1", "requestId": "m1", "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": true, "data": { "continuationsUsed": 2 } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-other" }, "expect": { "ok": false, "code": "SESSION_NOT_BOUND" } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "client": "outsider", "expect": { "ok": false, "code": "PROCESS_IDENTITY_UNVERIFIED" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "record": { "status": "active", "loopRevision": 4 } } } },
+        { "op": "t", "run": "r1", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "expect": { "ok": false, "code": "LOOP_BUDGET_EXHAUSTED" } },
+        { "op": "list", "run": "r1", "view": "implementer", "expect": { "ok": true, "data": { "record": { "status": "budget_exhausted" } } } }
+      ]
+    },
+    {
+      "name": "P3.4C-5 enforcement: a continuation needs the custodian's own derivation (DERIVATION_STALE without one, for an unknown id, after any revision change, after the TTL)",
+      "steps": [
+        { "op": "mint", "run": "e1", "requestId": "mint-e1", "expect": { "ok": true } },
+        { "op": "t", "run": "e1", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1" }, "run": "e1", "derivation": "none", "expect": { "ok": false, "code": "DERIVATION_STALE" } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:never" }, "run": "e1", "expect": { "ok": false, "code": "DERIVATION_STALE" } },
+        { "op": "derive", "run": "e1", "derivation": { "fingerprint": "f1" }, "as": "d1", "expect": { "ok": true, "data": { "available": true, "authority": "custodian", "route": { "kind": "implementer_step" } } } },
+        { "op": "t", "run": "e1", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:d1" }, "run": "e1", "expect": { "ok": false, "code": "DERIVATION_STALE" } },
+        { "op": "derive", "run": "e1", "derivation": { "fingerprint": "f2" }, "as": "d2", "expect": { "ok": true } },
+        { "op": "advance", "seconds": 121 },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:d2" }, "run": "e1", "expect": { "ok": false, "code": "DERIVATION_STALE" } },
+        { "op": "derive", "run": "e1", "derivation": { "fingerprint": "f3" }, "as": "d3", "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:d3" }, "run": "e1", "expect": { "ok": true, "data": { "continuationsUsed": 1 } } },
+        { "op": "list", "run": "e1", "expect": { "ok": true, "data": { "record": { "used": { "continuations": 1 } } } } }
+      ]
+    },
+    {
+      "name": "P3.4C-5 enforcement: only an implementer-step route spends a continuation or dispatches a wake (ROUTE_NOT_IMPLEMENTER_STEP; a ready run ends, never authorizes)",
+      "steps": [
+        { "op": "mint", "run": "e2", "requestId": "mint-e2", "expect": { "ok": true } },
+        { "op": "t", "run": "e2", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e2", "derivation": { "routeKind": "end", "routeCode": "end", "fingerprint": "r1" }, "as": "ready", "expect": { "ok": true, "data": { "route": { "kind": "end" }, "completion": { "state": "ready" } } } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:ready" }, "run": "e2", "expect": { "ok": false, "code": "ROUTE_NOT_IMPLEMENTER_STEP" } },
+        { "op": "t", "run": "e2", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "w" }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e2", "derivation": { "routeKind": "pause", "routeCode": "pause", "fingerprint": "r2" }, "as": "paused", "expect": { "ok": true } },
+        { "op": "t", "run": "e2", "kind": "wake_consume", "fields": { "claimId": "$claim:w", "session_id": "s-1", "derivation_id": "$der:paused" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "ROUTE_NOT_IMPLEMENTER_STEP", "consumed": false } } },
+        { "op": "list", "run": "e2", "expect": { "ok": true, "data": { "record": { "used": { "continuations": 0 } } } } }
+      ]
+    },
+    {
+      "name": "P3.4C-5 enforcement: unchanged work earns no second continuation or wake (NO_PROGRESS); moved work does (N5-14, N5-15)",
+      "steps": [
+        { "op": "mint", "run": "e3", "requestId": "mint-e3", "expect": { "ok": true } },
+        { "op": "t", "run": "e3", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e3", "derivation": { "fingerprint": "same" }, "as": "a", "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:a" }, "run": "e3", "expect": { "ok": true, "data": { "continuationsUsed": 1 } } },
+        { "op": "list", "run": "e3", "expect": { "ok": true, "data": { "record": { "progress": { "kind": "spend_continuation" } } } } },
+        { "op": "derive", "run": "e3", "derivation": { "fingerprint": "same" }, "as": "b", "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:b" }, "run": "e3", "expect": { "ok": false, "code": "NO_PROGRESS" } },
+        { "op": "t", "run": "e3", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "w" }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e3", "derivation": { "fingerprint": "same" }, "as": "c", "expect": { "ok": true } },
+        { "op": "t", "run": "e3", "kind": "wake_consume", "fields": { "claimId": "$claim:w", "session_id": "s-1", "derivation_id": "$der:c" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "NO_PROGRESS" } } },
+        { "op": "derive", "run": "e3", "derivation": { "fingerprint": "moved" }, "as": "m", "expect": { "ok": true } },
+        { "op": "t", "run": "e3", "kind": "wake_consume", "fields": { "claimId": "$claim:w", "session_id": "s-1", "derivation_id": "$der:m" }, "expect": { "ok": true, "data": { "dispatchAuthorized": true, "consumed": true } } },
+        { "op": "list", "run": "e3", "expect": { "ok": true, "data": { "record": { "used": { "continuations": 1, "wakes": 1 }, "progress": { "kind": "wake_consume" } } } } }
+      ]
+    },
+    {
+      "name": "P3.4C-5 enforcement (N5-17): the working tree changed after the derivation, without any custodian record changing: the re-measurement differs and nothing is spent",
+      "steps": [
+        { "op": "mint", "run": "e4", "requestId": "mint-e4", "expect": { "ok": true } },
+        { "op": "t", "run": "e4", "kind": "bind", "fields": { "bindNonce": "$nonce", "session_id": "s-1", "process": { "pid": "$claude" } }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e4", "derivation": { "fingerprint": "x" }, "as": "d", "expect": { "ok": true } },
+        { "op": "measurement", "sourceId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:d" }, "run": "e4", "expect": { "ok": false, "code": "DERIVATION_STALE" } },
+        { "op": "t", "run": "e4", "kind": "wake_arm", "fields": { "operationHandle": "$handle", "session_id": "s-1" }, "capture": { "claim": "w" }, "expect": { "ok": true } },
+        { "op": "derive", "run": "e4", "derivation": { "fingerprint": "y" }, "as": "d2", "expect": { "ok": true } },
+        { "op": "measurement", "sourceId": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" },
+        { "op": "t", "run": "e4", "kind": "wake_consume", "fields": { "claimId": "$claim:w", "session_id": "s-1", "derivation_id": "$der:d2" }, "expect": { "ok": true, "data": { "dispatchAuthorized": false, "refusal": "DERIVATION_STALE" } } },
+        { "op": "derive", "run": "e4", "derivation": { "fingerprint": "z" }, "as": "d3", "expect": { "ok": true } },
+        { "op": "t", "kind": "spend_continuation", "fields": { "session_id": "s-1", "derivation_id": "$der:d3" }, "run": "e4", "expect": { "ok": true, "data": { "continuationsUsed": 1 } } }
+      ]
+    }
+  ]
+}

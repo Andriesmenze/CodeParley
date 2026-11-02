@@ -1,0 +1,20 @@
+{
+  "tag": "v0.1.0",
+  "platform": "win32",
+  "node": "v24.11.0",
+  "generated_at": "2026-10-05T18:45:46.755Z",
+  "run_id": "01a10d62-cb15-7e35-b5ac-a8095eb838e6",
+  "files": [
+    "exports/01a10d62-d327-720f-9e7d-ebbfff52a8f2/review/manifest.json",
+    "exports/01a10d62-dcc2-726d-92c0-2b6afab3f5a8/review/manifest.json",
+    "ops/01a10d62-cba6-7e6b-9342-d8ef1bc27f8d/capture.json",
+    "ops/01a10d62-d327-720f-9e7d-ebbfff52a8f2/capture.json",
+    "ops/01a10d62-d327-720f-9e7d-ebbfff52a8f2/review/items.json",
+    "ops/01a10d62-d327-720f-9e7d-ebbfff52a8f2/review/output.json",
+    "ops/01a10d62-dcc2-726d-92c0-2b6afab3f5a8/capture.json",
+    "ops/01a10d62-dcc2-726d-92c0-2b6afab3f5a8/review/items.json",
+    "ops/01a10d62-dcc2-726d-92c0-2b6afab3f5a8/review/output.json",
+    "run.json",
+    "state.json"
+  ]
+}

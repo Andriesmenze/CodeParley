@@ -1,0 +1,15 @@
+#!/bin/sh
+# Phase 5 G-OP (contract §4.5): the ONLY way the operator account runs the CodeParley CLI on Linux. Installed root-owned
+# 0755 at /usr/local/sbin/code-parley-operator and invoked by that absolute path (never found through PATH or an alias).
+# It starts the approved engine runtime — every file and ancestor root-owned, nothing group- or other-writable — with a
+# cleared environment plus an allowlist, so nothing the implementer can influence (NODE_OPTIONS, NODE_PATH, LD_*, GIT_*,
+# CODEPARLEY_*, npm_*, a PATH entry, a module directory) reaches the operator's process. The CLI then verifies its own
+# location and environment again before contacting the custodian (OPERATOR_CODE_UNTRUSTED otherwise).
+set -eu
+RUNTIME=/opt/codeparley/engine/current
+exec /usr/bin/env -i \
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  HOME="${HOME:-/nonexistent}" \
+  LANG="${LANG:-C.UTF-8}" \
+  TERM="${TERM:-dumb}" \
+  "$RUNTIME/node" --disable-proto=throw "$RUNTIME/dist/cli/main.js" "$@"

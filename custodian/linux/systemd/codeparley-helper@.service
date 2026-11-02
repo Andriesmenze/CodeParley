@@ -1,0 +1,44 @@
+# Phase 5 Increment 2 (contract §4.10, D5-C): ONE helper job, as codeparley-helper, with the custodian's accepted
+# connection as standard input. The per-job cgroup bounds it: memory, tasks and a runtime above the custodian's request
+# deadline (600 s), and KillMode=control-group kills every process it started when the job ends. It holds no authority,
+# writes nothing (its home and temp variables point at the custodian's read-only per-request directory) and reaches no
+# network. It reads repositories only through the operator-provisioned codeparley-readers ACLs (D5-D).
+[Unit]
+Description=CodeParley helper (one job)
+
+[Service]
+Type=simple
+ExecStart=/opt/codeparley/custodian/codeparley-custodian helper
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+User=codeparley-helper
+Group=codeparley-helper
+UMask=0077
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_gcServer=0
+RuntimeMaxSec=660
+MemoryMax=2G
+TasksMax=64
+KillMode=control-group
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+IPAddressDeny=any
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+LockPersonality=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RemoveIPC=yes
+PrivateUsers=no

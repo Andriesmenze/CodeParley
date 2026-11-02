@@ -1,0 +1,21 @@
+# Phase 5 Increment 2 (contract §4.2, §4.10, D5-C): the helper's job socket. The CUSTODIAN connects (the reverse of
+# Windows, where the helper attaches to the custodian's pipe); systemd starts one codeparley-helper@.service instance per
+# connection (Accept=yes). The socket is codeparley-helper:codeparley 0660 in the root-owned /run/codeparley-helper, so only
+# the custodian (group codeparley) and root can connect. The helper serves only a peer the kernel identifies as the
+# custodian (SO_PEERCRED on its accepted socket); the custodian accepts only a helper the kernel identifies as the helper
+# account in a codeparley-helper@ unit (SCM_CREDENTIALS of its hello and its cgroup).
+[Unit]
+Description=CodeParley helper (job socket)
+
+[Socket]
+ListenStream=/run/codeparley-helper/job.sock
+SocketUser=codeparley-helper
+SocketGroup=codeparley
+SocketMode=0660
+DirectoryMode=0755
+Accept=yes
+MaxConnections=4
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

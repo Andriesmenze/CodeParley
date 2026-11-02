@@ -1,0 +1,1612 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`tool surface (plan §11) > schemas have object roots and refuse unknown keys (tool-list snapshot) 1`] = `
+[
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1136,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "additional_required_checks": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string",
+          },
+          "maxItems": 50,
+          "type": "array",
+        },
+        "budget_overrides": {
+          "additionalProperties": false,
+          "properties": {
+            "max_check_executions": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "max_reviews": {
+              "maximum": 9007199254740991,
+              "minimum": 1,
+              "type": "integer",
+            },
+          },
+          "type": "object",
+        },
+        "repository_root": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "type": "string",
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string",
+        },
+        "review_target": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "uncommitted",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "kind",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "since_baseline",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "kind",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "base_ref",
+                  "type": "string",
+                },
+                "ref": {
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "kind",
+                "ref",
+              ],
+              "type": "object",
+            },
+          ],
+        },
+        "task_envelope": {
+          "additionalProperties": false,
+          "properties": {
+            "acceptance_criteria": {
+              "items": {
+                "maxLength": 1000,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "background": {
+              "maxLength": 8000,
+              "type": "string",
+            },
+            "constraints": {
+              "items": {
+                "maxLength": 1000,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "current_focus": {
+              "items": {
+                "maxLength": 1000,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "goal": {
+              "maxLength": 2000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "out_of_scope": {
+              "items": {
+                "maxLength": 1000,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "references": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "note": {
+                    "maxLength": 1000,
+                    "type": "string",
+                  },
+                  "path": {
+                    "maxLength": 1024,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "path",
+                ],
+                "type": "object",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "user_request_excerpt": {
+              "maxLength": 4000,
+              "type": "string",
+            },
+            "work_completed": {
+              "items": {
+                "maxLength": 1000,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+          },
+          "required": [
+            "goal",
+          ],
+          "type": "object",
+        },
+        "wait_seconds": {
+          "maximum": 3600,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "task_envelope",
+      ],
+      "type": "object",
+    },
+    "name": "create_review_run",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "budgets": {},
+        "checks_available": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "prepare": {},
+        "repository": {},
+        "run_id": {
+          "type": "string",
+        },
+        "scope": {},
+        "state": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+        "verification_floor": {},
+        "warnings": {
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "code": {
+                "type": "string",
+              },
+              "count": {
+                "type": "number",
+              },
+              "detail": {
+                "type": "string",
+              },
+              "paths": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "code",
+              "detail",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Create review run",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1020,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "checks": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string",
+          },
+          "maxItems": 100,
+          "type": "array",
+        },
+        "profiles": {
+          "items": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string",
+          },
+          "maxItems": 50,
+          "type": "array",
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "wait_seconds": {
+          "maximum": 3600,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "run_id",
+      ],
+      "type": "object",
+    },
+    "name": "run_checks",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "deduplicated": {
+          "type": "boolean",
+        },
+        "elapsed_ms": {
+          "type": "number",
+        },
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "floor": {},
+        "kind": {
+          "type": "string",
+        },
+        "limitations": {
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "code": {
+                "type": "string",
+              },
+              "count": {
+                "type": "number",
+              },
+              "detail": {
+                "type": "string",
+              },
+              "paths": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "code",
+              "detail",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "next": {
+          "type": "string",
+        },
+        "operation_id": {
+          "type": "string",
+        },
+        "progress": {
+          "type": "string",
+        },
+        "results": {},
+        "run_id": {
+          "type": "string",
+        },
+        "started_at": {
+          "type": "string",
+        },
+        "status": {
+          "description": ""running" for an operation still in progress (a handle), else the final status",
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Run approved checks",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1875,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "depth": {
+          "enum": [
+            "focused",
+            "standard",
+            "deep",
+          ],
+          "type": "string",
+        },
+        "focus": {
+          "maxLength": 4000,
+          "type": "string",
+        },
+        "force_new": {
+          "type": "boolean",
+        },
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "wait_seconds": {
+          "maximum": 3600,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "run_id",
+      ],
+      "type": "object",
+    },
+    "name": "review_with_codex",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "amendments": {},
+        "conditions": {},
+        "continuation": {},
+        "deduplicated": {
+          "type": "boolean",
+        },
+        "discussion": {},
+        "elapsed_ms": {
+          "type": "number",
+        },
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "findings": {},
+        "incidents": {},
+        "kind": {
+          "type": "string",
+        },
+        "limitations": {
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "code": {
+                "type": "string",
+              },
+              "count": {
+                "type": "number",
+              },
+              "detail": {
+                "type": "string",
+              },
+              "paths": {
+                "items": {
+                  "type": "string",
+                },
+                "type": "array",
+              },
+            },
+            "required": [
+              "code",
+              "detail",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "next": {
+          "type": "string",
+        },
+        "open_findings": {},
+        "operation_id": {
+          "type": "string",
+        },
+        "progress": {
+          "type": "string",
+        },
+        "review_id": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "started_at": {
+          "type": "string",
+        },
+        "status": {
+          "description": ""running" for an operation still in progress (a handle), else the final status",
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Independent Codex review",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "description_chars": 1606,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "wait_seconds": {
+          "maximum": 3600,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "type": "object",
+    },
+    "name": "get_review_status",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "active_operation": {},
+        "completed_operation": {},
+        "completion": {},
+        "continuation": {},
+        "discussion": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "fixes": {},
+        "open_findings": {},
+        "run_id": {
+          "type": "string",
+        },
+        "runs": {},
+        "state": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+        "user": {},
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Review status",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "description_chars": 990,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "after_seq": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer",
+        },
+        "artifact": {
+          "additionalProperties": false,
+          "properties": {
+            "length": {
+              "maximum": 30000,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "offset": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer",
+            },
+            "operation_id": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string",
+            },
+            "part": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string",
+            },
+          },
+          "required": [
+            "operation_id",
+            "part",
+          ],
+          "type": "object",
+        },
+        "limit": {
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer",
+        },
+        "responses": {
+          "additionalProperties": false,
+          "properties": {
+            "finding_id": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string",
+            },
+            "length": {
+              "maximum": 30000,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "offset": {
+              "maximum": 9007199254740991,
+              "minimum": 0,
+              "type": "integer",
+            },
+          },
+          "type": "object",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_id",
+      ],
+      "type": "object",
+    },
+    "name": "get_review_history",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "artifact": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "events": {},
+        "next_after_seq": {
+          "type": [
+            "number",
+            "null",
+          ],
+        },
+        "responses": {},
+        "run_id": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Review history",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1515,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "request_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string",
+        },
+        "responses": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "disposition": {
+                "enum": [
+                  "accepted",
+                  "disputed",
+                  "deferred",
+                  "fix_claimed",
+                ],
+                "type": "string",
+              },
+              "finding_id": {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string",
+              },
+              "rationale": {
+                "maxLength": 2000,
+                "type": "string",
+              },
+              "references": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "end_line": {
+                      "maximum": 9007199254740991,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                    "path": {
+                      "maxLength": 1024,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "start_line": {
+                      "maximum": 9007199254740991,
+                      "minimum": 1,
+                      "type": "integer",
+                    },
+                  },
+                  "required": [
+                    "path",
+                  ],
+                  "type": "object",
+                },
+                "maxItems": 8,
+                "type": "array",
+              },
+              "response_token": {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "finding_id",
+              "response_token",
+              "disposition",
+            ],
+            "type": "object",
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "type": "array",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_id",
+        "responses",
+      ],
+      "type": "object",
+    },
+    "name": "respond_to_review",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "deduplicated": {
+          "type": "boolean",
+        },
+        "delivery_preview": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "note": {
+          "type": "string",
+        },
+        "recorded": {},
+        "response_set_id": {
+          "type": "string",
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "source": {},
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Respond to review findings",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1985,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_id",
+      ],
+      "type": "object",
+    },
+    "name": "start_review_loop",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "bind_nonce": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "continuation": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "existing": {
+          "type": "boolean",
+        },
+        "note": {
+          "type": "string",
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Start automated review loop",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "description_chars": 872,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "expected_operation_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "mode": {
+          "enum": [
+            "cancel_active",
+            "abort",
+            "close",
+          ],
+          "type": "string",
+        },
+        "reason": {
+          "maxLength": 1000,
+          "type": "string",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_id",
+        "mode",
+      ],
+      "type": "object",
+    },
+    "name": "stop_review_loop",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "cancellation": {},
+        "completion": {},
+        "custodian_end": {},
+        "discussion": {},
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "note": {
+          "type": "string",
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "state": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+        "user": {},
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Stop review work",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false,
+    },
+    "description_chars": 1112,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_review_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string",
+        },
+        "boundary": {
+          "additionalProperties": false,
+          "properties": {
+            "allow_binary": {
+              "default": false,
+              "type": "boolean",
+            },
+            "allow_create": {
+              "default": false,
+              "type": "boolean",
+            },
+            "allow_delete": {
+              "default": false,
+              "type": "boolean",
+            },
+            "max_changed_files": {
+              "default": 10,
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "max_file_bytes": {
+              "default": 65536,
+              "maximum": 262144,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "max_total_bytes": {
+              "default": 262144,
+              "maximum": 524288,
+              "minimum": 1,
+              "type": "integer",
+            },
+            "permitted_dirs": {
+              "default": [],
+              "items": {
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string",
+              },
+              "maxItems": 20,
+              "type": "array",
+            },
+            "permitted_files": {
+              "default": [],
+              "items": {
+                "maxLength": 1024,
+                "minLength": 1,
+                "type": "string",
+              },
+              "maxItems": 50,
+              "type": "array",
+            },
+            "proposal_lifetime_seconds": {
+              "default": 3600,
+              "maximum": 604800,
+              "minimum": 60,
+              "type": "integer",
+            },
+            "time_limit_seconds": {
+              "default": 600,
+              "maximum": 3600,
+              "minimum": 30,
+              "type": "integer",
+            },
+          },
+          "type": "object",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "task": {
+          "maxLength": 8000,
+          "minLength": 1,
+          "type": "string",
+        },
+        "wait_seconds": {
+          "maximum": 3600,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "task",
+        "boundary",
+        "run_id",
+      ],
+      "type": "object",
+    },
+    "name": "delegate_fix",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "fix_id": {
+          "type": "string",
+        },
+        "next": {
+          "type": "string",
+        },
+        "proposal": {},
+        "proposal_id": {
+          "type": "string",
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "status": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+        "violations": {},
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Delegate one scoped fix",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false,
+      "readOnlyHint": false,
+    },
+    "description_chars": 917,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "proposal_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+        "run_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string",
+        },
+      },
+      "required": [
+        "run_id",
+        "proposal_id",
+      ],
+      "type": "object",
+    },
+    "name": "apply_fix",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "apply_operation_id": {
+          "type": "string",
+        },
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "files": {},
+        "next": {
+          "type": "string",
+        },
+        "proposal_id": {
+          "type": "string",
+        },
+        "run_id": {
+          "type": "string",
+        },
+        "source_id_after": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "status": {
+          "type": "string",
+        },
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Apply an owner-confirmed fix",
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true,
+    },
+    "description_chars": 440,
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "maxLength": 1000,
+          "type": "string",
+        },
+      },
+      "type": "object",
+    },
+    "name": "diag_echo",
+    "outputSchema": {
+      "additionalProperties": {},
+      "properties": {
+        "client": {},
+        "echo": {
+          "type": [
+            "string",
+            "null",
+          ],
+        },
+        "error": {
+          "additionalProperties": {},
+          "description": "Present only on error results (isError: true)",
+          "properties": {
+            "code": {
+              "type": "string",
+            },
+            "details": {
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string",
+              },
+              "type": "object",
+            },
+            "message": {
+              "type": "string",
+            },
+            "retryable": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "code",
+            "message",
+            "retryable",
+          ],
+          "type": "object",
+        },
+        "protocol": {},
+        "summary": {
+          "description": "Human-readable summary for the model; the rest of this object is the complete result",
+          "type": "string",
+        },
+        "truncation": {
+          "additionalProperties": {},
+          "properties": {
+            "truncated": {
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "truncated",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "summary",
+      ],
+      "type": "object",
+    },
+    "title": "Diagnostics echo",
+  },
+]
+`;

@@ -1,0 +1,365 @@
+{
+  "summary": {
+    "enabledPatterns": {
+      "before": 351,
+      "after": 1122
+    },
+    "enabledTools": {
+      "before": 9,
+      "after": 9
+    },
+    "issues": {
+      "before": 653,
+      "after": 1006
+    },
+    "analysisRuntime": {
+      "before": 24574,
+      "after": 703293
+    }
+  },
+  "notes": [
+    "Local analysis ran on Windows: Checkov, Opengrep (Semgrep), Trivy and PMD7 have no win32 binaries, so they were evaluated from the stack only and run on Codacy Cloud only.",
+    "The 'before' issue count is misleadingly low: in the Cloud config ESLint 8 skipped its entire @typescript-eslint plugin (22 rules, no type-aware parser) and its security-node plugin (crash), so only ESLint core and eslint-plugin-security rules reported.",
+    "The broad init --auto config produced more than 6,365 ESLint9 issues before ESLint9 hit the 10-minute timeout; samples averaged about 100-150 issues per file. The tuned config is about 85% below that.",
+    "The 'after' issue count is 998 from the full validation run plus 8 security-node/detect-crlf issues measured in a separate security-node-only run after the second crashing rule was removed.",
+    "Runtime is dominated by ESLint9 type-aware linting (about 700s for 169 files on this machine)."
+  ],
+  "toolChanges": [
+    {
+      "toolId": "ESLint8",
+      "action": "disabled",
+      "reason": "Replaced by ESLint9. ESLint 8 could not run its @typescript-eslint rules (no type-aware parser), so most TypeScript rules were silently skipped.",
+      "patternsAffected": 118
+    },
+    {
+      "toolId": "ESLint9",
+      "action": "enabled",
+      "reason": "Type-aware TypeScript linting (typescript-eslint, sonarjs, vitest, regexp, security, security-node). 19 convention-mismatch, duplicate or crashing patterns were removed from the default set (see patternChanges).",
+      "patternsAffected": 354
+    },
+    {
+      "toolId": "spectral",
+      "action": "disabled",
+      "reason": "Wrong stack: OpenAPI/AsyncAPI linter, and the repo has no API specs (0 issues on 13 JSON/YAML files). It was proposed by init --auto and was never enabled on Cloud.",
+      "patternsAffected": 92
+    },
+    {
+      "toolId": "PMD7",
+      "action": "disabled",
+      "reason": "Duplicate: its 6 ECMAScript rules are covered by ESLint9 core (no-with, consistent-return, no-cond-assign) and Biome (useParseIntRadix, noUselessLoneBlockStatements, noDoubleEquals). It is not runnable on Windows and was never enabled on Cloud.",
+      "patternsAffected": 6
+    }
+  ],
+  "patternChanges": [
+    {
+      "patternId": "ESLint9_@typescript-eslint_naming-convention",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Convention mismatch: the snake_case wire/JSON field names (request_id, execution_id, ...) are deliberate. About 830 hits in 26 sampled files.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_prefer-readonly-parameter-types",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Extreme noise (about 660 hits in 26 sampled files); impractical with zod/Node types.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_no-magic-numbers",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Noise: timeouts, exit codes and test values (about 440 hits in 26 sampled files).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_no-use-before-define",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Convention mismatch (about 160 sampled hits): helper function declarations placed below their callers, plus one class referenced only inside a method body. Verified that none is a TDZ hazard, and tsc already reports let/const/class TDZ errors (TS2448-2450) for src and test. The pattern exposes no parameters for tuning.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_strict-boolean-expressions",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Convention mismatch: idiomatic truthiness checks. Verified all 145 sampled hits and found no real 0-or-empty-string bug; some were closure-narrowing false positives.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_consistent-type-definitions",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Contradicts no-type-alias (both fire). The codebase uses type aliases and interfaces deliberately.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_no-type-alias",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Contradicts consistent-type-definitions. Type aliases are idiomatic with zod inference.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_dot-notation",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style preference: bracket access is used for record-like state fields.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_sort-type-constituents",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_explicit-member-accessibility",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only; the codebase relies on default public members.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_explicit-function-return-type",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Convention: return types are inferred internally. explicit-module-boundary-types stays enabled for exports.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_init-declarations",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only; conflicts with the let-then-assign-in-try pattern.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_prefer-destructuring",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_parameter-properties",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_method-signature-style",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Style only.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_@typescript-eslint_max-params",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Duplicate of Lizard_parameter-count-medium, which is kept.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_no-undef",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "All 19 sampled hits were false positives for Node globals (process, Buffer, setTimeout) in spike/*.mjs. tsc covers undefined identifiers in src and test. Known gap: spike/*.mjs (non-production Gate A spike) loses static undefined-identifier checks.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_security-node_detect-unhandled-async-errors",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Rule crashes ('Cannot read properties of null') and makes the runner skip the whole security-node plugin. Removing it restores the other security-node rules.",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "ESLint9_security-node_detect-unhandled-event-errors",
+      "toolId": "ESLint9",
+      "action": "disabled",
+      "reason": "Second crashing rule (on test/fixtures/fake-codex); same plugin-wide skip. With both removed, the remaining 20 security-node rules run (8 new detect-crlf findings).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "Lizard_ccn-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "reason": "Raised the threshold from 8 to 15 to match the codebase's complexity profile. Functions above 15 stay flagged (51 vs 130).",
+      "delta": 51,
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "8",
+          "after": "15"
+        }
+      ]
+    },
+    {
+      "patternId": "Lizard_nloc-medium",
+      "toolId": "Lizard",
+      "action": "updated",
+      "reason": "Raised the threshold from 50 to 100 lines. Very long functions stay flagged (10 vs 39).",
+      "delta": 10,
+      "parameters": [
+        {
+          "id": "threshold",
+          "before": "50",
+          "after": "100"
+        }
+      ]
+    },
+    {
+      "patternId": "Biome_lint_style_noNonNullAssertion",
+      "toolId": "Biome",
+      "action": "disabled",
+      "reason": "Duplicate of ESLint9 @typescript-eslint/no-non-null-assertion, which is kept (type-aware, runs locally).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "Semgrep_* (107 wrong-stack rules)",
+      "toolId": "Semgrep",
+      "action": "disabled",
+      "reason": "Wrong stack: kubernetes, docker-compose, dockerfile, AWS CDK/Lambda, sequelize, puppeteer, jose/jsonwebtoken, vm2, spring, argo, openapi, browser DOM, apollo, argon2, bluebird, ajv, electron, react, deno, monaco, intercom, chrome-remote-interface, and handlebars/mustache/squirrelly/express template-XSS rules. None of these technologies appear in package.json or the tracked files (verified).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "Checkov_* (1332 non-GitHub-Actions IaC rules)",
+      "toolId": "Checkov",
+      "action": "disabled",
+      "reason": "Wrong stack: AWS/Azure/GCP/K8s/Docker/Terraform/etc. The repo's only IaC-like file is .github/workflows/ci.yml, so only CKV_GHA, CKV2_GHA and CKV_SECRET (26) are kept. The 6 GCP/Azure Checkov patterns previously on Cloud are also dropped (wrong stack, 0 issues).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "Biome_lint_complexity_useLiteralKeys",
+      "toolId": "Biome",
+      "action": "disabled",
+      "reason": "Cloud verification: 343 issues, the same convention as the disabled ESLint9 dot-notation (bracket access on record-like/index-signature values).",
+      "delta": 0,
+      "parameters": []
+    },
+    {
+      "patternId": "Biome_lint_security_noSecrets",
+      "toolId": "Biome",
+      "action": "disabled",
+      "reason": "Cloud verification: 60 issues, all sampled hits false positives (Windows paths, PowerShell strings, test fixtures). The secrets concern stays covered by 225 Semgrep generic.secrets rules and Trivy_secret (cross-tool dedup).",
+      "delta": 0,
+      "parameters": []
+    }
+  ],
+  "securityCoverage": {
+    "deduplication": [
+      "No security pattern was disabled for duplication. Semgrep javascript_pathtraversal_rule-non-literal-fs-filename overlaps ESLint9 security/detect-non-literal-fs-filename; both are kept because Semgrep cannot run locally on Windows.",
+      "Biome noSecrets disabled: secrets detection covered by Semgrep generic.secrets (225 rules) and Trivy_secret"
+    ],
+    "newCoverage": [
+      "ESLint9 security-node plugin (20 rules) now actually runs: it was silently skipped on Cloud's ESLint 8 because of a crash. 8 detect-crlf findings in spike/run-spike.mjs.",
+      "ESLint9 sonarjs security rules: slow-regex (High, 7), no-hardcoded-ip (High, 3), publicly-writable-directories (Critical, 2)",
+      "ESLint9 regexp/no-super-linear-move ReDoS (High, 6)",
+      "Semgrep: 377 rules including 225 secret detectors, Node path traversal, command exec, crypto and GitHub Actions injection (Cloud-only on this machine)",
+      "Checkov GitHub Actions and secrets checks (26); Trivy SCA and secrets (6) (Cloud-only on this machine)"
+    ],
+    "noisyButKept": [
+      "ESLint9 security/detect-object-injection (144 issues): FP-prone on typed record lookups, kept per the security guardrail. Triage individual instances on Cloud.",
+      "ESLint9 security/detect-non-literal-fs-filename (142 issues): expected in a filesystem-heavy tool, kept per the security guardrail."
+    ]
+  },
+  "keyImprovements": [
+    "Switched TypeScript linting from ESLint 8 (whose @typescript-eslint and security-node plugins were silently skipped) to type-aware ESLint9, which surfaces real type-safety findings such as no-unsafe-type-assertion (120), no-unnecessary-condition (28) and switch-exhaustiveness-check (2).",
+    "Removed 19 convention-mismatch, duplicate and crashing ESLint9 rules, cutting projected ESLint9 noise from over 6,365 issues to 861. Each High-severity disable was adversarially verified against the code.",
+    "Fixed two crashing security-node rules that were taking down the whole plugin, restoring 20 Node security checks.",
+    "Tuned Lizard complexity thresholds (CCN 8 to 15, NLOC 50 to 100), cutting complexity warnings from 174 to 66 while keeping the genuinely complex functions flagged.",
+    "Pruned about 1,440 wrong-stack Semgrep/Checkov rules and removed the irrelevant Spectral and duplicate PMD7 tools. Secret, path-traversal, ReDoS and GitHub Actions coverage stays intact."
+  ],
+  "localConfigTools": [],
+  "warnings": [
+    "Biome: local output parse failure on Windows (MalformedOutput, 'Bad escaped character'), so Biome results could not be evaluated locally. Biome still runs on Cloud.",
+    "Checkov, Opengrep, Trivy, PMD7: no win32 binaries; evaluated only on Codacy Cloud.",
+    "Agentlinter: 0 files matched locally.",
+    "ESLint9 takes about 700s locally for 169 files (type-aware linting); local runs need --tool-timeout above 600000."
+  ],
+  "codacyYaml": "---\nengines:\n  markdownlint:\n    exclude_paths:\n      - \"DESIGN.MD\"",
+  "importResults": {
+    "status": "success",
+    "toolsConfigured": 9,
+    "toolsEnabled": [
+      "ESLint9"
+    ],
+    "toolsDisabled": [
+      "ESLint",
+      "PMD"
+    ],
+    "errors": [
+      {
+        "toolId": "ESLint",
+        "error": "Conflict (409)",
+        "detail": "Cannot disable a tool that is enabled by a standard (first attempt without --force)"
+      }
+    ],
+    "warnings": [
+      "PMD (legacy 6.x, Java/Apex/PLSQL/JSP patterns) became enabled after the standards were unlinked; disabled via Cloud CLI as wrong stack"
+    ],
+    "codingStandards": [
+      "AI Policy",
+      "Default coding standard"
+    ],
+    "forceUsed": true
+  },
+  "cloudVerification": {
+    "reanalysisCompleted": true,
+    "issuesBefore": 36,
+    "issuesAfter": 707,
+    "note": "Before = old main (890 LOC); after = main at 0f7fc41 (31.7k LOC after the PR #2 merge), so the counts are not comparable. 707 includes 403 issues from the 2 Biome patterns disabled afterwards.",
+    "patternsDisabled": [
+      {
+        "patternId": "Biome_lint_complexity_useLiteralKeys",
+        "toolId": "Biome",
+        "reason": "Convention mismatch",
+        "issueCount": 343
+      },
+      {
+        "patternId": "Biome_lint_security_noSecrets",
+        "toolId": "Biome",
+        "reason": "False positives; covered by Semgrep/Trivy",
+        "issueCount": 60
+      }
+    ],
+    "warnings": [
+      "ESLint9 on Cloud reported only 2 issues (no-unsafe-call, no-unsafe-member-access) vs about 860 locally; Cloud ESLint9 is likely timing out or failing on type-aware linting. Check the tool logs in the Codacy UI.",
+      "markdownlint DESIGN.MD exclusion only takes effect on Cloud once .codacy.yaml is on the default branch (main)."
+    ]
+  },
+  "fileExclusions": {
+    "global": [],
+    "perTool": {
+      "markdownlint": [
+        "DESIGN.MD"
+      ]
+    }
+  }
+}

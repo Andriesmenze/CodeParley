@@ -1,0 +1,102 @@
+{
+  "digest": "f694f2d3fd4f8e5b37486792ad8e9d375732470f2f848c9a573f5aa22a173cf6",
+  "presented": {
+    "prior": [
+      {
+        "id": "PF-1",
+        "discussion": {
+          "thread": "T-1",
+          "exchanges_used": 0,
+          "exchange_limit": 3,
+          "history": [],
+          "implementer_turn": {
+            "position": "accepted",
+            "rationale": "",
+            "references": [],
+            "after_round": 1,
+            "presented_because": [
+              "context"
+            ]
+          },
+          "awaiting_reply": false
+        }
+      },
+      {
+        "id": "PF-2",
+        "discussion": {
+          "thread": "T-2",
+          "exchanges_used": 0,
+          "exchange_limit": 3,
+          "history": [],
+          "implementer_turn": {
+            "position": "disputed",
+            "rationale": "P21-DISPUTE inputs are bounded by the caller",
+            "references": [],
+            "after_round": 1,
+            "presented_because": [
+              "first_exchange"
+            ]
+          },
+          "awaiting_reply": true
+        }
+      },
+      {
+        "id": "PF-3",
+        "discussion": {
+          "thread": "T-3",
+          "exchanges_used": 0,
+          "exchange_limit": 3,
+          "history": [],
+          "implementer_turn": {
+            "position": "deferred",
+            "rationale": "P21-DEFERRAL decided in the next change",
+            "references": [],
+            "after_round": 1,
+            "presented_because": [
+              "context"
+            ]
+          },
+          "awaiting_reply": false
+        }
+      }
+    ],
+    "informational": []
+  },
+  "delivered": [
+    {
+      "response_id": "01a11350-52a8-7ffd-a8db-c12165d8ed25",
+      "item_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+      "reply_sought": false,
+      "basis": [
+        "context"
+      ],
+      "truncated": false
+    },
+    {
+      "response_id": "01a11350-52a8-711f-8965-d5841008c182",
+      "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "reply_sought": true,
+      "basis": [
+        "first_exchange"
+      ],
+      "truncated": false
+    },
+    {
+      "response_id": "01a11350-52a8-7cb0-ada4-3078fc042154",
+      "item_id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+      "reply_sought": false,
+      "basis": [
+        "context"
+      ],
+      "truncated": false
+    }
+  ],
+  "awaiting_reply": [
+    {
+      "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "alias": "PF-2",
+      "response_id": "01a11350-52a8-711f-8965-d5841008c182"
+    }
+  ],
+  "not_delivered": []
+}

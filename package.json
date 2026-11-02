@@ -1,0 +1,39 @@
+{
+  "name": "code-parley",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CodeParley: independent, read-isolated Codex reviews, operator-approved checks and a custodian-protected review loop for Claude Code (protected mode on Windows 11 and Ubuntu 24.04).",
+  "license": "Apache-2.0",
+  "bin": {
+    "code-parley": "dist/cli/main.js",
+    "code-parley-mcp": "dist/server/main.js"
+  },
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0"
+  },
+  "files": [
+    "dist/**/*.js",
+    "prompts/*.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "package:pack": "node scripts/package/pack.mjs",
+    "package:smoke": "node scripts/package/smoke.mjs",
+    "package:check": "node scripts/package/check-install.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.0",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.0",
+    "@modelcontextprotocol/sdk": "1.32.0",
+    "@types/node": "^22.10.0",
+    "typescript": "~6.0.0",
+    "vitest": "^5.0.0"
+  }
+}

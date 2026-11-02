@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>CodeParley.Custodian</RootNamespace>
+    <AssemblyName>CodeParley.Custodian</AssemblyName>
+    <!-- Published self-contained single-file (install-custodian.ps1). NativeAOT is the eventual
+         goal (no managed startup-hook/profiler attack surface), but it needs the VC++ linker, which
+         this host lacks; recorded as a follow-up. A single-file self-contained publish is used now. -->
+    <!-- P3.4C-1 (confidentiality correction): ICU is enabled because the custodian must reproduce the
+         engine's Unicode content-equivalence normalization EXACTLY — Unicode NFC and the locale-independent
+         lowercase mapping incl. U+0130 İ and Greek Final_Sigma (Ledger/AmendmentContentKey.cs), pinned by
+         the shared golden corpus. The custodian's own string handling is culture-INDEPENDENT (explicit
+         Ordinal / Invariant throughout; audited), so enabling ICU changes no existing behaviour; it only
+         adds the Unicode data the content-key normalization needs. On the Windows target the runtime uses
+         the OS-provided icu.dll (no app-local ICU bundled). NativeAOT remains compatible with ICU. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Phase 5 (D5-A): the portable core (protocol, ledgers, records, recovery, corpora); this project is the Windows host. -->
+    <ProjectReference Include="..\CodeParley.Custodian.Core\CodeParley.Custodian.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>

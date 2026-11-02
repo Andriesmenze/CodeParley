@@ -1,0 +1,180 @@
+{
+  "schema": "arl.review-manifest.v1",
+  "capture_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+  "target": {
+    "kind": "uncommitted",
+    "ref": null
+  },
+  "base": {
+    "kind": "commit",
+    "commit": "95bc9da7b6adffb79f58ea72366263ba8625f28b",
+    "baseline_capture_id": null
+  },
+  "head": {
+    "commit": "95bc9da7b6adffb79f58ea72366263ba8625f28b",
+    "branch": "main"
+  },
+  "object_format": "sha1",
+  "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+  "rules_digest": "b72ca9f4998f71dc4350f3692bdae6570e1d65b8cc9f5598d317cc1717621c1d",
+  "limits": {
+    "max_file_bytes": 2097152,
+    "max_export_bytes": 536870912,
+    "max_diff_bytes": 400000
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "area": "tree",
+      "size": 13,
+      "sha256": "dac0f4c8806609b045c6fea2e892fd491a5d28ece0ac87a2c02175e41286a486"
+    },
+    {
+      "path": "flag.txt",
+      "area": "tree",
+      "size": 5,
+      "sha256": "106675dc1490d5cdd6d1f0410731316ce93fc964c6cf6726e2b0d53e19688feb"
+    },
+    {
+      "path": "scripts/edit-trust.js",
+      "area": "tree",
+      "size": 227,
+      "sha256": "6bc6417f8f062142bdc18a4fced0ddf17fe2ddc66018d6ebcc3fe7f4fec35508"
+    },
+    {
+      "path": "scripts/env.js",
+      "area": "tree",
+      "size": 60,
+      "sha256": "8884df8ba974963a9abde49f376944fa163528a493e8ba99abe7a98835154c28"
+    },
+    {
+      "path": "scripts/flag.js",
+      "area": "tree",
+      "size": 137,
+      "sha256": "88279a4c180377842805981a990c8836c8d6cfc0081edd2fbf6e44b1e3f7d6f2"
+    },
+    {
+      "path": "scripts/flaky.js",
+      "area": "tree",
+      "size": 169,
+      "sha256": "1041ccd3fc929c331a00eadea577598898b9c3aba334b2f29d7a3b12c60c4434"
+    },
+    {
+      "path": "scripts/flood.js",
+      "area": "tree",
+      "size": 109,
+      "sha256": "29d73d0c2d5d2823f2e82633ed9cf7f9ae74fd1150afe02d9a2c69d7c137b38f"
+    },
+    {
+      "path": "scripts/pass.js",
+      "area": "tree",
+      "size": 65,
+      "sha256": "add341de942ae058142298e575bd9a18a820241ee191470c6b2052ba0dbf577e"
+    },
+    {
+      "path": "scripts/sleep.js",
+      "area": "tree",
+      "size": 76,
+      "sha256": "0ec2499e11bef995de07dc9655416bf4254726ac73fb7e5e9a2e39af99ead1c4"
+    },
+    {
+      "path": "scripts/spawn-gc.js",
+      "area": "tree",
+      "size": 255,
+      "sha256": "ce3e9748f229b7a3a9d5d61634c611e5eb3def95e3ec1419ed881f59918f3acd"
+    },
+    {
+      "path": "scripts/write.js",
+      "area": "tree",
+      "size": 157,
+      "sha256": "ed988b2f50a8ec11a661ada1f08fffcbd4e76a35b3c5cc9ff3a9edef3aac36a3"
+    },
+    {
+      "path": "src/app.js",
+      "area": "tree",
+      "size": 20,
+      "sha256": "6e66e366f0aefb84ad8110afcd9b2245702c643c831edf8316ff048fec739d2e"
+    },
+    {
+      "path": "src/math.js",
+      "area": "tree",
+      "size": 46,
+      "sha256": "75cfacb7faac086c50b23ac4b29a709eb8680999e6756f620ca76d42aba07cab"
+    }
+  ],
+  "changes": [
+    {
+      "path": "src/math.js",
+      "status": "modified",
+      "class": "permitted",
+      "binary": false,
+      "eol": {
+        "base_style": "lf",
+        "current_style": "lf",
+        "eol_change": false,
+        "eol_only_change": false,
+        "git_eol_normalized": false
+      },
+      "transformation_unsupported": false,
+      "change_uncertain": false,
+      "index_flag_hidden": false,
+      "committed": null,
+      "uncommitted": true,
+      "base_in_export": true,
+      "head_in_export": true,
+      "diff": "included"
+    }
+  ],
+  "review_files": {
+    "diff_patch": {
+      "size": 488,
+      "sha256": "c52d7d1f19814941105267f1713c4dedea602bcded9725239a34eba493c2c952"
+    },
+    "base": [
+      {
+        "path": "src/math.js",
+        "size": 46,
+        "sha256": "5b63136552577a64d788dc3cd4552739d0d60f9e1adb63ec4dfb6932d56fc75d"
+      }
+    ],
+    "head": [
+      {
+        "path": "src/math.js",
+        "size": 46,
+        "sha256": "75cfacb7faac086c50b23ac4b29a709eb8680999e6756f620ca76d42aba07cab"
+      }
+    ]
+  },
+  "exclusions": {
+    "confidential": {
+      "count": 2,
+      "changed_count": 2
+    },
+    "repository_context": {
+      "count": 0
+    },
+    "size_skipped": [],
+    "context_reduced": [],
+    "link_skipped": [],
+    "path_unsupported": [],
+    "submodules": []
+  },
+  "eol_conversion_equivalent": {
+    "count": 0,
+    "paths": []
+  },
+  "limitations": [
+    {
+      "code": "excluded_confidential",
+      "detail": "files excluded by trusted confidentiality rules; names and contents withheld from the review",
+      "count": 2
+    },
+    {
+      "code": "excluded_changed_file",
+      "detail": "changed files excluded by trusted confidentiality rules; names and contents withheld — this change is NOT reviewed",
+      "count": 2
+    }
+  ],
+  "stable": true,
+  "manifest_digest": "e072c07e1eea0387a1aaef193f233f6980c4a6057db6dc996fafccb54986d709"
+}

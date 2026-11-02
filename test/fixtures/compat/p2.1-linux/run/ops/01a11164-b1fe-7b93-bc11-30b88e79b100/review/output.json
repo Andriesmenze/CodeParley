@@ -1,0 +1,14 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "summary": "One defect found.",
+  "assessment": "The change mostly works but subtracts instead of adding.",
+  "positive_observations": [],
+  "suggestions": [],
+  "context_requests": [],
+  "coverage": {
+    "files_reviewed": [],
+    "files_not_reviewed": [],
+    "reviewer_limitations": ""
+  },
+  "prior_findings": []
+}

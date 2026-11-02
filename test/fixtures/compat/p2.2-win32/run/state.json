@@ -1,0 +1,998 @@
+{
+  "schema_version": 1,
+  "run_id": "01a11350-3aad-79f9-8d5f-67f3d4360176",
+  "state": "IDLE",
+  "revision": 15,
+  "created_at": "2026-10-06T22:23:07.585Z",
+  "updated_at": "2026-10-06T22:23:16.463Z",
+  "operations": [
+    {
+      "operation_id": "01a11350-3b41-77ce-96f6-02580a933202",
+      "kind": "prepare",
+      "status": "completed",
+      "owner": {
+        "serverInstanceId": "01a11350-3a2f-714d-8c05-1b0b70ae12fa",
+        "pid": 66768,
+        "startedAtMs": 1791325386895
+      },
+      "input_identity": "9e271d5b8dbec3a59e580e290a057657e410b821dba1f72c7c67500f725bb444",
+      "started_at": "2026-10-06T22:23:07.585Z",
+      "ended_at": "2026-10-06T22:23:08.188Z",
+      "outcome": {
+        "status": "completed",
+        "baseline_source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+        "capture_ref": "ops/01a11350-3b41-77ce-96f6-02580a933202/capture.json",
+        "stable": true,
+        "limitations": [
+          {
+            "code": "excluded_confidential",
+            "detail": "files excluded by trusted confidentiality rules; names and contents withheld from the review",
+            "count": 2
+          },
+          {
+            "code": "excluded_changed_file",
+            "detail": "changed files excluded by trusted confidentiality rules; names and contents withheld — this change is NOT reviewed",
+            "count": 2
+          }
+        ],
+        "head": "95bc9da7b6adffb79f58ea72366263ba8625f28b",
+        "branch": "main"
+      },
+      "command_lines": [
+        "baseline capture (read-only git queries)"
+      ]
+    },
+    {
+      "operation_id": "01a11350-3e61-7844-9ffb-d56344388311",
+      "kind": "checks",
+      "status": "completed",
+      "owner": {
+        "serverInstanceId": "01a11350-3a2f-714d-8c05-1b0b70ae12fa",
+        "pid": 66768,
+        "startedAtMs": 1791325386895
+      },
+      "input_identity": "31a41cd64dc60bbe2cd4520a52657d2f858c4733abd370e2836ffd7b7777ff27",
+      "started_at": "2026-10-06T22:23:08.389Z",
+      "ended_at": "2026-10-06T22:23:09.378Z",
+      "outcome": {
+        "status": "passed",
+        "execution_ids": [
+          "01a11350-422a-7ae6-bbe6-a68ebd45b1a0"
+        ]
+      },
+      "request": {
+        "checks": [],
+        "profiles": []
+      },
+      "command_lines": [
+        "unit: [\"<NODE>\",\"scripts/pass.js\"]"
+      ],
+      "planned": [
+        {
+          "check": "unit",
+          "disposition": "runnable"
+        }
+      ],
+      "used_floor": true
+    },
+    {
+      "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+      "kind": "review",
+      "status": "completed",
+      "owner": {
+        "serverInstanceId": "01a11350-3a2f-714d-8c05-1b0b70ae12fa",
+        "pid": 66768,
+        "startedAtMs": 1791325386895
+      },
+      "input_identity": "b4ff4ccfa073d1e8675e2588cc2609ec88ae1a6c77e4d9a0d77d02f52f5cab00",
+      "started_at": "2026-10-06T22:23:09.632Z",
+      "ended_at": "2026-10-06T22:23:12.135Z",
+      "outcome": {
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "status": "completed",
+        "accepted": true
+      },
+      "request": {
+        "focus": null,
+        "depth": "standard",
+        "force_new": false
+      },
+      "command_lines": [
+        "codex exec (review) <SCRATCH>\\codex-install\\bin\\codex.exe"
+      ],
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f"
+    },
+    {
+      "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c",
+      "kind": "review",
+      "status": "completed",
+      "owner": {
+        "serverInstanceId": "01a11350-3a2f-714d-8c05-1b0b70ae12fa",
+        "pid": 66768,
+        "startedAtMs": 1791325386895
+      },
+      "input_identity": "b4ff4ccfa073d1e8675e2588cc2609ec88ae1a6c77e4d9a0d77d02f52f5cab00",
+      "started_at": "2026-10-06T22:23:13.602Z",
+      "ended_at": "2026-10-06T22:23:15.015Z",
+      "outcome": {
+        "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+        "status": "completed",
+        "accepted": true
+      },
+      "request": {
+        "focus": null,
+        "depth": "standard",
+        "force_new": false
+      },
+      "command_lines": [
+        "codex exec (review) <SCRATCH>\\codex-install\\bin\\codex.exe"
+      ],
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07"
+    }
+  ],
+  "findings": [
+    {
+      "id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+      "item_kind": "finding",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "add() subtracts",
+      "claim_type": "defect",
+      "severity": "high",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [
+        {
+          "kind": "code_reference",
+          "detail": "return a - b",
+          "path": "src/math.js",
+          "start_line": 1,
+          "end_line": 1,
+          "version": "current",
+          "in_scope": true,
+          "validation": "valid"
+        }
+      ],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "established_defect",
+      "basis": "reviewer_evidence",
+      "policy_notes": [
+        "established per reviewer evidence (not engine-verified)"
+      ],
+      "status": "reported_resolved",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": null,
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "apparently_resolved",
+          "note": "now adds",
+          "effect": "status:reported_resolved"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z"
+    },
+    {
+      "id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "item_kind": "finding",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "overflow risk",
+      "claim_type": "risk",
+      "severity": "high",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "serious_concern",
+      "basis": "reviewer_evidence",
+      "policy_notes": [],
+      "status": "superseded",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": "01a11350-583b-7fd1-8dc2-a153b41ac77d",
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "superseded",
+          "note": "more precise",
+          "effect": "status:superseded_by:01a11350-583b-7fd1-8dc2-a153b41ac77d"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z"
+    },
+    {
+      "id": "01a11350-4cfa-7971-a496-f7761229a9bb",
+      "item_kind": "finding",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "naming nit",
+      "claim_type": "suggestion",
+      "severity": "low",
+      "category": "style",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "note",
+      "basis": "reviewer_evidence",
+      "policy_notes": [],
+      "status": "informational",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": null,
+      "assessments": [],
+      "created_at": "2026-10-06T22:23:12.122Z"
+    },
+    {
+      "id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+      "item_kind": "question",
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "round": 1,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "title": "Should add() accept strings?",
+      "claim_type": null,
+      "severity": null,
+      "category": null,
+      "impacts": [],
+      "consequence": "",
+      "confidence": null,
+      "evidence": [],
+      "investigation": "",
+      "recommended_change": "",
+      "triage": "blocking_question",
+      "basis": "reviewer_evidence",
+      "policy_notes": [],
+      "status": "open",
+      "related_prior_id": null,
+      "supersedes": [],
+      "superseded_by": null,
+      "assessments": [
+        {
+          "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+          "round": 2,
+          "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+          "assessment": "still_present",
+          "note": "",
+          "effect": "kept_open"
+        }
+      ],
+      "created_at": "2026-10-06T22:23:12.122Z",
+      "related_finding_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120"
+    },
+    {
+      "id": "01a11350-583b-7fd1-8dc2-a153b41ac77d",
+      "item_kind": "finding",
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+      "round": 2,
+      "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+      "review_input_id": "96a16c5cf779483fe86cde70d61935948a29107153c971f96f920b5981851f6a",
+      "title": "overflow for large ints",
+      "claim_type": "defect",
+      "severity": "critical",
+      "category": "correctness",
+      "impacts": [
+        "correctness"
+      ],
+      "consequence": "Every caller gets a - b instead of a + b.",
+      "confidence": "high",
+      "evidence": [
+        {
+          "kind": "code_reference",
+          "detail": "a + b",
+          "path": "src/math.js",
+          "start_line": 2,
+          "end_line": 2,
+          "version": "current",
+          "in_scope": true,
+          "validation": "valid"
+        }
+      ],
+      "investigation": "",
+      "recommended_change": "return a + b",
+      "triage": "established_defect",
+      "basis": "reviewer_evidence",
+      "policy_notes": [
+        "established per reviewer evidence (not engine-verified)"
+      ],
+      "status": "open",
+      "related_prior_id": null,
+      "supersedes": [
+        "01a11350-4cfa-7e79-a391-4fd4ac6e11b7"
+      ],
+      "superseded_by": null,
+      "assessments": [],
+      "created_at": "2026-10-06T22:23:15.003Z"
+    }
+  ],
+  "implementer_responses": [
+    {
+      "response_id": "01a11350-52a8-7ffd-a8db-c12165d8ed25",
+      "item_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+      "disposition": "accepted",
+      "rationale": "",
+      "references": [],
+      "answers": {
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "round": 1,
+        "token": "1e25f36078666380a603aeeb48f995bb",
+        "run_review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "run_round": 1,
+        "reviewer_reply_id": null
+      },
+      "source": {
+        "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+        "note": null
+      },
+      "disclosure_ref": "ops/01a11350-529f-7197-a8b3-e5edc2e3a209/responses/disclosure.json",
+      "text_withheld": false,
+      "supersedes": null,
+      "thread_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+      "recorded_by": {
+        "role": "implementer",
+        "channel": "mcp"
+      },
+      "response_set_id": "01a11350-529f-7197-a8b3-e5edc2e3a209",
+      "request_id": null,
+      "request_digest": "2d6d3aa1174673fd0ea37753184eb6cc57774b8235c3d5806b76d460f7255e6a",
+      "recorded_at": "2026-10-06T22:23:13.567Z"
+    },
+    {
+      "response_id": "01a11350-52a8-711f-8965-d5841008c182",
+      "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "disposition": "disputed",
+      "rationale": "P21-DISPUTE inputs are bounded by the caller",
+      "references": [],
+      "answers": {
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "round": 1,
+        "token": "390b156aaa585247941e6d9ffc46abcf",
+        "run_review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "run_round": 1,
+        "reviewer_reply_id": null
+      },
+      "source": {
+        "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+        "note": null
+      },
+      "disclosure_ref": "ops/01a11350-529f-7197-a8b3-e5edc2e3a209/responses/disclosure.json",
+      "text_withheld": false,
+      "supersedes": null,
+      "thread_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "recorded_by": {
+        "role": "implementer",
+        "channel": "mcp"
+      },
+      "response_set_id": "01a11350-529f-7197-a8b3-e5edc2e3a209",
+      "request_id": null,
+      "request_digest": "2d6d3aa1174673fd0ea37753184eb6cc57774b8235c3d5806b76d460f7255e6a",
+      "recorded_at": "2026-10-06T22:23:13.567Z"
+    },
+    {
+      "response_id": "01a11350-52a8-7cb0-ada4-3078fc042154",
+      "item_id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+      "disposition": "deferred",
+      "rationale": "P21-DEFERRAL decided in the next change",
+      "references": [],
+      "answers": {
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "round": 1,
+        "token": "886b5b7a3e5a277206a53809c25fd692",
+        "run_review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+        "run_round": 1,
+        "reviewer_reply_id": null
+      },
+      "source": {
+        "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+        "note": null
+      },
+      "disclosure_ref": "ops/01a11350-529f-7197-a8b3-e5edc2e3a209/responses/disclosure.json",
+      "text_withheld": false,
+      "supersedes": null,
+      "thread_id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+      "recorded_by": {
+        "role": "implementer",
+        "channel": "mcp"
+      },
+      "response_set_id": "01a11350-529f-7197-a8b3-e5edc2e3a209",
+      "request_id": null,
+      "request_digest": "2d6d3aa1174673fd0ea37753184eb6cc57774b8235c3d5806b76d460f7255e6a",
+      "recorded_at": "2026-10-06T22:23:13.567Z"
+    },
+    {
+      "response_id": "01a11350-5def-7562-86d2-41ca2b0aeb95",
+      "item_id": "01a11350-583b-7fd1-8dc2-a153b41ac77d",
+      "disposition": "disputed",
+      "rationale": "P21-SUCCESSOR-DISPUTE numbers stay below 2^53 here",
+      "references": [
+        {
+          "path": "src/math.js",
+          "start_line": 2,
+          "end_line": null
+        }
+      ],
+      "answers": {
+        "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+        "round": 2,
+        "token": "832b8724ac04f728af0cbebc90dc2247",
+        "run_review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+        "run_round": 2,
+        "reviewer_reply_id": "01a11350-583c-7372-bab8-375726226617"
+      },
+      "source": {
+        "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+        "note": null
+      },
+      "disclosure_ref": "ops/01a11350-5de7-7242-b64f-26c1d9fe3d2e/responses/disclosure.json",
+      "text_withheld": false,
+      "supersedes": null,
+      "thread_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "recorded_by": {
+        "role": "implementer",
+        "channel": "mcp"
+      },
+      "response_set_id": "01a11350-5de7-7242-b64f-26c1d9fe3d2e",
+      "request_id": null,
+      "request_digest": "46c8e5fb5c08d90f6292f8c2a149f26206cd9d5532a7178e064fbb9c40c32d15",
+      "recorded_at": "2026-10-06T22:23:16.455Z"
+    }
+  ],
+  "reviewer_replies": [
+    {
+      "reply_id": "01a11350-583c-7372-bab8-375726226617",
+      "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+      "round": 2,
+      "stance": "maintain",
+      "reply": "P22-REPLY callers outside this module are not bounded",
+      "new_information": "not_applicable",
+      "answers": {
+        "response_id": "01a11350-52a8-711f-8965-d5841008c182"
+      },
+      "assessment": "superseded",
+      "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+      "notes": [],
+      "recorded_by": {
+        "role": "reviewer",
+        "channel": "codex"
+      },
+      "recorded_at": "2026-10-06T22:23:15.003Z"
+    }
+  ],
+  "engine_conditions": [],
+  "isolation_incidents": [],
+  "reviews": [
+    {
+      "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f",
+      "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+      "round": 1,
+      "status": "completed",
+      "failure": null,
+      "started_at": "2026-10-06T22:23:11.489Z",
+      "ended_at": "2026-10-06T22:23:12.135Z",
+      "duration_ms": 77,
+      "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "review_input_id": "ee44b2de70660f953f7af0874cc84d7faf097059f0b5e0993d81bed05c208134",
+      "capture_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+      "capture_stable": true,
+      "export_ref": "exports/01a11350-433c-72e4-bf7a-1d896e124d3b",
+      "manifest_digest": "e072c07e1eea0387a1aaef193f233f6980c4a6057db6dc996fafccb54986d709",
+      "export_digest": "bb58a22a0885982e8ae746241c6e20581df4bf7c2989dfadfce844bb766d7cc0",
+      "check_evidence_digest": "1517587e25d954f4a18042e5786b5ef458f6f2b1aefd36a3a2c9ee378cb81dd6",
+      "check_execution_ids": [
+        "01a11350-422a-7ae6-bbe6-a68ebd45b1a0"
+      ],
+      "effective_isolation": {
+        "mode": "S1",
+        "backend": "mxc",
+        "reads": "restricted",
+        "network": "os_enforced",
+        "selftest_id": "01a11350-46f1-7e81-a618-a44a62b07c38",
+        "acceptance_id": null,
+        "user_hooks_present": false,
+        "profile_digest": "a717e986ede2b32ccf3e1c016ec56ccb95ed139ec5a2890cc537f6a515036d15",
+        "codex_version": "0.160.0"
+      },
+      "codex": {
+        "version": "0.160.0",
+        "model": null,
+        "reasoning_effort": null
+      },
+      "prompt": {
+        "template_id": "codex-reviewer",
+        "template_version": "4",
+        "sha256": "700e023108535ff6f808a8c9856ea68e99be41be1f1eba6be7bc6f1069c613a9",
+        "bytes": 12765,
+        "artifact": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/prompt.md"
+      },
+      "output_schema_version": "3",
+      "policy_version": "review.v1+triage.v1+bundle.v2",
+      "depth": "standard",
+      "focus_sha256": null,
+      "verdict": "CHANGES_REQUIRED",
+      "summary": "One defect found.",
+      "item_ids": [
+        "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+        "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+        "01a11350-4cfa-7971-a496-f7761229a9bb",
+        "01a11350-4cfb-7801-b0af-8e5bceb9014f"
+      ],
+      "policy_notes": [],
+      "freshness": {
+        "source": true,
+        "check_evidence": true,
+        "current": true,
+        "stale_reasons": [],
+        "checked_at": "2026-10-06T22:23:12.121Z"
+      },
+      "accepted": true,
+      "not_accepted_reasons": [],
+      "audit": {
+        "events_total": 5,
+        "events_malformed": 0,
+        "events_oversize": 0,
+        "events_unknown_type": 0,
+        "stream_bytes": 2077,
+        "stream_truncated": false,
+        "thread_started": true,
+        "turn_completed": true,
+        "turn_failed": null,
+        "error_events": [],
+        "commands_run": 1,
+        "commands": [
+          {
+            "command": "type tree\\src\\math.js",
+            "exit_code": 0,
+            "status": "completed"
+          }
+        ],
+        "file_changes": 0,
+        "mcp_tool_calls": 0,
+        "web_searches": 0,
+        "item_types": {
+          "command_execution": 1,
+          "agent_message": 1
+        },
+        "usage": {
+          "input_tokens": 1234,
+          "cached_input_tokens": 100,
+          "output_tokens": 56,
+          "reasoning_output_tokens": null
+        },
+        "isolation_violations": [],
+        "audit_truncated": false
+      },
+      "incident_ids": [],
+      "cancellation": null,
+      "termination": null,
+      "artifacts": {
+        "prompt": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/prompt.md",
+        "capture": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/capture.json",
+        "events": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/events.jsonl",
+        "stderr": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/stderr.log",
+        "raw_output": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/raw-output.json",
+        "output": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/output.json",
+        "items": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/items.json",
+        "result": "ops/01a11350-433c-72e4-bf7a-1d896e124d3b/review/result.json"
+      },
+      "discussion": {
+        "schema": "arl.review-discussion.v1",
+        "digest": "19264a11c3c1b72f570309620d181f06754321cb36494cce8fad627485e4936f",
+        "delivered": [],
+        "informational_presented": [],
+        "check_results_digest": "ce31d1e987f5c9cc1351aa7082227d1318db089914f3969006a731465800d7ff",
+        "not_delivered": []
+      },
+      "bundle_limitations": []
+    },
+    {
+      "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07",
+      "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c",
+      "round": 2,
+      "status": "completed",
+      "failure": null,
+      "started_at": "2026-10-06T22:23:14.384Z",
+      "ended_at": "2026-10-06T22:23:15.015Z",
+      "duration_ms": 73,
+      "source_id": "c75496df5ea35866bfb4b541fcf5b41be76968423dcac318686aaa288a5f211f",
+      "review_input_id": "96a16c5cf779483fe86cde70d61935948a29107153c971f96f920b5981851f6a",
+      "capture_id": "01a11350-52bf-7ed8-a179-6b9eab18820c",
+      "capture_stable": true,
+      "export_ref": "exports/01a11350-52bf-7ed8-a179-6b9eab18820c",
+      "manifest_digest": "9b3f5f084349cdfd3907d6fed99de79d86cd4420afb3247a39309be224cb74cd",
+      "export_digest": "cb70839781bdee89df984cd45b2631ba707c617c9230c0e7b81bcb1ac2d453c3",
+      "check_evidence_digest": "b6ad0f69fb8ac4806a20ba18052edc8d7a8a45eb5051597409cf95165b052449",
+      "check_execution_ids": [
+        "01a11350-422a-7ae6-bbe6-a68ebd45b1a0"
+      ],
+      "effective_isolation": {
+        "mode": "S1",
+        "backend": "mxc",
+        "reads": "restricted",
+        "network": "os_enforced",
+        "selftest_id": "01a11350-46f1-7e81-a618-a44a62b07c38",
+        "acceptance_id": null,
+        "user_hooks_present": false,
+        "profile_digest": "a717e986ede2b32ccf3e1c016ec56ccb95ed139ec5a2890cc537f6a515036d15",
+        "codex_version": "0.160.0"
+      },
+      "codex": {
+        "version": "0.160.0",
+        "model": null,
+        "reasoning_effort": null
+      },
+      "prompt": {
+        "template_id": "codex-reviewer",
+        "template_version": "4",
+        "sha256": "393aebe5701f080bc5b1ea974d57f45fd4a7c7a0eda54292e95bb3dfac2d2a56",
+        "bytes": 14794,
+        "artifact": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/prompt.md"
+      },
+      "output_schema_version": "3",
+      "policy_version": "review.v1+triage.v1+bundle.v2",
+      "depth": "standard",
+      "focus_sha256": null,
+      "verdict": "CHANGES_REQUIRED",
+      "summary": "One defect found.",
+      "item_ids": [
+        "01a11350-583b-7fd1-8dc2-a153b41ac77d"
+      ],
+      "policy_notes": [],
+      "freshness": {
+        "source": true,
+        "check_evidence": true,
+        "current": true,
+        "stale_reasons": [],
+        "checked_at": "2026-10-06T22:23:15.003Z"
+      },
+      "accepted": true,
+      "not_accepted_reasons": [],
+      "audit": {
+        "events_total": 5,
+        "events_malformed": 0,
+        "events_oversize": 0,
+        "events_unknown_type": 0,
+        "stream_bytes": 1736,
+        "stream_truncated": false,
+        "thread_started": true,
+        "turn_completed": true,
+        "turn_failed": null,
+        "error_events": [],
+        "commands_run": 1,
+        "commands": [
+          {
+            "command": "type tree\\src\\math.js",
+            "exit_code": 0,
+            "status": "completed"
+          }
+        ],
+        "file_changes": 0,
+        "mcp_tool_calls": 0,
+        "web_searches": 0,
+        "item_types": {
+          "command_execution": 1,
+          "agent_message": 1
+        },
+        "usage": {
+          "input_tokens": 1234,
+          "cached_input_tokens": 100,
+          "output_tokens": 56,
+          "reasoning_output_tokens": null
+        },
+        "isolation_violations": [],
+        "audit_truncated": false
+      },
+      "incident_ids": [],
+      "cancellation": null,
+      "termination": null,
+      "artifacts": {
+        "prompt": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/prompt.md",
+        "capture": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/capture.json",
+        "discussion": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/discussion.json",
+        "events": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/events.jsonl",
+        "stderr": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/stderr.log",
+        "raw_output": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/raw-output.json",
+        "output": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/output.json",
+        "items": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/items.json",
+        "result": "ops/01a11350-52bf-7ed8-a179-6b9eab18820c/review/result.json"
+      },
+      "discussion": {
+        "schema": "arl.review-discussion.v1",
+        "digest": "f694f2d3fd4f8e5b37486792ad8e9d375732470f2f848c9a573f5aa22a173cf6",
+        "delivered": [
+          {
+            "response_id": "01a11350-52a8-7ffd-a8db-c12165d8ed25",
+            "item_id": "01a11350-4cfa-7010-b165-1c7fc9f6b120",
+            "reply_sought": false,
+            "basis": [
+              "context"
+            ],
+            "truncated": false
+          },
+          {
+            "response_id": "01a11350-52a8-711f-8965-d5841008c182",
+            "item_id": "01a11350-4cfa-7e79-a391-4fd4ac6e11b7",
+            "reply_sought": true,
+            "basis": [
+              "first_exchange"
+            ],
+            "truncated": false
+          },
+          {
+            "response_id": "01a11350-52a8-7cb0-ada4-3078fc042154",
+            "item_id": "01a11350-4cfb-7801-b0af-8e5bceb9014f",
+            "reply_sought": false,
+            "basis": [
+              "context"
+            ],
+            "truncated": false
+          }
+        ],
+        "informational_presented": [],
+        "check_results_digest": "bdbe4c04e7dcd3a39e81dce92c01bfd09422ab4924fe09e0b3dd1df44493127f",
+        "not_delivered": []
+      },
+      "bundle_limitations": []
+    }
+  ],
+  "check_executions": [
+    {
+      "execution_id": "01a11350-422a-7ae6-bbe6-a68ebd45b1a0",
+      "operation_id": "01a11350-3e61-7844-9ffb-d56344388311",
+      "check": "unit",
+      "status": "passed",
+      "definition_digest": "29ff04b0d7c4d2ffa996090269b048d0c39b80a0221977c130978bfe2aac56fe",
+      "check_spec_id": "96e59b2bb7752c60a788a38a9a8ec0b6bf03659d1037173661bbcaa91eec6446",
+      "execution_input_id": "e7ec53843978defa97a1d6c06971ba3b37ef31010fdbfe5540e624da48db1175",
+      "resolved_executable": {
+        "path": "<NODE>",
+        "kind": "native",
+        "how": "absolute",
+        "size": 89872896,
+        "mtime_ms": 1761612480000
+      },
+      "env_digest": "4d4e8bbaeaa0a51dd9ff2546a5b4767eee595b6899cf978919ff1d8d81975523",
+      "env_names": [
+        "APPDATA",
+        "COMPUTERNAME",
+        "ComSpec",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "LOCALAPPDATA",
+        "NO_COLOR",
+        "NUMBER_OF_PROCESSORS",
+        "PATH",
+        "PATHEXT",
+        "PROCESSOR_ARCHITECTURE",
+        "PROGRAMDATA",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "SYSTEMDRIVE",
+        "SystemRoot",
+        "TEMP",
+        "TMP",
+        "USERDOMAIN",
+        "USERNAME",
+        "USERPROFILE",
+        "windir"
+      ],
+      "passthrough_missing": [],
+      "freshness_inputs": [],
+      "freshness_digest": "e240f1bb475cf14df58701458012c8bb299d20cd0b662a4777ded17d7dbee174",
+      "source_id_at_start": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "source_id_at_end": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+      "source_stable": true,
+      "started_at": "2026-10-06T22:23:08.881Z",
+      "ended_at": "2026-10-06T22:23:08.943Z",
+      "duration_ms": 62,
+      "exit_code": 0,
+      "pid": 78800,
+      "timed_out": false,
+      "cancelled": false,
+      "stdout": {
+        "bytes": 5,
+        "stored_bytes": 5,
+        "truncated": false,
+        "artifact": "ops/01a11350-3e61-7844-9ffb-d56344388311/checks/01a11350-422a-7ae6-bbe6-a68ebd45b1a0/stdout.log"
+      },
+      "stderr": {
+        "bytes": 0,
+        "stored_bytes": 0,
+        "truncated": false,
+        "artifact": "ops/01a11350-3e61-7844-9ffb-d56344388311/checks/01a11350-422a-7ae6-bbe6-a68ebd45b1a0/stderr.log"
+      },
+      "stdio_held_after_exit": false,
+      "descendants": null,
+      "result_artifact": "ops/01a11350-3e61-7844-9ffb-d56344388311/checks/01a11350-422a-7ae6-bbe6-a68ebd45b1a0/result.json",
+      "environment_bound": "partial",
+      "limitations": []
+    }
+  ],
+  "counters": {
+    "check_executions": 1,
+    "reviews": 2
+  },
+  "events": [
+    {
+      "seq": 1,
+      "ts": "2026-10-06T22:23:07.585Z",
+      "type": "run.created",
+      "actor": "host",
+      "summary": "run created for uncommitted; baseline capture started",
+      "refs": {
+        "operation_id": "01a11350-3b41-77ce-96f6-02580a933202"
+      }
+    },
+    {
+      "seq": 2,
+      "ts": "2026-10-06T22:23:08.188Z",
+      "type": "prepare.finished",
+      "actor": "engine",
+      "summary": "baseline capture completed",
+      "refs": {
+        "operation_id": "01a11350-3b41-77ce-96f6-02580a933202"
+      }
+    },
+    {
+      "seq": 3,
+      "ts": "2026-10-06T22:23:08.389Z",
+      "type": "checks.started",
+      "actor": "check",
+      "summary": "checks started: unit",
+      "refs": {
+        "operation_id": "01a11350-3e61-7844-9ffb-d56344388311"
+      }
+    },
+    {
+      "seq": 4,
+      "ts": "2026-10-06T22:23:09.371Z",
+      "type": "check.finished",
+      "actor": "check",
+      "summary": "unit: passed",
+      "refs": {
+        "operation_id": "01a11350-3e61-7844-9ffb-d56344388311",
+        "execution_id": "01a11350-422a-7ae6-bbe6-a68ebd45b1a0"
+      }
+    },
+    {
+      "seq": 5,
+      "ts": "2026-10-06T22:23:09.378Z",
+      "type": "checks.finished",
+      "actor": "check",
+      "summary": "checks completed",
+      "refs": {
+        "operation_id": "01a11350-3e61-7844-9ffb-d56344388311"
+      }
+    },
+    {
+      "seq": 6,
+      "ts": "2026-10-06T22:23:09.632Z",
+      "type": "review.started",
+      "actor": "engine",
+      "summary": "review started (depth standard)",
+      "refs": {
+        "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b"
+      }
+    },
+    {
+      "seq": 7,
+      "ts": "2026-10-06T22:23:11.493Z",
+      "type": "review.codex_starting",
+      "actor": "codex",
+      "summary": "review 01a11350 round 1: Codex starting (S1/mxc)",
+      "refs": {
+        "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f"
+      }
+    },
+    {
+      "seq": 8,
+      "ts": "2026-10-06T22:23:12.135Z",
+      "type": "review.finished",
+      "actor": "engine",
+      "summary": "review 01a11350: completed (accepted) (CHANGES_REQUIRED, 4 item(s))",
+      "refs": {
+        "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b",
+        "review_id": "01a11350-4a7a-7a27-8584-3ea08c4b149f"
+      }
+    },
+    {
+      "seq": 9,
+      "ts": "2026-10-06T22:23:12.135Z",
+      "type": "review.operation_finished",
+      "actor": "engine",
+      "summary": "review operation completed",
+      "refs": {
+        "operation_id": "01a11350-433c-72e4-bf7a-1d896e124d3b"
+      }
+    },
+    {
+      "seq": 10,
+      "ts": "2026-10-06T22:23:13.576Z",
+      "type": "review.responses_recorded",
+      "actor": "host",
+      "summary": "implementer recorded 3 response(s): 1 accepted, 1 disputed, 1 deferred",
+      "refs": {
+        "response_set_id": "01a11350-529f-7197-a8b3-e5edc2e3a209"
+      }
+    },
+    {
+      "seq": 11,
+      "ts": "2026-10-06T22:23:13.602Z",
+      "type": "review.started",
+      "actor": "engine",
+      "summary": "review started (depth standard)",
+      "refs": {
+        "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c"
+      }
+    },
+    {
+      "seq": 12,
+      "ts": "2026-10-06T22:23:14.387Z",
+      "type": "review.codex_starting",
+      "actor": "codex",
+      "summary": "review 01a11350 round 2: Codex starting (S1/mxc)",
+      "refs": {
+        "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c",
+        "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07"
+      }
+    },
+    {
+      "seq": 13,
+      "ts": "2026-10-06T22:23:15.015Z",
+      "type": "review.finished",
+      "actor": "engine",
+      "summary": "review 01a11350: completed (accepted) (CHANGES_REQUIRED, 1 item(s), 1 discussion reply)",
+      "refs": {
+        "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c",
+        "review_id": "01a11350-55c7-72d4-a6b7-7a288c63fa07"
+      }
+    },
+    {
+      "seq": 14,
+      "ts": "2026-10-06T22:23:15.015Z",
+      "type": "review.operation_finished",
+      "actor": "engine",
+      "summary": "review operation completed",
+      "refs": {
+        "operation_id": "01a11350-52bf-7ed8-a179-6b9eab18820c"
+      }
+    },
+    {
+      "seq": 15,
+      "ts": "2026-10-06T22:23:16.463Z",
+      "type": "review.responses_recorded",
+      "actor": "host",
+      "summary": "implementer recorded 1 response(s): 1 disputed",
+      "refs": {
+        "response_set_id": "01a11350-5de7-7242-b64f-26c1d9fe3d2e"
+      }
+    }
+  ]
+}

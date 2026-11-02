@@ -1,0 +1,9 @@
+---
+# Stores written by released versions, kept byte for byte to test compatibility (never edited
+# by hand): their digests and response tokens are not secrets and not code to analyse.
+exclude_paths:
+  - "test/fixtures/compat/**"
+engines:
+  markdownlint:
+    exclude_paths:
+      - "DESIGN.MD"

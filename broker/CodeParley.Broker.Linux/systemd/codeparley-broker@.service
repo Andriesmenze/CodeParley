@@ -1,0 +1,24 @@
+# CodeParley Linux broker — per-connection request handler (Phase 3.1B).
+# Socket-activated instance (Accept=yes): the accepted Unix-socket connection is this unit's stdin.
+# It runs as root because launching a worker run as another UID and owning its cgroup requires it.
+# It authenticates the peer by SO_PEERCRED before reading the request, handles exactly one request,
+# and exits. The worker RUN units it creates (via systemd-run) are independent, PID 1-owned units;
+# they are not children of this handler and outlive it.
+[Unit]
+Description=CodeParley broker request handler (%i)
+Documentation=file:/opt/codeparley-broker/README.md
+Requires=codeparley-broker.socket
+After=codeparley-broker.socket
+
+[Service]
+Type=oneshot
+ExecStart=/opt/codeparley-broker/bin/codeparley-broker handle
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=codeparley-broker
+TimeoutStartSec=120
+# The handler itself needs root and access to the system manager (systemd-run/systemctl); it is kept
+# small rather than sandboxed so it can create worker units. Its own privilege hardening:
+NoNewPrivileges=no
+UMask=0077

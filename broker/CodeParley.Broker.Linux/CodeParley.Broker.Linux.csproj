@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CodeParley Broker for Linux (Phase 3.1B). A small root-owned systemd service: Unix-socket IPC
+    authenticated by SO_PEERCRED, a dedicated worker UID, descriptor-relative (openat2) workspace
+    handling, and one transient systemd unit (= one cgroup) per worker run. Deliberately free of
+    NuGet dependencies; publish self-contained for linux-x64 (see README.md).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>codeparley-broker</AssemblyName>
+    <RootNamespace>CodeParley.Broker.Linux</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The fixed worker workloads are installed next to the binary (root-owned), never into the
+         worker-writable workspace. -->
+    <None Include="workloads\*.js" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

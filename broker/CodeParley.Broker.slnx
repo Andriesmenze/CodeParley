@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CodeParley.Broker/CodeParley.Broker.csproj" />
+  <Project Path="CodeParley.Broker.Linux/CodeParley.Broker.Linux.csproj" />
+</Solution>

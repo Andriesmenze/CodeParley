@@ -1,0 +1,19 @@
+# Phase 5 (contract §4.2): the implementer surface of the CodeParley custodian. PID 1 creates the socket in the
+# root-owned runtime directory (tmpfiles.d) as codeparley:codeparley-impl 0660, so only the custodian and members of
+# codeparley-impl can connect; the custodian then classifies the caller by SO_PEERCRED before reading a request byte.
+[Unit]
+Description=CodeParley custodian (implementer socket)
+
+[Socket]
+ListenStream=/run/codeparley/implementer.sock
+FileDescriptorName=implementer
+SocketUser=codeparley
+SocketGroup=codeparley-impl
+SocketMode=0660
+DirectoryMode=0755
+RemoveOnStop=yes
+Accept=no
+Service=codeparley-custodian.service
+
+[Install]
+WantedBy=sockets.target

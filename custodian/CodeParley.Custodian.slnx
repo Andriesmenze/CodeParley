@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="CodeParley.Custodian.Core/CodeParley.Custodian.Core.csproj" />
+  <Project Path="CodeParley.Custodian/CodeParley.Custodian.csproj" />
+  <Project Path="CodeParley.Custodian.Linux/CodeParley.Custodian.Linux.csproj" />
+</Solution>

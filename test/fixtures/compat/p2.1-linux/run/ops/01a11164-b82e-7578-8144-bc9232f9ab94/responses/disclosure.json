@@ -1,0 +1,14 @@
+{
+  "schema": "arl.response-disclosure.v1",
+  "withheld_paths": [
+    ".env",
+    "config/db.env"
+  ],
+  "withheld_hashes": [
+    "06fdd7e2462ee3e0857faf88ad68779495c9b1e8",
+    "10cb14dc4b9d038fbd949164e88b1ea4e6fb6d10",
+    "3e99d163b27b6b02c057e7a957624c1e7d60785d21e69c82fbfed4b9e2034211",
+    "a6d421b289b1b7162731db675b303f283bb4e6fb8e47ac3a7e1b2a87660deede"
+  ],
+  "repo_context": []
+}

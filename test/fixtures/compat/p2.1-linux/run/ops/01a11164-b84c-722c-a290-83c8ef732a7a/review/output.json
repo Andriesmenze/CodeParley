@@ -1,0 +1,33 @@
+{
+  "verdict": "CHANGES_REQUIRED",
+  "summary": "One defect found.",
+  "assessment": "The change mostly works but subtracts instead of adding.",
+  "positive_observations": [],
+  "suggestions": [],
+  "context_requests": [],
+  "coverage": {
+    "files_reviewed": [],
+    "files_not_reviewed": [],
+    "reviewer_limitations": ""
+  },
+  "prior_findings": [
+    {
+      "id": "PF-1",
+      "assessment": "apparently_resolved",
+      "superseded_by_index": null,
+      "note": "now adds"
+    },
+    {
+      "id": "PF-2",
+      "assessment": "superseded",
+      "superseded_by_index": 0,
+      "note": "more precise"
+    },
+    {
+      "id": "PF-3",
+      "assessment": "still_present",
+      "superseded_by_index": null,
+      "note": ""
+    }
+  ]
+}

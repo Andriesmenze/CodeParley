@@ -1,0 +1,11 @@
+abi <abi/4.0>,
+include <tunables/global>
+
+# CodeParley Phase 5 (contract §4.9, §4.12): the user-namespace exception for exactly the bubblewrap bundled with the
+# administrator-installed Codex. With kernel.apparmor_restrict_unprivileged_userns=1 nothing else may create an
+# unprivileged user namespace. The custodian measures this file (root 0644, one profile, this attachment, and no
+# file pulled in but the system tunables); confinement itself is established only by the operator-confirmed self-test of
+# the current boot.
+profile codeparley-codex-bwrap /opt/codeparley-codex/@CODEX_VERSION@/codex-resources/bwrap flags=(unconfined) {
+  userns,
+}

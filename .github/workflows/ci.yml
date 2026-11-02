@@ -1,0 +1,188 @@
+# CodeParley CI (plan §18.1, §21.2; Linux milestone, plan §1.13; Phase 6 contract §3.5, §3.6, §4): typecheck,
+# build and the automated test suite on both supported platforms, both native custodians built and self-tested, and
+# the installed-package compatibility tests. Windows and Linux are both release gates: each job runs the
+# platform-independent tests, the shared contracts (one behaviour, a fixture per platform) and its own platform's
+# integration tests; the other platform's are skipped and say so (docs/validation/test-classes.md). Local/live
+# validation — a logged-in Codex, Claude hosts, the Codex sandbox self-test with the real Codex, the installed
+# custodian services — is not part of CI (plan §18.2, §19; the RC gates, contract §10); see docs/validation/.
+name: CI
+
+# When it runs (plan M1.6-7; the owner's choices of 2026-10-05 to save Actions minutes: the
+# repository is private and Windows minutes count double): pull requests, pushes to main and
+# manual runs (Actions tab or `gh workflow run CI --ref <branch> -f expected_sha=<sha>`); plain
+# branch pushes and documentation-only changes do not start it. What runs (see the matrix): a pull
+# request, into any branch, tests Linux on Node 22 and 24 and Windows on Node 24; a push to main (a
+# merge) and a manual run test the full Windows/Linux x Node 22/24 matrix. Releases are tagged on
+# main, so the release gate is the push run of the tagged commit (or of the last earlier commit that
+# changed more than documentation); a manual run gives a branch the full matrix before merging.
+on:
+  push:
+    branches: [main]
+    # Documentation only: Markdown at the repository root, docs/ and the spike's Markdown. Other
+    # Markdown still runs CI: prompts/codex-reviewer.md is the reviewer prompt the product loads
+    # at run time and the tests render.
+    paths-ignore: ["*.md", "*.MD", "docs/**", "spike/**/*.md"]
+  pull_request:
+    paths-ignore: ["*.md", "*.MD", "docs/**", "spike/**/*.md"]
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: "The full 40-character id of the signed commit this run must test (contract §4.2); empty: the ref's head"
+        required: false
+        default: ""
+
+# The default read-only token and nothing else: no job uses a secret, a signing key or a deployment credential, and
+# no job needs Docker (contract §4.3).
+permissions:
+  contents: read
+
+# A newer run cancels the one it supersedes: a new commit on a pull request, or a new manual run
+# on the same branch. Pushes to main are grouped by commit, so a later merge does not cancel
+# them: pull requests skip Windows on Node 22, which leaves each merge's own run as the only
+# full-matrix result for its commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: true
+
+# Runner labels (contract §4.3, O-10): repository variables CP_LINUX_RUNNER and CP_WINDOWS_RUNNER name the runners;
+# unset, the jobs run where they always have (GitHub's ubuntu-latest and windows-latest). Changing them is the owner's
+# runner decision, not this file's.
+jobs:
+  # CI verifies its own input (contract §4.2 step 4): the commit under test is the expected one (a pull request's head,
+  # a manual run's expected_sha, a push's commit) and it is signed by the owner's key committed in
+  # .github/ci/commit-signing-key.asc. Every other job tests exactly the commit this job verified.
+  identity:
+    name: Commit identity
+    runs-on: ${{ vars.CP_LINUX_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.verify.outputs.sha }}
+    steps:
+      - name: Check out the commit under test
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || inputs.expected_sha || github.sha }}
+          # A merge GitHub made carries GitHub's signature; its merged head (the second parent) is verified instead.
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      - name: Verify the commit and its signature
+        id: verify
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_sha || github.sha }}
+          MERGE: ${{ github.event_name == 'push' && '--allow-github-merge' || '' }}
+        run: |
+          node scripts/ci/verify-commit-identity.mjs --expect "$EXPECTED_SHA" $MERGE
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: ${{ matrix.platform }} · Node ${{ matrix.node }}
+    needs: identity
+    runs-on: ${{ matrix.platform == 'windows' && (vars.CP_WINDOWS_RUNNER || 'windows-latest') || (vars.CP_LINUX_RUNNER || 'ubuntu-latest') }}
+    # Windows: an estimated 50 to 55 minutes in all (`npm test` was cut off at 40 minutes with 64 of 136 files done and
+    # none failing, on the 2-core hosted runner), so 90 allows for a slower runner. Linux: about 15 minutes. A limit
+    # keeps a hung run from burning Actions minutes; it does not make a slow test pass.
+    timeout-minutes: ${{ matrix.platform == 'windows' && 90 || 25 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Supported runtimes (plan §6.1, package.json engines): Node 22 and 24 LTS. Pull requests
+        # skip Windows on Node 22 (the costliest job); pushes to main and manual runs run both
+        # Windows jobs.
+        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"linux","node":"22.x"},{"platform":"linux","node":"24.x"},{"platform":"windows","node":"24.x"}]' || '[{"platform":"linux","node":"22.x"},{"platform":"linux","node":"24.x"},{"platform":"windows","node":"22.x"},{"platform":"windows","node":"24.x"}]') }}
+    env:
+      CI: "true"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      # The repository is stored with LF line endings; keep them on Windows runners too.
+      - name: Keep the repository's line endings
+        run: git config --global core.autocrlf false
+
+      - name: Check out the verified commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.identity.outputs.sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      # The SDK custodian/global.json pins (10.0.201, latest feature band of 10.0.2xx, no previews).
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: custodian/global.json
+
+      - name: Versions
+        run: |
+          git rev-parse HEAD
+          node --version
+          npm --version
+          git --version
+          dotnet --version
+
+      # What the Linux suite ran on (validation discipline: record the environment). The user
+      # namespace settings decide whether the mount-point tests (unshare) can run.
+      - name: Linux environment
+        if: runner.os == 'Linux'
+        run: |
+          uname -srm
+          grep -E '^(PRETTY_NAME|VERSION_ID)=' /etc/os-release
+          echo "user.max_user_namespaces=$(cat /proc/sys/user/max_user_namespaces 2>/dev/null || echo n/a)"
+          echo "kernel.apparmor_restrict_unprivileged_userns=$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null || echo n/a)"
+          if unshare -rm true 2>/dev/null; then echo "unshare -rm: available"; else echo "unshare -rm: not available (mount-point tests are skipped)"; fi
+          git lfs version || echo "git-lfs: not installed"
+          df -T "$RUNNER_TEMP" | tail -1
+
+      - name: Install dependencies (exactly the lockfile)
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      # Layer B (contract §3.5): the platform's custodian, built from this commit. On Windows the real-custodian
+      # contract tests in `npm test` find it and run instead of skipping; its `version` verb reports the release
+      # version, the build commit and the protocol (test/release-version.test.ts).
+      - name: Build the Windows custodian
+        if: runner.os == 'Windows'
+        run: dotnet build custodian/CodeParley.Custodian/CodeParley.Custodian.csproj -c Release
+
+      - name: Build the Linux custodian
+        if: runner.os == 'Linux'
+        run: dotnet build custodian/CodeParley.Custodian.Linux/CodeParley.Custodian.Linux.csproj -c Release
+
+      # The self-tests that need no installed service (Windows) or no provisioned system (Linux); the installed
+      # custodians are verified on the native VMs (contract §10).
+      - name: Custodian self-tests (Windows)
+        if: runner.os == 'Windows'
+        run: node scripts/ci/custodian-selftests.mjs --host windows --exe custodian/CodeParley.Custodian/bin/Release/net10.0-windows/CodeParley.Custodian.exe
+
+      - name: Custodian self-tests (Linux)
+        if: runner.os == 'Linux'
+        run: node scripts/ci/custodian-selftests.mjs --host linux --exe custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
+
+      - name: Test
+        run: npm test
+
+      # Layer A (contract §3.5): the packed engine installed clean, globally and into a project, with fault injection
+      # and the gate without a custodian (manual review works; a protected loop is refused fail-closed).
+      - name: Install smoke test
+        run: node scripts/package/smoke.mjs --mode both
+
+      - name: Plugin build and verification
+        shell: bash
+        run: |
+          node plugin/build-plugin.mjs --out "$RUNNER_TEMP/code-parley-plugin"
+          node plugin/verify-plugin.mjs "$RUNNER_TEMP/code-parley-plugin"

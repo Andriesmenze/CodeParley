@@ -1,0 +1,470 @@
+{
+  "schema": "arl.capture-record.v1",
+  "capture_id": "01a10d63-48a6-74a0-9b98-efe40017c114",
+  "kind": "review",
+  "started_at": "2026-10-05T18:46:13.511Z",
+  "completed_at": "2026-10-05T18:46:13.606Z",
+  "repository": {
+    "root": "<REPO>",
+    "git_dir": "<REPO>/.git",
+    "common_dir": "<REPO>/.git",
+    "head_commit": "1750a2aba6c6e64301a92beb1fc7f744afdf7c7a",
+    "branch": "main"
+  },
+  "git": {
+    "exe": "/usr/bin/git",
+    "version": "2.43.0"
+  },
+  "target": {
+    "kind": "uncommitted"
+  },
+  "base": {
+    "kind": "commit",
+    "commit": "1750a2aba6c6e64301a92beb1fc7f744afdf7c7a",
+    "baseline_capture_id": null
+  },
+  "rules": {
+    "exclude_globs": [
+      "**/.env",
+      "**/.env.*",
+      "**/.env-*",
+      "**/.env_*",
+      "**/*.env",
+      "**/*.env.local",
+      "**/.envrc",
+      "**/*.pem",
+      "**/*.key",
+      "**/*.pfx",
+      "**/*.p12",
+      "**/id_rsa*",
+      "**/id_dsa*",
+      "**/id_ecdsa*",
+      "**/id_ed25519*",
+      "**/*.kdbx",
+      "**/.netrc",
+      "**/_netrc"
+    ],
+    "context_include": [],
+    "repo_exclude_paths": [],
+    "max_file_bytes": 2097152,
+    "max_export_bytes": 536870912,
+    "max_diff_bytes": 400000
+  },
+  "rules_digest": "b72ca9f4998f71dc4350f3692bdae6570e1d65b8cc9f5598d317cc1717621c1d",
+  "support": {
+    "git_version": "2.43.0",
+    "object_format": "sha1",
+    "unborn_head": false,
+    "shallow": false,
+    "partial_clone": false,
+    "linked_worktree": false,
+    "external_git_dir": false,
+    "submodules": 0,
+    "index_flags": {
+      "assume_unchanged": 0,
+      "skip_worktree": 0
+    },
+    "filters_in_use": [],
+    "transformation_unsupported": 0,
+    "in_progress": []
+  },
+  "source_id": "36af4f80d5e01edf7e5b6bdef15ce64210a08de27a4f11900b8bac4f289ad480",
+  "entries": [
+    {
+      "path": ".env",
+      "area": "tree",
+      "class": "excluded",
+      "disposition": "excluded_confidential",
+      "size": 33,
+      "sha256": "a6d421b289b1b7162731db675b303f283bb4e6fb8e47ac3a7e1b2a87660deede",
+      "git_oid": "06fdd7e2462ee3e0857faf88ad68779495c9b1e8",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": ".gitignore",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 13,
+      "sha256": "dac0f4c8806609b045c6fea2e892fd491a5d28ece0ac87a2c02175e41286a486",
+      "git_oid": "4c5196f914112b48eeb8a7436b8ccb91f85701c1",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "config/db.env",
+      "area": "tree",
+      "class": "excluded",
+      "disposition": "excluded_confidential",
+      "size": 22,
+      "sha256": "3e99d163b27b6b02c057e7a957624c1e7d60785d21e69c82fbfed4b9e2034211",
+      "git_oid": "10cb14dc4b9d038fbd949164e88b1ea4e6fb6d10",
+      "tracked": false,
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "flag.txt",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 5,
+      "sha256": "106675dc1490d5cdd6d1f0410731316ce93fc964c6cf6726e2b0d53e19688feb",
+      "git_oid": "12799ccbe7ce445b11b7bd4833bcc2c2ce1b48b7",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/edit-trust.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 227,
+      "sha256": "6bc6417f8f062142bdc18a4fced0ddf17fe2ddc66018d6ebcc3fe7f4fec35508",
+      "git_oid": "c27d29a72ffec315f891d8ad3612ba81c4a2f9d2",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/env.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 60,
+      "sha256": "8884df8ba974963a9abde49f376944fa163528a493e8ba99abe7a98835154c28",
+      "git_oid": "34c4d64912bf8c10fa08b55bd5fbdee807587b9c",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/flag.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 137,
+      "sha256": "88279a4c180377842805981a990c8836c8d6cfc0081edd2fbf6e44b1e3f7d6f2",
+      "git_oid": "63c93adc4287d27ced3af77793ae604aef0a2308",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/flaky.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 169,
+      "sha256": "1041ccd3fc929c331a00eadea577598898b9c3aba334b2f29d7a3b12c60c4434",
+      "git_oid": "e2944daa4daed0fa432934a73369bc640c07af1a",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/flood.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 109,
+      "sha256": "29d73d0c2d5d2823f2e82633ed9cf7f9ae74fd1150afe02d9a2c69d7c137b38f",
+      "git_oid": "5b63f85746c40585cb994caaf53a2177df34cf88",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/pass.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 65,
+      "sha256": "add341de942ae058142298e575bd9a18a820241ee191470c6b2052ba0dbf577e",
+      "git_oid": "47da997972e9c2a6d2cd19bd2fa0e389091d6fc3",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/sleep.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 76,
+      "sha256": "0ec2499e11bef995de07dc9655416bf4254726ac73fb7e5e9a2e39af99ead1c4",
+      "git_oid": "259d0c39f7085b22bc62fea84880469801ccb05d",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/spawn-gc.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 255,
+      "sha256": "ce3e9748f229b7a3a9d5d61634c611e5eb3def95e3ec1419ed881f59918f3acd",
+      "git_oid": "743f2fcae2a46685db98b290e58d22bdc15ee783",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "scripts/write.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 157,
+      "sha256": "ed988b2f50a8ec11a661ada1f08fffcbd4e76a35b3c5cc9ff3a9edef3aac36a3",
+      "git_oid": "83e05da3ddb1ca64b8e3c7ba7b6147eaaeef33c3",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "src/app.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 20,
+      "sha256": "6e66e366f0aefb84ad8110afcd9b2245702c643c831edf8316ff048fec739d2e",
+      "git_oid": "bd816eaba4ca3be8e4d68cfc0ae9f64b5aa712cc",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    },
+    {
+      "path": "src/math.js",
+      "area": "tree",
+      "class": "permitted",
+      "disposition": "exported",
+      "size": 46,
+      "sha256": "75cfacb7faac086c50b23ac4b29a709eb8680999e6756f620ca76d42aba07cab",
+      "git_oid": "29b385181d203ecb3e293909118bd66d5321dad4",
+      "tracked": true,
+      "index_flags": {
+        "assume_unchanged": false,
+        "skip_worktree": false
+      },
+      "filter": null,
+      "working_tree_encoding": null,
+      "git_eol_normalized": false
+    }
+  ],
+  "changes": [
+    {
+      "path": ".env",
+      "status": "modified",
+      "confidential": true,
+      "class": "excluded",
+      "base": {
+        "oid": "de437d99dae18155d882ebc879c1292992bd30fc",
+        "mode": "100644",
+        "size": 25,
+        "source": "commit",
+        "available": false
+      },
+      "current": {
+        "sha256": "a6d421b289b1b7162731db675b303f283bb4e6fb8e47ac3a7e1b2a87660deede",
+        "size": 33
+      },
+      "binary": null,
+      "eol": null,
+      "transformation_unsupported": false,
+      "change_uncertain": false,
+      "index_flag_hidden": false,
+      "committed": null,
+      "uncommitted": true,
+      "in_export": {
+        "base": false,
+        "head": false
+      },
+      "diff": "none"
+    },
+    {
+      "path": "config/db.env",
+      "status": "added",
+      "confidential": true,
+      "class": "excluded",
+      "base": null,
+      "current": {
+        "sha256": "3e99d163b27b6b02c057e7a957624c1e7d60785d21e69c82fbfed4b9e2034211",
+        "size": 22
+      },
+      "binary": null,
+      "eol": null,
+      "transformation_unsupported": false,
+      "change_uncertain": false,
+      "index_flag_hidden": false,
+      "committed": null,
+      "uncommitted": true,
+      "in_export": {
+        "base": false,
+        "head": false
+      },
+      "diff": "none"
+    },
+    {
+      "path": "src/math.js",
+      "status": "modified",
+      "confidential": false,
+      "class": "permitted",
+      "base": {
+        "oid": "7d658310b0d95fd8c4981c2cc0fad840aebd6a20",
+        "mode": "100644",
+        "size": 46,
+        "source": "commit",
+        "available": true
+      },
+      "current": {
+        "sha256": "75cfacb7faac086c50b23ac4b29a709eb8680999e6756f620ca76d42aba07cab",
+        "size": 46
+      },
+      "binary": false,
+      "eol": {
+        "base_style": "lf",
+        "current_style": "lf",
+        "eol_change": false,
+        "eol_only_change": false,
+        "git_eol_normalized": false
+      },
+      "transformation_unsupported": false,
+      "change_uncertain": false,
+      "index_flag_hidden": false,
+      "committed": null,
+      "uncommitted": true,
+      "in_export": {
+        "base": true,
+        "head": true
+      },
+      "diff": "included"
+    }
+  ],
+  "eol_conversion_equivalent": [],
+  "limitations": [
+    {
+      "code": "excluded_confidential",
+      "detail": "files excluded by trusted confidentiality rules; names and contents withheld from the review",
+      "paths": [
+        ".env",
+        "config/db.env"
+      ],
+      "count": 2
+    },
+    {
+      "code": "excluded_changed_file",
+      "detail": "changed files excluded by trusted confidentiality rules; names and contents withheld — this change is NOT reviewed",
+      "paths": [
+        ".env",
+        "config/db.env"
+      ],
+      "count": 2
+    }
+  ],
+  "model_limitations": [
+    {
+      "code": "excluded_confidential",
+      "detail": "files excluded by trusted confidentiality rules; names and contents withheld from the review",
+      "count": 2
+    },
+    {
+      "code": "excluded_changed_file",
+      "detail": "changed files excluded by trusted confidentiality rules; names and contents withheld — this change is NOT reviewed",
+      "count": 2
+    }
+  ],
+  "stable": true,
+  "instability": [],
+  "neutralized_filters": [],
+  "export": {
+    "ref": "exports/01a10d63-48a6-74a0-9b98-efe40017c114",
+    "manifest_digest": "78cd436c16952206e6d692cce4670ac6fc2b78a5df73e04694dc117241eec9a4",
+    "export_digest": "2a9f6e646e81274f9db1c65b9e856530c9f9aa55bcd1e651604e25fdde62b495",
+    "file_count": 17,
+    "total_bytes": 6748
+  },
+  "baseline": null,
+  "timings_ms": {
+    "inspect_and_list": 12,
+    "resolve_base": 2,
+    "first_pass": 12,
+    "change_detection": 1,
+    "export_base": 7,
+    "second_pass": 28,
+    "head_copies": 4,
+    "prepared_diff": 9,
+    "stability_check": 6,
+    "total": 95
+  }
+}

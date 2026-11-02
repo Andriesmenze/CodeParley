@@ -1,0 +1,17 @@
+# Node / build noise (the M1.0 spike is zero-dependency, but keep this clean for M1.1+)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local spike/validation scratch. The committed records live in docs/validation/results/
+# as summaries only; raw traces, event streams and exports stay out of git (plan §19.1).
+*.local.json
+spike/.data/
+
+# M1.3 cross-process tests compile src here (needs the repo node_modules for resolution)
+.tmp-test-dist/
+
+# Phase 5 packaging: scripts/package/pack.mjs stages clean builds and writes tarballs here
+.tmp-package/
+.tmp-release/
+__pycache__/

@@ -1,0 +1,57 @@
+# Phase 5 (contract §4.2): the CodeParley custodian on Linux. It receives the two named sockets (descriptors are mapped
+# by FileDescriptorName, never by position), validates the host, the whole store and the descriptors, completes new-boot
+# recovery, and only then reports READY=1 and accepts. Any failure serves nothing (fail closed).
+#
+# Writable state: ProtectSystem=strict makes the whole file system read-only for the service; the ONLY writable
+# exception is the store, /var/lib/codeparley (no '-' prefix: a missing store fails namespace setup and the service does
+# not start). No StateDirectory= (its ownership repair is shallow; the store comes from tmpfiles.d and the custodian
+# validates every entry itself). PrivateUsers stays off (F5-12: SO_PEERCRED uids must be the host's).
+#
+# No RestrictSUIDSGID= (TD decision D-24, 2026-10-21, an approved deviation from contract §4.2): systemd implements it
+# with a seccomp filter that cannot inspect openat2()'s mode, so it fails EVERY openat2() with ENOSYS — and the
+# repository identity (contract §4.6, D-L1) is an openat2 walk. The residual is stated in the contract: the kernel no
+# longer prevents this process from creating set-user-ID/set-group-ID files. The other controls (no capabilities,
+# NoNewPrivileges, the store as the only writable path, the start-time refusal of setuid/setgid/executable store files)
+# reduce it; they are not an identical substitute.
+[Unit]
+Description=CodeParley custodian
+Requires=codeparley-implementer.socket codeparley-operator.socket
+After=codeparley-implementer.socket codeparley-operator.socket local-fs.target systemd-tmpfiles-setup.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=/opt/codeparley/custodian/codeparley-custodian
+Sockets=codeparley-implementer.socket codeparley-operator.socket
+User=codeparley
+Group=codeparley
+UMask=0027
+ReadWritePaths=/var/lib/codeparley
+Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_gcServer=0
+TimeoutStartSec=120
+Restart=no
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+PrivateNetwork=yes
+IPAddressDeny=any
+RestrictAddressFamilies=AF_UNIX
+RestrictNamespaces=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+LockPersonality=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+RemoveIPC=yes
+PrivateUsers=no
+
+[Install]
+WantedBy=multi-user.target

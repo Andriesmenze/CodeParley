@@ -1,0 +1,1266 @@
+{
+  "version": 1,
+  "description": "P3.4C-4 M9: the repository payloads the custodian accepts or refuses, and the digests it computes (arl.check-definition.v1, arl.capture-rules-config.v1, arl.repository-config.v1 with no Codex installation), pinned for both the engine/simulator (test/config-digest-corpus.test.ts) and the real custodian (self-test-config-corpus). `canonical` pins the engine's canonical JSON (EngineJson).",
+  "canonical": [
+    {
+      "name": "integer-like keys first, numerically; then UTF-16 order",
+      "value": {
+        "2": 4,
+        "10": 2,
+        "4294967294": 8,
+        "b": 1,
+        "a": 3,
+        "01": 5,
+        "-1": 6,
+        "1.5": 7,
+        "4294967295": 9,
+        "B": 10,
+        "é": 11,
+        "🚀": 12,
+        "Ａ": 13,
+        "": 14
+      },
+      "digest": "07e8e55e61092436f5571eedf5374fd2efae39e150570e889a563d455a8566b6"
+    },
+    {
+      "name": "nested objects, arrays, null, booleans, negative integers",
+      "value": {
+        "z": [
+          {
+            "y": null,
+            "x": true
+          },
+          false,
+          -42,
+          0,
+          9007199254740991
+        ],
+        "a": {
+          "1": {},
+          "3": []
+        }
+      },
+      "digest": "885f65db4ed9967ffa9ceb02701520f80293e6af21e50845194c1d3f56f60529"
+    },
+    {
+      "name": "string escapes",
+      "value": {
+        "s": "\"\\/\b\f\n\r\t\u0000\u0001\u001f  😀"
+      },
+      "digest": "b6f47be8adce3dce13e0b4ac30931b838c7fd976684f47d849c5e5e22148d673"
+    }
+  ],
+  "accepted": [
+    {
+      "name": "plain ASCII",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node",
+              "scripts/pass.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "default": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "default"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      },
+      "digests": {
+        "unit": "f35bed648c0d17a915241eac7b7cf1976d62c783d02577f7d09de6f69b239b80"
+      },
+      "captureRulesDigest": "c0658ce4b1a5f8032ff1591ec758bf60374db0d120d4ee3d23c483f635d149b0",
+      "configDigest": "ac16b644d6aa2a663148907abfb6e72190452bcbec1736780f9d43842c1fe8d2"
+    },
+    {
+      "name": "unicode and escapes in argv, env values and description",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "lint": {
+            "argv": [
+              "node",
+              "lint.js",
+              "café",
+              "日本語",
+              "🚀",
+              "quote\"back\\slash",
+              "tab\there",
+              "nl\nline",
+              "cr\rx",
+              "\u0001\u001f",
+              "  ",
+              " nbsp",
+              "﻿bom"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {
+              "LANG": "nl_NL.UTF-8",
+              "Z_x.y(1)-z": "é\\\"\b\f",
+              "A_B": ""
+            },
+            "env_passthrough": [],
+            "freshness_inputs": [],
+            "description": "Résumé — \"quoted\" \\ 😀"
+          }
+        },
+        "profiles": {
+          "default": [
+            "lint"
+          ]
+        },
+        "requiredProfiles": [
+          "default"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      },
+      "digests": {
+        "lint": "6207d6279fde7ed43f3a7090bc7a7567a215a9e570d374b9c59ae59dffb54e88"
+      },
+      "captureRulesDigest": "c0658ce4b1a5f8032ff1591ec758bf60374db0d120d4ee3d23c483f635d149b0",
+      "configDigest": "37ce7dae750cffa3e5f9122492ac6b3f8d1bf34e398c49a386611fb1f84a9a04"
+    },
+    {
+      "name": "integer-like and mixed-case check and profile names (object key order)",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "0": {
+            "argv": [
+              "node",
+              "c.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "2": {
+            "argv": [
+              "node",
+              "b.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "10": {
+            "argv": [
+              "node",
+              "a.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "4294967294": {
+            "argv": [
+              "node",
+              "e.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "01": {
+            "argv": [
+              "node",
+              "d.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "4294967295": {
+            "argv": [
+              "node",
+              "f.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "B": {
+            "argv": [
+              "node",
+              "g.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "a": {
+            "argv": [
+              "node",
+              "h.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          },
+          "a.b-c_d": {
+            "argv": [
+              "node",
+              "i.js"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "9": [
+            "10",
+            "2"
+          ],
+          "11": [
+            "0"
+          ],
+          "Z": [
+            "01",
+            "4294967295"
+          ],
+          "z": [
+            "4294967294",
+            "B",
+            "a",
+            "a.b-c_d"
+          ]
+        },
+        "requiredProfiles": [
+          "11",
+          "9",
+          "Z",
+          "z"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      },
+      "digests": {
+        "0": "42351fbabbe09304ed29f35203d77be0ac79bd0ac17eb01d0402242984e2b527",
+        "2": "4308f61dc3a5addd030b3cbf4c3aa7f4c932fb07bea2492fdbe556f895e894aa",
+        "10": "6d619f11e3005df9c6ea39eec9019ed6a4e779afc8ffd7711e588039ca01e6ef",
+        "4294967294": "8319d0d8d8cd639cd5e2dbd77feaf49134258f45a9a9bb083c927489ab44d404",
+        "01": "a4b7ac9c84b2e2c32f8e77c9a9f161d8c476e6077d4f1fb172e1fea401346e40",
+        "4294967295": "6abdce7a0102017b1e13f833fd41090bee6844e09cf805bd86c560d1aa732139",
+        "B": "ecef7a9898b05e8360540c804fd23df9cdbaeb133b1a78ebe47fee04d65e4418",
+        "a": "3be940a3bcd57084cae710360e0166f2ac7b09feb8f49d52b282c83b8e219769",
+        "a.b-c_d": "5fb0e34bb5b982c5945b3029903bca6def5f50313669b501f97b31bdeade88d6"
+      },
+      "captureRulesDigest": "c0658ce4b1a5f8032ff1591ec758bf60374db0d120d4ee3d23c483f635d149b0",
+      "configDigest": "39ff6b08027b348ad1c065614d6526288d7fa482b76b6cea04a4f7c4c1f80f0b"
+    },
+    {
+      "name": "passthrough sorted case-insensitively, freshness inputs, cwd, globs with unicode",
+      "payload": {
+        "rootCommit": "0123456789abcdef0123456789abcdef01234567",
+        "checks": {
+          "build": {
+            "argv": [
+              "dotnet",
+              "build",
+              "--configuration",
+              "Release"
+            ],
+            "cwd": "src/été",
+            "timeout_seconds": 3600,
+            "env": {
+              "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
+            },
+            "env_passthrough": [
+              "home",
+              "PATH",
+              "Temp",
+              "USERPROFILE"
+            ],
+            "freshness_inputs": [
+              "package-lock.json",
+              "src/a b.ts",
+              "src/é.ts"
+            ]
+          }
+        },
+        "profiles": {
+          "ci": [
+            "build"
+          ]
+        },
+        "requiredProfiles": [
+          "ci"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [
+          "test/**/*.test.ts",
+          "**/é*.spec.js"
+        ],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env",
+            "secrets/**",
+            "**/*.pém"
+          ],
+          "contextInclude": [
+            "docs/**/*.md"
+          ],
+          "maxFileBytes": 1,
+          "maxExportBytes": 1073741824,
+          "maxDiffBytes": 1
+        },
+        "codexPath": null
+      },
+      "digests": {
+        "build": "a628bea5c2f396845897f4c3e3763833b8445f3dbfefb16ce3eaa87a5d1f973a"
+      },
+      "captureRulesDigest": "7fc7a6272729654eb477dd1e06dd4cf1bee9634756462f424e479d1fedb48578",
+      "configDigest": "63475f606ea637ea2199b7e6168584a9f87b6b14d0fed8483179e096f69e41e8"
+    },
+    {
+      "name": "no required checks",
+      "payload": {
+        "rootCommit": null,
+        "checks": {},
+        "profiles": {},
+        "requiredProfiles": [],
+        "noRequiredChecks": true,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      },
+      "digests": {},
+      "captureRulesDigest": "c0658ce4b1a5f8032ff1591ec758bf60374db0d120d4ee3d23c483f635d149b0",
+      "configDigest": "410e7a2d265e3eeee62139e3131134bbabf7fb44d2dc2cc1a81c791bd1533b5d"
+    }
+  ],
+  "refused": [
+    {
+      "name": "unknown definition key",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": [],
+            "shell": true
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "argv[0] with a quote",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "no\"de"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "NUL in an argument",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node",
+              "a\u0000b"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "cwd traversal",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": "../x",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "cwd names .git",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": "a/.GIT",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "freshness input with a wildcard",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": [
+              "src/*.ts"
+            ]
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "freshness inputs unsorted",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": [
+              "b",
+              "a"
+            ]
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "reserved device segment",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": "src/NUL.txt",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "passthrough of a secret-shaped name",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [
+              "GITHUB_TOKEN"
+            ],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "passthrough not sorted case-insensitively",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [
+              "PATH",
+              "home"
+            ],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "env name duplicated case-insensitively",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {
+              "Path": "a",
+              "PATH": "b"
+            },
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "env sets a CLAUDE variable",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {
+              "CLAUDE_X": "1"
+            },
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "timeout out of range",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 3601,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "check name with a space",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "a b": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "a b"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "profile references an undefined check",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "other"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "profile name collides with a check name",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "unit": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "unit"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "required profiles unsorted",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "b": [
+            "unit"
+          ],
+          "a": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "b",
+          "a"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "both a floor and no required checks",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": true,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "unknown payload field",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null,
+        "extra": 1
+      }
+    },
+    {
+      "name": "a glob with a control character",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [
+          "a\tb"
+        ],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "capture limit zero",
+      "payload": {
+        "rootCommit": null,
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 0
+        },
+        "codexPath": null
+      }
+    },
+    {
+      "name": "root commit not lowercase hex",
+      "payload": {
+        "rootCommit": "0123456789ABCDEF0123456789abcdef01234567",
+        "checks": {
+          "unit": {
+            "argv": [
+              "node"
+            ],
+            "cwd": ".",
+            "timeout_seconds": 900,
+            "env": {},
+            "env_passthrough": [],
+            "freshness_inputs": []
+          }
+        },
+        "profiles": {
+          "d": [
+            "unit"
+          ]
+        },
+        "requiredProfiles": [
+          "d"
+        ],
+        "noRequiredChecks": false,
+        "testGlobs": [],
+        "captureRules": {
+          "excludeGlobs": [
+            "**/.env"
+          ],
+          "contextInclude": [],
+          "maxFileBytes": 2097152,
+          "maxExportBytes": 536870912,
+          "maxDiffBytes": 400000
+        },
+        "codexPath": null
+      }
+    }
+  ]
+}

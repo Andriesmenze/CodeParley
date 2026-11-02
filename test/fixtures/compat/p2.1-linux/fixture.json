@@ -1,0 +1,23 @@
+{
+  "tag": "p2.1",
+  "ref": "b21ef09",
+  "platform": "linux",
+  "node": "v22.22.0",
+  "generated_at": "2026-10-06T13:26:16.493Z",
+  "run_id": "01a11164-afcb-77cc-a90d-dff556f3f748",
+  "files": [
+    "exports/01a11164-b1fe-7b93-bc11-30b88e79b100/review/manifest.json",
+    "exports/01a11164-b84c-722c-a290-83c8ef732a7a/review/manifest.json",
+    "ops/01a11164-aff7-757b-8203-f27e13a87922/capture.json",
+    "ops/01a11164-b1fe-7b93-bc11-30b88e79b100/capture.json",
+    "ops/01a11164-b1fe-7b93-bc11-30b88e79b100/review/items.json",
+    "ops/01a11164-b1fe-7b93-bc11-30b88e79b100/review/output.json",
+    "ops/01a11164-b82e-7578-8144-bc9232f9ab94/responses/disclosure.json",
+    "ops/01a11164-b84c-722c-a290-83c8ef732a7a/capture.json",
+    "ops/01a11164-b84c-722c-a290-83c8ef732a7a/review/items.json",
+    "ops/01a11164-b84c-722c-a290-83c8ef732a7a/review/output.json",
+    "ops/01a11164-ba89-7c47-a551-7cd4cc64f68a/responses/disclosure.json",
+    "run.json",
+    "state.json"
+  ]
+}
