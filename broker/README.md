@@ -184,7 +184,7 @@ controller restart reconnects by opening the pipe and re-querying runs the broke
 
 ## Build / publish
 
-Development/CI build (SDK pinned to 10.0.201 via `global.json`):
+Development/CI build (SDK pinned to 10.0.403 via `global.json`):
 
 ```bash
 dotnet build broker/CodeParley.Broker -c Release

@@ -3,7 +3,7 @@
 ## Requirements
 
 - Node.js `^22.12.0 || ^24.0.0` (the range in `package.json` `engines`) with npm, and git.
-- The .NET SDK pinned by `custodian/global.json` (10.0.201, later feature bands allowed), for the custodian.
+- The .NET SDK pinned by `custodian/global.json` (10.0.403, later feature bands allowed), for the custodian.
 - Windows 11 or Ubuntu 24.04 for the platform-specific suites. Each platform runs its own integration tests and skips
   the other's.
 

@@ -26,14 +26,14 @@
     "package:check": "node scripts/package/check-install.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.3.0",
-    "zod": "^4.2.0"
+    "@modelcontextprotocol/server": "2.4.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@modelcontextprotocol/client": "2.3.0",
-    "@modelcontextprotocol/sdk": "1.32.0",
-    "@types/node": "^22.10.0",
-    "typescript": "~6.0.0",
-    "vitest": "^5.0.0"
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@types/node": "^22.20.5",
+    "typescript": "~7.0.2",
+    "vitest": "^5.1.0"
   }
 }
