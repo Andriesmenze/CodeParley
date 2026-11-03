@@ -47,8 +47,8 @@ log "T1 on $SHA in $REPO; HEAD $(git rev-parse HEAD); $(git status --porcelain |
 [ "$(git rev-parse HEAD)" = "$SHA" ] || { log "HEAD is not $SHA"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { log "the checkout is not clean"; exit 1; }
 
-guard; log "test windows node24"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --log "$OUT/windows-node24" >> "$OUT/driver.log" 2>&1; log "exit $?"
-guard; log "test windows node22"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --node "$NODE22" --log "$OUT/windows-node22" >> "$OUT/driver.log" 2>&1; log "exit $?"
+guard; log "test windows node24"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --log "$OUT/windows-node24" >> "$OUT/driver.log" 2>&1; log "exit $?"
+guard; log "test windows node22"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --node "$NODE22" --log "$OUT/windows-node22" >> "$OUT/driver.log" 2>&1; log "exit $?"
 
 guard; log "linux custodian cross-build"
 rm -rf "$OUT/linux-cust"
@@ -64,14 +64,14 @@ for v in 24 22; do
   mkdir -p custodian/CodeParley.Custodian.Linux/bin/Release/net10.0
   install -m 755 "$W_OUT/linux-cust/codeparley-custodian" custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
   echo "[\$(date +%H:%M:%S)] test linux node\$v"
-  PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job test --expect $SHA --log "$W_OUT/linux-node\$v" \\
+  PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job test --expect $SHA --set VERIFIED_SHA=$SHA --log "$W_OUT/linux-node\$v" \\
     --substitute "Versions=no .NET SDK in WSL: node, npm, git and the custodian's version verb are recorded in the run summary and the self-test step" \\
     --substitute "Build the Linux custodian=cross-built on Windows from the same clean commit with the pinned SDK (dotnet publish -r linux-x64 --self-contained), placed at the path the self-test step uses"
   echo "[\$(date +%H:%M:%S)] exit \$?"
   find /tmp -maxdepth 1 -newer "\$M/package.json" \\( -name 'arl-*' -o -name 'cp-*' -o -name 'cps-*' \\) -exec rm -rf {} + 2>/dev/null
 done
 echo "[\$(date +%H:%M:%S)] identity (Linux)"
-PATH="\$HOME/.local/opt/node24/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job identity --expect $SHA --log "$W_OUT/identity-linux" --set EXPECTED_SHA=$SHA --set MERGE=
+PATH="\$HOME/.local/opt/node24/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job identity --expect $SHA --log "$W_OUT/identity-linux" --set EXPECTED_SHA=$SHA --set REQUESTED_SHA=$SHA --set MERGE=
 echo "[\$(date +%H:%M:%S)] exit \$?"
 EOF
 guard; log "linux runs"

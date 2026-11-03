@@ -9,12 +9,12 @@ name: CI
 
 # When it runs (plan M1.6-7; the owner's choices of 2026-10-05 to save Actions minutes: the
 # repository is private and Windows minutes count double): pull requests, pushes to main and
-# manual runs (Actions tab or `gh workflow run CI --ref <branch> -f expected_sha=<sha>`); plain
+# manual runs (Actions tab or `gh workflow run CI --ref <branch> [-f expected_sha=<sha>]`); plain
 # branch pushes and documentation-only changes do not start it. What runs (see the matrix): a pull
 # request, into any branch, tests Linux on Node 22 and 24 and Windows on Node 24; a push to main (a
 # merge) and a manual run test the full Windows/Linux x Node 22/24 matrix. Releases are tagged on
 # main, so the release gate is the push run of the tagged commit (or of the last earlier commit that
-# changed more than documentation); a manual run gives a branch the full matrix before merging.
+# changed more than documentation); a manual run gives a branch's head the full matrix before merging.
 on:
   push:
     branches: [main]
@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       expected_sha:
-        description: "The full 40-character id of the signed commit this run must test (contract §4.2); empty: the ref's head"
+        description: "Optional: the full 40-character id the selected ref's head must be (contract §4.2); the run fails on any other head"
         required: false
         default: ""
 
@@ -49,9 +49,11 @@ concurrency:
 # platform: `ubuntu-latest` moves to Ubuntu 26.04 from 2026-10-19 (GitHub's announced migration), which CodeParley does
 # not yet support. Changing the variables is the owner's runner decision, not this file's.
 jobs:
-  # CI verifies its own input (contract §4.2 step 4): the commit under test is the expected one (a pull request's head,
-  # a manual run's expected_sha, a push's commit) and it is signed by the owner's key committed in
-  # .github/ci/commit-signing-key.asc. Every other job tests exactly the commit this job verified.
+  # CI verifies its own input (contract §4.2 step 4). The commit under test comes from the event alone, the same way in
+  # every job: a pull request's head, a push's commit, or the head of the ref a manual run was started on. A manual
+  # run's expected_sha selects nothing: when given, the run fails unless it names that head. This job checks the commit
+  # and its signature by the owner's key committed in .github/ci/commit-signing-key.asc; the test jobs confirm they
+  # have the commit it verified.
   identity:
     name: Commit identity
     runs-on: ${{ vars.CP_LINUX_RUNNER || 'ubuntu-24.04' }}
@@ -62,7 +64,7 @@ jobs:
       - name: Check out the commit under test
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha || inputs.expected_sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           # A merge GitHub made carries GitHub's signature; its merged head (the second parent) is verified instead.
           fetch-depth: 2
           persist-credentials: false
@@ -78,10 +80,11 @@ jobs:
       - name: Verify the commit and its signature
         id: verify
         env:
-          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || inputs.expected_sha || github.sha }}
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REQUESTED_SHA: ${{ inputs.expected_sha }}
           MERGE: ${{ github.event_name == 'push' && '--allow-github-merge' || '' }}
         run: |
-          node scripts/ci/verify-commit-identity.mjs --expect "$EXPECTED_SHA" $MERGE
+          node scripts/ci/verify-commit-identity.mjs --expect "$EXPECTED_SHA" --requested "$REQUESTED_SHA" $MERGE
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   test:
@@ -108,16 +111,29 @@ jobs:
       - name: Keep the repository's line endings
         run: git config --global core.autocrlf false
 
-      - name: Check out the verified commit
+      # Selected from the event, as in the identity job, not from that job's output; the next step confirms it is the
+      # commit the identity job verified.
+      - name: Check out the commit under test
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ needs.identity.outputs.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
+      - name: Confirm the verified commit
+        shell: bash
+        env:
+          VERIFIED_SHA: ${{ needs.identity.outputs.sha }}
+        run: |
+          head=$(git rev-parse HEAD)
+          if [ -z "$VERIFIED_SHA" ] || [ "$head" != "$VERIFIED_SHA" ]; then
+            echo "::error::HEAD $head is not the commit the identity job verified (${VERIFIED_SHA:-none})"
+            exit 1
+          fi
+
       # The npm cache, only where its scope fits the code: a push to main runs a signed commit already on main, and a pull
-      # request's cache is written to the pull request's own ref. A manual run tests any signed commit (expected_sha) in
-      # the dispatched branch's scope, so it neither restores nor saves the cache. Automatic caching stays off: it would
-      # follow the package.json of the commit under test.
+      # request's cache is written to the pull request's own ref. A manual run can test the head of any branch it is
+      # started on, in that branch's scope, so it neither restores nor saves the cache. Automatic caching stays off: it
+      # would follow the package.json of the commit under test.
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:

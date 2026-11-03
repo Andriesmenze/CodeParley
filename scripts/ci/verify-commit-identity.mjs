@@ -4,7 +4,11 @@
 // (.github/ci/commit-signing-key.asc), in a keyring of its own that holds nothing else. A mismatch or a bad, missing
 // or foreign signature exits 1.
 //
-//   node scripts/ci/verify-commit-identity.mjs [--expect <sha>] [--allow-github-merge] [--gpg <gpg executable>]
+//   node scripts/ci/verify-commit-identity.mjs [--expect <sha>] [--requested <sha>] [--allow-github-merge]
+//        [--gpg <gpg executable>]
+//
+// --requested (a manual run's expected_sha): when not empty, HEAD must also be that commit; it is an assertion on the
+// commit CI selected, never a selection. Both checks come before anything about the signature, which is always checked.
 //
 // --allow-github-merge (pushes to main only): a merge GitHub made on the web carries GitHub's signature, not the
 // owner's. It is accepted when HEAD is a merge committed by GitHub whose merged head (second parent) verifies against
@@ -21,6 +25,7 @@ const opt = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const expect = opt("expect")?.toLowerCase();
+const requested = opt("requested")?.toLowerCase();
 const allowMerge = args.includes("--allow-github-merge");
 const gpg = opt("gpg") ?? "gpg";
 const keyFile = join(fileURLToPath(new URL(".", import.meta.url)), "..", "..", ".github", "ci", "commit-signing-key.asc");
@@ -40,6 +45,12 @@ const fail = (msg) => {
   process.exit(1);
 };
 
+const head = git("rev-parse", "HEAD").out;
+console.log(`HEAD ${head}`);
+if (!/^[0-9a-f]{40}$/.test(head)) fail("HEAD is not a commit");
+if (expect !== undefined && head !== expect) fail(`HEAD ${head} is not the expected commit ${expect}`);
+if (requested && head !== requested) fail(`HEAD ${head} is not the requested commit ${requested}`);
+
 // The owner's key, alone in a fresh keyring, trusted there so that a good signature reads G (not U).
 const shown = sh(gpg, ["--batch", "--with-colons", "--import-options", "show-only", "--import", keyFile]);
 // --with-colons: an "fpr" record carries the fingerprint in its tenth field.
@@ -48,11 +59,6 @@ const primary = fprs[0];
 if (!primary) fail(`no key in ${keyFile} (${shown.err.split("\n")[0] ?? ""})`);
 if (sh(gpg, ["--batch", "--import", keyFile]).status !== 0) fail("the owner's public key does not import");
 if (sh(gpg, ["--batch", "--import-ownertrust"], `${primary}:6:\n`).status !== 0) fail("the owner's key cannot be trusted in the temporary keyring");
-
-const head = git("rev-parse", "HEAD").out;
-console.log(`HEAD ${head}`);
-if (!/^[0-9a-f]{40}$/.test(head)) fail("HEAD is not a commit");
-if (expect !== undefined && head !== expect) fail(`HEAD ${head} is not the expected commit ${expect}`);
 
 /** Whether `rev` carries a good signature by the owner's key (primary or subkey). */
 function ownerSigned(rev) {
