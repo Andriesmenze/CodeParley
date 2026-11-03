@@ -47,6 +47,16 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     expect(code).toMatch(/ref: \$\{\{ needs\.identity\.outputs\.sha \}\}/);
   });
 
+  it("never restores or saves the npm cache on a manual run, and never caches automatically", () => {
+    // setup-node caches when `cache` is non-empty, or, with package-manager-cache true, when package.json names npm.
+    const setups = [...code.matchAll(/uses: actions\/setup-node@\S+.*\n {8}with:\n((?: {10}.*\n)+)/g)].map((m) => m[1]!);
+    expect(setups).toHaveLength(2);
+    for (const w of setups) expect(w).toMatch(/^ {10}package-manager-cache: false$/m);
+    const caches = setups.flatMap((w) => [...w.matchAll(/^ {10}cache: (.*)$/gm)].map((m) => m[1]!));
+    expect(caches).toEqual(["${{ github.event_name != 'workflow_dispatch' && 'npm' || '' }}"]);
+    expect(code).not.toMatch(/actions\/cache@|^\s*cache-dependency-path:/m);
+  });
+
   it("builds and self-tests both custodians with the pinned SDK, and runs the suite, the install smoke and the plugin check", () => {
     const steps = jobs["test"]!.steps;
     const run = (name: string) => steps.find((s) => s.name === name);
