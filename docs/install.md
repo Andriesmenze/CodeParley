@@ -27,8 +27,13 @@ never creates the human accounts: they must exist first.
 
 ## Get the release
 
-Download the artifacts from the release on the
-[releases page](https://github.com/vanderMerkProjects/CodeParley/releases). The release's artifacts are:
+Version 1.0.0 was released privately: no public binary release is available yet. The first public
+binary release is planned as 1.0.1, on the
+[releases page](https://github.com/vanderMerkProjects/CodeParley/releases). The 1.0.0 file names in
+this guide match the version of these sources; they are examples, not downloads available now. When
+1.0.1 is published, follow that release's signed manifest and use the artifact file names it lists.
+
+A release's artifacts are:
 
 | File | Used by |
 |---|---|
