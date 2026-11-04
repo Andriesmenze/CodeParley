@@ -20,6 +20,8 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
+    "test:quick": "vitest run --mode quick",
+    "test:changed": "vitest run --changed",
     "test:watch": "vitest",
     "package:pack": "node scripts/package/pack.mjs",
     "package:smoke": "node scripts/package/smoke.mjs",
