@@ -2,9 +2,10 @@
 // lib/release-verify.mjs), end to end with DISPOSABLE keys made for the test in GnuPG homes of its own, with smart cards
 // disabled: never the release key, never a YubiKey. A fixture repository carries the files the real one pins (the
 // commit key in .github/ci/, the release key in docs/), so the scripts run their production checks with only the pinned
-// fingerprints replaced. Platform-independent; skipped where no GnuPG is installed.
+// fingerprints replaced. Platform-independent. The GnuPG tests are skipped, with the reason, only where no GnuPG is
+// installed or where it is the known-incompatible MSYS build; any other GnuPG that fails the probe fails them.
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from "vitest";
 import { spawnSync } from "node:child_process";
 import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -36,11 +37,41 @@ const { verify } = (await import(new URL("../scripts/package/verify-release.mjs"
 };
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
-const gpg = lib.defaultGpg();
-const probeHome = mkdtempSync(join(tmpdir(), "cp-relsign-probe-"));
-const haveGpg = spawnSync(gpg, ["--homedir", probeHome, "--version"], { windowsHide: true }).status === 0;
-rmSync(probeHome, { recursive: true, force: true });
+// CP_RELEASE_TEST_GPG points the suite at another GnuPG (to check the probe below against a specific build).
+const gpg = process.env.CP_RELEASE_TEST_GPG || lib.defaultGpg();
 const gpgconf = /[\\/]/.test(gpg) ? join(dirname(gpg), process.platform === "win32" ? "gpgconf.exe" : "gpgconf") : "gpgconf";
+
+/**
+ * Whether this GnuPG can run the suite. Everything here (and in the tools) uses a temporary home of its own, so the probe
+ * initializes one, isolated like the suite's homes, and requires its keyring to exist afterwards: an exit status alone
+ * proves nothing (Git for Windows' MSYS gpg exits 0 after some fatal errors). Exactly two cases skip the GnuPG tests,
+ * each with its reason: no GnuPG at all, and the known-incompatible MSYS build, which resolves `--homedir C:\...` under
+ * the current directory (its `Home:` line shows the Windows path appended to a POSIX one). Any other GnuPG that cannot
+ * initialize the keyring, a broken Gpg4win or Linux gpg included, makes the suite fail.
+ */
+function gpgSupport(): { skip?: string; broken?: string } {
+  const h = mkdtempSync(join(tmpdir(), "cp-relsign-probe-"));
+  try {
+    writeFileSync(join(h, "gpg-agent.conf"), "disable-scdaemon\n");
+    writeFileSync(join(h, "common.conf"), "");
+    const version = spawnSync(gpg, ["--homedir", h, "--version"], { encoding: "utf8", windowsHide: true, timeout: 60_000 });
+    if ((version.error as NodeJS.ErrnoException | undefined)?.code === "ENOENT") return { skip: `no GnuPG found (${gpg})` };
+    const list = spawnSync(gpg, ["--homedir", h, "--batch", "--no-tty", "--list-keys"], { encoding: "utf8", windowsHide: true, timeout: 60_000 });
+    const keyring = existsSync(join(h, "pubring.kbx"));
+    if (list.status === 0 && keyring) return {};
+    const reported = /^Home: (.*)$/m.exec(version.stdout ?? "")?.[1]?.trim() ?? "";
+    const detail = `${gpg}: --list-keys exited ${list.status ?? list.error?.message}, keyring ${keyring ? "created" : "not created"}, Home: ${reported || "(none)"}`;
+    if (process.platform === "win32" && reported.startsWith("/") && reported.endsWith(h)) {
+      return { skip: `known-incompatible GnuPG, Git for Windows' MSYS build (it resolves a Windows --homedir under the current directory); install Gpg4win to run these tests. ${detail}` };
+    }
+    return { broken: `GnuPG cannot initialize an isolated keyring. ${detail}. ${(list.stderr ?? "").trim()}` };
+  } finally {
+    spawnSync(gpgconf, ["--homedir", h, "--kill", "all"], { windowsHide: true });
+    rmSync(h, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  }
+}
+const support = gpgSupport();
+if (support.skip) console.warn(`release-signing: the GnuPG tests are skipped: ${support.skip}`);
 const VERSION = "1.0.1";
 const ROTATED = "1.0.2";
 const REHEARSAL = "1.0.1-rehearsal.1";
@@ -171,8 +202,16 @@ const tag = (name: string, target: string, message: string, key = keys.releaseSu
 };
 const remove = (name: string) => git(repo, ["tag", "-d", name], { allowFail: true });
 
-describe.skipIf(!haveGpg)("Step 4: release-signing workflow, with disposable keys", { timeout: 180_000 }, () => {
+describe("Step 4: release-signing workflow, with disposable keys", { timeout: 180_000 }, () => {
+  // A skip carries its reason on every test; a broken GnuPG fails every test (in beforeAll, vitest would list them as
+  // skipped).
+  beforeEach(({ skip }) => {
+    if (support.skip) skip(support.skip);
+    if (support.broken) throw new Error(support.broken);
+  });
+
   beforeAll(async () => {
+    if (support.skip || support.broken) return;
     base = await tempDir("cp-relsign-");
     home = newHome("gnupg");
     g(["--quick-gen-key", "Disposable Commit <commit@example.invalid>", "ed25519", "sign", "1d"]);
@@ -208,6 +247,7 @@ describe.skipIf(!haveGpg)("Step 4: release-signing workflow, with disposable key
   });
 
   afterAll(() => {
+    if (!base) return;
     for (const h of readdirSync(base).filter((d) => d === "gnupg" || d.startsWith("gnupg-"))) spawnSync(gpgconf, ["--homedir", join(base, h), "--kill", "all"], { windowsHide: true });
     if (base) rmSync(base, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
   });
@@ -675,7 +715,7 @@ describe("Step 4: approved subkeys and the signature status rules", () => {
 // Template literals (text) and comments are removed before the checks.
 describe("Step 4: the release tooling has no signing or publication side effects", () => {
   const files = ["scripts/package/prepare-signing.mjs", "scripts/package/verify-release.mjs", "scripts/package/lib/release-verify.mjs"];
-  const code = (f: string) => readFileSync(join(root, f), "utf8").replace(/`(?:\\[\s\S]|\$\{(?:[^{}]|\{[^{}]*\})*\}|[^`\\])*`/g, "``").replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  const code = (f: string) => readFileSync(join(root, f), "utf8").replace(/`(?:\\[\s\S]|\$\{(?:[^{}]|\{[^{}]*\})*\}|\$(?!\{)|[^`\\$])*`/g, "``").replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
 
   it("contains no signing, push or release-changing invocation", () => {
     for (const f of files) {
