@@ -23,8 +23,9 @@ npm run build
 npm test
 ```
 
-Run the custodian builds and self-tests too if you change `custodian/`. [docs/development.md](docs/development.md) has
-the commands, the test classes and what CI does not cover.
+While developing, `npm run test:quick` and single test files give fast feedback; the full `npm test` is still what a
+change has to pass. Run the custodian builds and self-tests too if you change `custodian/`.
+[docs/development.md](docs/development.md) has the commands, the test classes and what CI does not cover.
 
 ## Guidelines
 

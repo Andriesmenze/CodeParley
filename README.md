@@ -864,6 +864,10 @@ npm run build
 npm test
 ```
 
+While developing, `npm run test:quick` runs the test files that are fast in CI and `npx vitest run
+test/<file>.test.ts` a single file; `npm test` is the full suite a change has to pass
+([docs/development.md](docs/development.md#fast-feedback-and-full-validation)).
+
 CI (`.github/workflows/ci.yml`) runs these on Windows and Linux with Node 22 and 24 for pushes
 to `main` and manual runs (`gh workflow run CI --ref <branch>`); pull requests, into any
 branch, run Linux on Node 22 and 24 and Windows on Node 24 only. A new commit on a pull request, or
@@ -873,7 +877,8 @@ run. Plain branch pushes and documentation-only changes (Markdown at the reposit
 it. Both platforms are gates: each runs the platform-independent tests, the shared contracts
 and its own platform's integration suites (real repositories, processes, links, the server over
 stdio); the other platform's are reported as skipped
-([docs/development.md](docs/development.md#test-classes)). Live validation with a
+([docs/development.md](docs/development.md#test-classes)). Windows runs the suite in three
+parallel shards per Node.js version, which together run every test file once. Live validation with a
 logged-in Codex and real Claude hosts is manual; for example
 `CODEPARLEY_LIVE_CODEX=1 npx vitest run test/review-live.integration.test.ts` spends Codex quota.
 

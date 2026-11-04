@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 // @ts-expect-error -- a plain .mjs script without type declarations
 import { parseJobs } from "../scripts/ci/run-workflow-local.mjs";
 import { commitAll, initRepo, linux, setupEnv, tempDir, win } from "./helpers/git-fixture.js";
+import { parseShard } from "./schedule.js";
 
 interface Step { name?: string; if?: string; shell?: string; run?: string; uses?: string; env: Record<string, string> }
 interface Job { env: Record<string, string>; steps: Step[] }
@@ -137,6 +138,30 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     expect(run("Test")?.run).toBe("npm test");
     expect(run("Install smoke test")?.run).toContain("scripts/package/smoke.mjs");
     expect(run("Plugin build and verification")?.run).toContain("verify-plugin.mjs");
+  });
+
+  // Step 6: a sharded combination is green only when all its shards are, and they must add up to the whole suite.
+  it("runs each supported platform and Node.js version's whole suite: in one job, or in shards 1/n to n/n of it", () => {
+    const include = /^ {8}include: \$\{\{ fromJSON\(github\.event_name == 'pull_request' && '(\[[^']*\])' \|\| '(\[[^']*\])'\) \}\}$/m.exec(code);
+    expect(include, "the matrix: one list for pull requests, one for pushes and manual runs").not.toBeNull();
+    const combos = (json: string) => {
+      const out: Record<string, string[]> = {};
+      for (const leg of JSON.parse(json) as { platform: string; node: string; shard: string }[]) (out[`${leg.platform} ${leg.node}`] ??= []).push(leg.shard);
+      return out;
+    };
+    const [pr, push] = [combos(include![1]!), combos(include![2]!)];
+    expect(Object.keys(pr).sort()).toEqual(["linux 22.x", "linux 24.x", "windows 24.x"]);
+    expect(Object.keys(push).sort()).toEqual(["linux 22.x", "linux 24.x", "windows 22.x", "windows 24.x"]);
+    for (const [combo, shards] of [...Object.entries(pr), ...Object.entries(push)]) {
+      const n = shards.length;
+      expect(shards, combo).toEqual(n === 1 && shards[0] === "" ? [""] : Array.from({ length: n }, (_, i) => `${i + 1}/${n}`));
+      for (const s of shards) expect(() => parseShard(s), `${combo} ${s}`).not.toThrow();
+    }
+    // The shard reaches the Test step alone, which still runs the whole `npm test` command.
+    const steps = jobs["test"]!.steps;
+    expect(steps.find((s) => s.name === "Test")).toMatchObject({ run: "npm test", env: { CP_TEST_SHARD: "${{ matrix.shard }}" } });
+    expect(steps.filter((s) => "CP_TEST_SHARD" in s.env).map((s) => s.name)).toEqual(["Test"]);
+    expect(jobs["test"]!.env).not.toHaveProperty("CP_TEST_SHARD");
   });
 });
 

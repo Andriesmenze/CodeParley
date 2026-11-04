@@ -13,7 +13,8 @@
 // must be clean and, with --expect, at that commit; it is checked again after the job. --node runs the job under
 // another Node.js: on Windows it gets a PATH directory of its own with node.exe and npm/npx shims (--npm-cli, default
 // the system npm), on Linux its own directory (which carries npm). --set gives a step environment value the workflow
-// computes with an expression (the identity job's EXPECTED_SHA and MERGE).
+// computes with an expression (the identity job's EXPECTED_SHA and MERGE; the test job's VERIFIED_SHA, and
+// CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `--set CP_TEST_SHARD=2/3` one shard).
 import { spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

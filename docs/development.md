@@ -16,6 +16,33 @@ npm run build
 npm test
 ```
 
+### Fast feedback and full validation
+
+| Command | What it runs |
+|---|---|
+| `npm run typecheck` | Both TypeScript projects (`src/`, and `src/` with `test/`) |
+| `npm run test:quick` | The quick tier: the test files that took at most 2 s in CI on each platform, and new files |
+| `npx vitest run test/<file>.test.ts [-t "<test name>"]` | One test file, or the tests whose name matches |
+| `npm run test:changed` | The test files that import, directly or not, a file changed since the last commit |
+| `npm test` | The whole suite: what a change has to pass |
+| `CP_TEST_SHARD=2/3 npm test` | One of CI's shards (PowerShell: `$env:CP_TEST_SHARD='2/3'; npm test`) |
+
+The quick tier is a selection by recorded duration, not a test class: it holds pure logic and schema tests as well as
+fast platform and contract tests, and leaves out the integration suites that build repositories and run processes.
+`test:changed` follows vitest's module graph: the suites that run `src/` compiled in a child process, and the files a
+test reads at run time, are invisible to it. Neither replaces `npm test`.
+
+`test/durations.json` records each test file's duration in CI, per platform. `test/schedule.ts` uses it to deal the
+files to CI's shards, to start the longest files first in CI and to pick the quick tier; what a test asserts never
+depends on it. A stale entry makes a shard or the quick tier slower, never smaller: every file is dealt to a shard, a
+shard only excludes the files dealt to the others, and a file with no entry stays in the quick tier. After large test
+changes, refresh it from full-suite runs with the JSON reporter on each platform:
+
+```bash
+npx vitest run --reporter=json --outputFile=report.json
+node scripts/ci/test-durations.mjs --platform win32 --source "<which runs>" report.json [more reports] [--prune]
+```
+
 The custodians and their self-tests, as CI runs them:
 
 ```bash
@@ -66,8 +93,13 @@ Opt-in suites:
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual runs. A pull request tests Linux on
 Node 22 and 24 and Windows on Node 24; `main` and manual runs test the full Windows and Linux by Node 22 and 24 matrix.
-Each job typechecks, builds, builds and self-tests both custodians, runs `npm test`, the install smoke test and the
-plugin build.
+Each job typechecks, builds, builds and self-tests the platform's custodian, runs `npm test`, the install smoke test and
+the plugin build.
+
+Windows runs the suite in three shards per Node.js version (`windows · Node 24.x · shard 1/3` to `3/3`). Each shard
+is a complete job that runs a third of the test files (`CP_TEST_SHARD`), dealt by their recorded durations so that the
+three take about as long; together they run every test file once, and a Windows combination has passed only when all
+three have. Linux runs the suite in one job.
 
 The first job, **Commit identity**, verifies that the commit under test is the expected one and that it is signed by
 the key in `.github/ci/commit-signing-key.asc`. Every other job depends on it, so a commit that is not signed with that

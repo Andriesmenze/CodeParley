@@ -2,7 +2,8 @@
 # Phase 6 Increment 1 (contract §4.1, T1): one full local matrix run of .github/workflows/ci.yml on the exact signed
 # commit, sequentially (the process-tree tests are load-sensitive): Windows on Node 24 and on a second Node.js, then
 # Linux (WSL2) on Node 24 and 22 in an ext4 mirror with .git, then the identity job. Run from Git Bash on Windows, in
-# the checkout to validate, with a clean tree at the commit.
+# the checkout to validate, with a clean tree at the commit. Each job runs the whole suite (CP_TEST_SHARD empty): one
+# machine runs all of a combination's CI shards (Step 6).
 #
 #   bash scripts/ci/t1-matrix.sh --sha <full commit id> --out <run dir> [--node22 <node.exe>] [--min-free-gb <n>]
 #
@@ -47,8 +48,8 @@ log "T1 on $SHA in $REPO; HEAD $(git rev-parse HEAD); $(git status --porcelain |
 [ "$(git rev-parse HEAD)" = "$SHA" ] || { log "HEAD is not $SHA"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { log "the checkout is not clean"; exit 1; }
 
-guard; log "test windows node24"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --log "$OUT/windows-node24" >> "$OUT/driver.log" 2>&1; log "exit $?"
-guard; log "test windows node22"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --node "$NODE22" --log "$OUT/windows-node22" >> "$OUT/driver.log" 2>&1; log "exit $?"
+guard; log "test windows node24"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --log "$OUT/windows-node24" >> "$OUT/driver.log" 2>&1; log "exit $?"
+guard; log "test windows node22"; node scripts/ci/run-workflow-local.mjs --job test --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --node "$NODE22" --log "$OUT/windows-node22" >> "$OUT/driver.log" 2>&1; log "exit $?"
 
 guard; log "linux custodian cross-build"
 rm -rf "$OUT/linux-cust"
@@ -64,7 +65,7 @@ for v in 24 22; do
   mkdir -p custodian/CodeParley.Custodian.Linux/bin/Release/net10.0
   install -m 755 "$W_OUT/linux-cust/codeparley-custodian" custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
   echo "[\$(date +%H:%M:%S)] test linux node\$v"
-  PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job test --expect $SHA --set VERIFIED_SHA=$SHA --log "$W_OUT/linux-node\$v" \\
+  PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job test --expect $SHA --set VERIFIED_SHA=$SHA --set CP_TEST_SHARD= --log "$W_OUT/linux-node\$v" \\
     --substitute "Versions=no .NET SDK in WSL: node, npm, git and the custodian's version verb are recorded in the run summary and the self-test step" \\
     --substitute "Build the Linux custodian=cross-built on Windows from the same clean commit with the pinned SDK (dotnet publish -r linux-x64 --self-contained), placed at the path the self-test step uses"
   echo "[\$(date +%H:%M:%S)] exit \$?"
