@@ -5,6 +5,8 @@ import { describe, it, expect } from "vitest";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { QUICK_SECONDS, excludedByQuick, excludedByShard, excludedFiles, parseShard, partition, readDurations, startOrder, testFiles, type Durations } from "./schedule.js";
+// @ts-expect-error -- a plain .mjs script without type declarations
+import { formatDurations, logDurations } from "../scripts/ci/test-durations.mjs";
 
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const files = ["test/a.test.ts", "test/b.test.ts", "test/c.test.ts", "test/d.test.ts", "test/e.test.ts", "test/f.test.ts", "test/g.test.ts"];
@@ -102,5 +104,34 @@ describe("test schedule (Step 6)", () => {
         for (const s of shards) expect(s.length).toBeGreaterThan(0);
       }
     }
+  });
+});
+
+describe("refreshing the recorded durations (scripts/ci/test-durations.mjs, Step 6)", () => {
+  it("reads each file's duration from a CI job log's npm test step alone, and from a terminal log", () => {
+    const job = [
+      "2026-11-04T11:41:12.0000000Z ##[group]Run npx vitest run test/b.test.ts",
+      "2026-11-04T11:41:46.0000000Z  ✓ test/b.test.ts (34 tests) 42803ms",
+      "2026-11-04T11:41:46.7811636Z ##[group]Run npm test",
+      "2026-11-04T11:41:47.9351275Z  RUN  v5.1.0 D:/a/CodeParley/CodeParley",
+      "2026-11-04T11:41:51.2488436Z  ✓ test/a.test.ts (26 tests | 18 skipped) 20ms",
+      "2026-11-04T11:42:34.5953866Z  ✓ test/b.test.ts (34 tests) 40046ms",
+      "2026-11-04T11:42:34.6130657Z      ✓ passes every scenario 19197ms",
+      "2026-11-04T11:43:00.0000000Z  ↓ test/c.test.ts (5 tests | 5 skipped)",
+      "2026-11-04T11:44:00.0000000Z  ❯ test/d.test.ts (3 tests | 1 failed) 1500ms",
+      "2026-11-04T12:07:54.4761479Z ##[group]Run node scripts/package/smoke.mjs --mode both",
+      "2026-11-04T12:09:08.0000000Z  ✓ test/e.test.ts (1 test) 5ms",
+    ].join("\n");
+    // The diagnostic's run of b before the step, and anything after it, are not the suite's.
+    expect(logDurations(job)).toEqual({ "test/a.test.ts": 0.02, "test/b.test.ts": 40.046, "test/c.test.ts": 0, "test/d.test.ts": 1.5 });
+    // A terminal capture, colours and all.
+    expect(logDurations("\x1b[32m ✓\x1b[39m test/f.test.ts \x1b[2m(6 tests)\x1b[22m\x1b[32m 5\x1b[2mms\x1b[22m\x1b[39m\n")).toEqual({ "test/f.test.ts": 0.005 });
+  });
+
+  it("writes one file per line, sorted, and reads back the same durations", () => {
+    const files = { "test/b.test.ts": { win32: 1.5, linux: 0 }, "test/a.test.ts": { win32: 2 } };
+    const text = formatDurations("a test", files) as string;
+    expect(text.split("\n").filter((l) => l.includes(".test.ts")).map((l) => l.trim().replace(/,$/, ""))).toEqual(['"test/a.test.ts": {"win32": 2}', '"test/b.test.ts": {"win32": 1.5, "linux": 0}']);
+    expect(JSON.parse(text)).toMatchObject({ source: "a test", files });
   });
 });

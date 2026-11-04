@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // Step 6: refresh test/durations.json, the recorded duration of each test file per platform (test/schedule.ts balances
-// the CI shards, orders the files and picks the quick tier by it), from vitest JSON reports of full-suite runs:
+// the CI shards, orders the files and picks the quick tier by it), from full-suite runs: vitest JSON reports, or the
+// logs of CI's test jobs (vitest's default reporter, which prints each file's duration).
 //
-//   npx vitest run --reporter=json --outputFile=<report.json>      (one run on one platform; CI uses 4-core runners)
-//   node scripts/ci/test-durations.mjs --platform win32|linux --source "<where the runs come from>" <report.json>...
-//        [--file <durations.json>] [--prune]
+//   npx vitest run --reporter=json --outputFile=<report.json>                    (a run on one platform)
+//   gh api repos/vanderMerkProjects/CodeParley/actions/jobs/<job id>/logs > <job.log>   (a CI test job, every shard)
+//   node scripts/ci/test-durations.mjs --platform win32|linux --source "<where the runs come from>"
+//        [<report.json>...] [--log <job.log>]... [--file <durations.json>] [--prune]
 //
-// A file's new duration on that platform is the median over the reports that ran it; its other platform's entry is
-// kept. --prune drops the entries of files that no longer exist. Only the relative durations matter: a machine
-// faster or slower than CI's runners scales every file alike.
+// A file's new duration on that platform is the median over the runs that ran it; its other platform's entry is
+// kept. --prune drops the entries of files that no longer exist. Only the relative durations matter: CI's runners are
+// what the shards are balanced for, so their logs are the better source; a development machine is slower or faster
+// file by file (it may run tests a runner skips).
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -46,26 +49,47 @@ export function reportDurations(report, root = ROOT) {
   return out;
 }
 
+/** A file's line in vitest's default reporter, with a GitHub Actions timestamp or without: ` ✓ test/x.test.ts (3 tests)
+ * 120ms` (no duration: all skipped). */
+const LOG_FILE = /^(?:\d{4}-\d\d-\d\dT[\d:.]+Z)?\s+[✓↓×❯]\s+(test\/\S+\.test\.ts)\s+\([^)]*\)(?:\s+(\d+)ms)?\s*$/u;
+
+/** Per-file seconds from a default-reporter log. In a GitHub Actions job log, only the `npm test` step counts: the
+ * Windows diagnostic runs one file on its own before it. */
+export function logDurations(text) {
+  const lines = text.replace(/\x1b\[[0-9;]*m/g, "").split(/\r?\n/);
+  const step = lines.findIndex((l) => /##\[group\]Run npm test$/.test(l));
+  const out = {};
+  for (const l of step >= 0 ? lines.slice(step + 1) : lines) {
+    if (step >= 0 && /##\[group\]Run /.test(l)) break;
+    const m = LOG_FILE.exec(l);
+    if (m) out[m[1]] = Number(m[2] ?? 0) / 1000;
+  }
+  return out;
+}
+
 function main(argv) {
-  const o = { platform: null, source: null, file: join(ROOT, "test", "durations.json"), prune: false, reports: [] };
+  const o = { platform: null, source: null, file: join(ROOT, "test", "durations.json"), prune: false, reports: [], logs: [] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--platform") o.platform = argv[++i];
     else if (a === "--source") o.source = argv[++i];
     else if (a === "--file") o.file = resolve(argv[++i]);
+    else if (a === "--log") o.logs.push(resolve(argv[++i]));
     else if (a === "--prune") o.prune = true;
     else if (a.startsWith("--")) throw new Error(`unknown option ${a}`);
     else o.reports.push(resolve(a));
   }
-  if (!PLATFORMS.includes(o.platform) || !o.source || o.reports.length === 0) throw new Error("usage: test-durations.mjs --platform win32|linux --source <text> <report.json>... [--file <durations.json>] [--prune]");
+  if (!PLATFORMS.includes(o.platform) || !o.source || o.reports.length + o.logs.length === 0) throw new Error("usage: test-durations.mjs --platform win32|linux --source <text> [<report.json>...] [--log <job.log>]... [--file <durations.json>] [--prune]");
   const current = JSON.parse(readFileSync(o.file, "utf8"));
   const files = { ...current.files };
   const samples = {};
-  for (const r of o.reports) for (const [f, s] of Object.entries(reportDurations(JSON.parse(readFileSync(r, "utf8"))))) (samples[f] ??= []).push(s);
+  const runs = [...o.reports.map((r) => reportDurations(JSON.parse(readFileSync(r, "utf8")))), ...o.logs.map((l) => logDurations(readFileSync(l, "utf8")))];
+  for (const run of runs) for (const [f, s] of Object.entries(run)) (samples[f] ??= []).push(s);
+  if (Object.keys(samples).length === 0) throw new Error("no test file durations in the given reports and logs");
   for (const [f, xs] of Object.entries(samples)) files[f] = { ...files[f], [o.platform]: Math.round(median(xs) * 10) / 10 };
   if (o.prune) for (const f of Object.keys(files)) if (!existsSync(join(ROOT, f))) delete files[f];
   writeFileSync(o.file, formatDurations(o.source, files));
-  console.log(`${relative(ROOT, o.file)}: ${Object.keys(samples).length} file(s) updated for ${o.platform} from ${o.reports.length} report(s); ${Object.keys(files).length} file(s) recorded`);
+  console.log(`${relative(ROOT, o.file)}: ${Object.keys(samples).length} file(s) updated for ${o.platform} from ${runs.length} run(s); ${Object.keys(files).length} file(s) recorded`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

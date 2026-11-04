@@ -36,12 +36,18 @@ test reads at run time, are invisible to it. Neither replaces `npm test`.
 files to CI's shards, to start the longest files first in CI and to pick the quick tier; what a test asserts never
 depends on it. A stale entry makes a shard or the quick tier slower, never smaller: every file is dealt to a shard, a
 shard only excludes the files dealt to the others, and a file with no entry stays in the quick tier. After large test
-changes, refresh it from full-suite runs with the JSON reporter on each platform:
+changes, refresh it from the logs of CI's test jobs (all shards of a platform; each log lists its files' durations),
+or from full-suite runs with the JSON reporter:
 
 ```bash
+gh api repos/vanderMerkProjects/CodeParley/actions/jobs/<job id>/logs > job-1.log
+node scripts/ci/test-durations.mjs --platform win32 --source "<which runs>" --log job-1.log --log job-2.log [--prune]
 npx vitest run --reporter=json --outputFile=report.json
-node scripts/ci/test-durations.mjs --platform win32 --source "<which runs>" report.json [more reports] [--prune]
+node scripts/ci/test-durations.mjs --platform linux --source "<which runs>" report.json
 ```
+
+CI's runners are what the shards are balanced for, so their logs are the better source: a development machine is
+slower or faster file by file, and may run tests a runner skips.
 
 The custodians and their self-tests, as CI runs them:
 
