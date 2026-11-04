@@ -108,9 +108,16 @@ export async function writeFiles(root: string, files: Record<string, string | Bu
   }
 }
 
-export function commitAll(dir: string, msg = "commit"): string {
+/** Stage everything and commit it. Step 6: the fixture builders, which never read the new commit's id, skip the extra
+ * `git rev-parse` that commitAll() spends on it (one process per fixture). */
+export function commitFiles(dir: string, msg = "commit"): void {
   git(dir, ["add", "-A"]);
   git(dir, ["commit", "-q", "--allow-empty", "-m", msg]);
+}
+
+/** Stage everything, commit it, and return the new commit's id. */
+export function commitAll(dir: string, msg = "commit"): string {
+  commitFiles(dir, msg);
   return git(dir, ["rev-parse", "HEAD"]).stdout.trim();
 }
 

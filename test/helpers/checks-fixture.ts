@@ -13,7 +13,7 @@ import { parseUserConfig } from "../../src/schemas/config.js";
 import { uuidv7 } from "../../src/common/ids.js";
 import { loadTrustedState, type ChecksEngineContext } from "../../src/engine/checks-operation.js";
 import { resolveRunFloor } from "../../src/policy/verification-floor.js";
-import { commitAll, gitExe, initRepo, tempDir, writeFiles } from "./git-fixture.js";
+import { commitFiles, gitExe, initRepo, tempDir, writeFiles } from "./git-fixture.js";
 
 export const SCRIPTS: Record<string, string> = {
   // exit 0, print a marker
@@ -56,7 +56,7 @@ export async function makeFixture(prefix = "arl-checks-"): Promise<Fixture> {
   await mkdir(scratch, { recursive: true });
   await initRepo(repo);
   await writeFiles(repo, { ...SCRIPTS, "flag.txt": "good\n", ".gitignore": "deps/\nbuild/\n", "src/app.js": "module.exports = 1;\n" });
-  commitAll(repo, "init");
+  commitFiles(repo, "init");
   return { dataHome, repo, git: await gitExe(), trustProjectsPath: storeLayout(dataHome).trustProjects, scratch };
 }
 
