@@ -877,8 +877,9 @@ run. Plain branch pushes and documentation-only changes (Markdown at the reposit
 it. Both platforms are gates: each runs the platform-independent tests, the shared contracts
 and its own platform's integration suites (real repositories, processes, links, the server over
 stdio); the other platform's are reported as skipped
-([docs/development.md](docs/development.md#test-classes)). Windows runs the suite in three
-parallel shards per Node.js version, which together run every test file once. Live validation with a
+([docs/development.md](docs/development.md#test-classes)). Each platform and Node.js version
+runs a verify job (typecheck, build, the custodian's self-tests, the install smoke test, the plugin check) and, in
+parallel, test shards (four on Windows, two on Linux) that together run every test file once. Live validation with a
 logged-in Codex and real Claude hosts is manual; for example
 `CODEPARLEY_LIVE_CODEX=1 npx vitest run test/review-live.integration.test.ts` spends Codex quota.
 

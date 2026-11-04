@@ -4,7 +4,7 @@
 // `run:` step runs in the shell GitHub uses (Windows: pwsh with $ErrorActionPreference stop and the last exit code;
 // Linux, and `shell: bash`: bash -eo pipefail); an `if: runner.os == '…'` is honoured; a step that fails stops the job.
 //
-//   node scripts/ci/run-workflow-local.mjs --job test|identity --log <dir> [--expect <sha>] [--node <node executable>]
+//   node scripts/ci/run-workflow-local.mjs --job identity|verify|test --log <dir> [--expect <sha>] [--node <node executable>]
 //        [--npm-cli <npm-cli.js>] [--bash <bash>] [--set NAME=value]... [--substitute "<step name>=<reason>"]...
 //
 // What is not run, and is recorded as such in <dir>/summary.json: an action step (`uses:`; the local Node.js, .NET SDK
@@ -13,8 +13,8 @@
 // must be clean and, with --expect, at that commit; it is checked again after the job. --node runs the job under
 // another Node.js: on Windows it gets a PATH directory of its own with node.exe and npm/npx shims (--npm-cli, default
 // the system npm), on Linux its own directory (which carries npm). --set gives a step environment value the workflow
-// computes with an expression (the identity job's EXPECTED_SHA and MERGE; the test job's VERIFIED_SHA, and
-// CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `--set CP_TEST_SHARD=2/3` one shard).
+// computes with an expression (the identity job's EXPECTED_SHA and MERGE; the verify and test jobs' VERIFIED_SHA, and
+// the test job's CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `=2/4` one shard).
 import { spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

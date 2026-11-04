@@ -104,13 +104,15 @@ Opt-in suites:
 
 `.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual runs. A pull request tests Linux on
 Node 22 and 24 and Windows on Node 24; `main` and manual runs test the full Windows and Linux by Node 22 and 24 matrix.
-Each job typechecks, builds, builds and self-tests the platform's custodian, runs `npm test`, the install smoke test and
-the plugin build.
+Each platform and Node.js version runs as one verify job and the test job's shards, at the same time:
 
-Windows runs the suite in three shards per Node.js version (`windows · Node 24.x · shard 1/3` to `3/3`). Each shard
-is a complete job that runs a third of the test files (`CP_TEST_SHARD`), dealt by their recorded durations so that the
-three take about as long; together they run every test file once, and a Windows combination has passed only when all
-three have. Linux runs the suite in one job.
+- `windows · Node 24.x · verify` typechecks, builds, builds and self-tests the platform's custodian, runs the Windows
+  diagnostic (the custodian's run corpus on its own), the install smoke test and the plugin build;
+- `windows · Node 24.x · tests 1/4` to `4/4` (on Linux `1/2` and `2/2`) each build the custodian, which the suite's
+  real-custodian contract tests run, and run a part of the test files (`CP_TEST_SHARD`), dealt by their recorded
+  durations so that the parts take about as long. Together they run every test file once.
+
+A platform and Node.js version has passed only when its verify job and all its shards have.
 
 The first job, **Commit identity**, verifies that the commit under test is the expected one and that it is signed by
 the key in `.github/ci/commit-signing-key.asc`. Every other job depends on it, so a commit that is not signed with that
