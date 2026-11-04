@@ -3,6 +3,6 @@
        source; test/release-version.test.ts pins this value to it. The SDK appends the source commit to the
        informational version ("<version>+<commit>"), which `version` reports with the protocol and the host. -->
   <PropertyGroup>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 </Project>

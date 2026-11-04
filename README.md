@@ -81,12 +81,13 @@ Node.js on the target. macOS is not supported.
 CodeParley is delivered as artifacts on this repository's
 [releases page](https://github.com/vanderMerkProjects/CodeParley/releases). Verify the release first
 ([docs/verifying-releases.md](docs/verifying-releases.md)). Version 1.0.0 was released privately; the first public
-binary release is planned as 1.0.1. The examples below name the version of these sources.
+binary release is 1.0.1 (until it appears there, no public binary is available). The examples below name the version
+of these sources.
 
 **Manual review:**
 
 ```bash
-npm install -g code-parley-1.0.0.tgz
+npm install -g code-parley-1.0.1.tgz
 code-parley init --repo <path>
 code-parley doctor
 ```

@@ -132,7 +132,7 @@ isolated `CLAUDE_CONFIG_DIR`:
 | Uninstall | Every cached version stays, marked `.orphaned_at`; Claude Code's documented background cleanup removes them about 14 days later. A session that loaded one keeps it until it ends. |
 
 So every build carries its content in its version: `build-plugin.mjs` sets the version to the
-template's base version plus a digest of the plugin's files (for this release `1.0.0-b<12 hex>`), and
+template's base version plus a digest of the plugin's files (for this release `1.0.1-b<12 hex>`), and
 `build-info.json` records that digest, each file's hash, the source commit and whether the tree had
 uncommitted changes. A changed build therefore always gets a new cache directory, and the same build
 anywhere has the same identity. After a rebuild:

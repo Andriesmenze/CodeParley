@@ -1,6 +1,6 @@
 {
   "name": "code-parley",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CodeParley: independent, read-isolated Codex reviews with same-session continuation. Thin hooks forward host facts to CodeParley's engine, which makes every decision; automation adds liveness only and never authority.",
   "author": { "name": "Andries van der Merk" }
 }

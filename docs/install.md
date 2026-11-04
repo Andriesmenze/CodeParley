@@ -27,11 +27,10 @@ never creates the human accounts: they must exist first.
 
 ## Get the release
 
-Version 1.0.0 was released privately: no public binary release is available yet. The first public
-binary release is planned as 1.0.1, on the
-[releases page](https://github.com/vanderMerkProjects/CodeParley/releases). The 1.0.0 file names in
-this guide match the version of these sources; they are examples, not downloads available now. When
-1.0.1 is published, follow that release's signed manifest and use the artifact file names it lists.
+Version 1.0.0 was released privately. The first public binary release is 1.0.1, on the
+[releases page](https://github.com/vanderMerkProjects/CodeParley/releases); until it appears there, no public
+binary is available. The file names in this guide are 1.0.1's, the version of these sources. For any release, follow
+its signed manifest and use the artifact file names it lists.
 
 A release's artifacts are:
 
@@ -40,7 +39,7 @@ A release's artifacts are:
 | `release-manifest.json` and its detached signature | Everyone: verify these first |
 | `codeparley-installer.ps1`, `custodian-windows-x64.tar.gz`, `engine-runtime-windows-x64.tar.gz`, `plugin-windows.tar.gz` | Windows protected install |
 | `codeparley-installer.sh`, `custodian-linux-x64.tar.gz`, `engine-runtime-linux-x64.tar.gz`, `plugin-linux.tar.gz` | Linux protected install |
-| `code-parley-1.0.0.tgz` | Manual review |
+| `code-parley-1.0.1.tgz` | Manual review |
 
 Put them in one directory; this document calls it `<dir>`. The installers bundle Node.js 24.22.2 in
 the engine runtime and a self-contained .NET runtime in the custodian: the target needs no SDK or
@@ -580,7 +579,7 @@ You need Node.js `^22.12 || ^24`, git 2.41 or later, and Codex CLI 0.160.x, logg
 npm tarball gives you no custodian: protected loops and delegated fixes are refused.
 
 ```bash
-npm install -g code-parley-1.0.0.tgz
+npm install -g code-parley-1.0.1.tgz
 code-parley init --repo <path>
 code-parley doctor
 ```

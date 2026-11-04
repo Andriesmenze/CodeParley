@@ -1,6 +1,6 @@
 {
   "name": "code-parley",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "CodeParley: independent, read-isolated Codex reviews, operator-approved checks and a custodian-protected review loop for Claude Code (protected mode on Windows 11 and Ubuntu 24.04).",
