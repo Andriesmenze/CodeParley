@@ -49,6 +49,11 @@ node scripts/ci/test-durations.mjs --platform linux --source "<which runs>" repo
 CI's runners are what the shards are balanced for, so their logs are the better source: a development machine is
 slower or faster file by file, and may run tests a runner skips.
 
+The fixtures (repositories, data homes, scratch folders) are made under the system temporary directory and removed
+after each test file by `test/setup-temp-dirs.ts`, without following links: fixtures hold junctions and symbolic
+links on purpose. A test that makes a temporary directory takes it from `tempDir()` (`test/helpers/git-fixture.ts`) or
+wraps it in `trackTemp()` (`test/helpers/temp-dirs.ts`). `CP_TEST_KEEP_TMP=1` keeps them, to inspect a run.
+
 The custodians and their self-tests, as CI runs them:
 
 ```bash

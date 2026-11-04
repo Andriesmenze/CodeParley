@@ -33,9 +33,16 @@ export default defineConfig(({ mode }) => {
       environment: "node",
       include: ["test/**/*.test.ts"],
       exclude: [...configDefaults.exclude, ...excluded],
-      ...(process.env["CI"] ? { sequence: { sequencer: scheduledSequencer((f) => startOrder(f, durations, process.platform)) } } : {}),
+      sequence: {
+        // After-hooks in reverse order (vitest's default, relied on): the temporary-directory cleanup registered by the
+        // setup file below runs after a test file's own afterAll hooks.
+        hooks: "stack",
+        ...(process.env["CI"] ? { sequencer: scheduledSequencer((f) => startOrder(f, durations, process.platform)) } : {}),
+      },
       // Compiles src/ once per run for the suites that run it in child processes (M1.6-17).
       globalSetup: ["./test/global-setup.ts"],
+      // Step 6: removes the temporary directories each test file made, after the file (test/helpers/temp-dirs.ts).
+      setupFiles: ["./test/setup-temp-dirs.ts"],
       // The integration suites spawn many processes (git, node, PowerShell, test servers) per
       // test. Locally, leave half the cores to those children: oversubscription made per-test
       // time limits flaky on loaded development machines (M1.6). On CI (a dedicated runner) use

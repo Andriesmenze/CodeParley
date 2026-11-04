@@ -32,6 +32,8 @@ change has to pass. Run the custodian builds and self-tests too if you change `c
 - Keep platform behaviour explicit: a test that does not apply to a platform skips and says so.
 - Never edit the stores under `test/fixtures/compat/`: released versions wrote them, and the compatibility tests depend
   on their exact bytes.
+- Take a test's temporary directories from `tempDir()` (`test/helpers/git-fixture.ts`), or wrap them in `trackTemp()`,
+  so they are removed after the test file.
 - Never put credentials, real account names, machine paths or session data in code, tests, fixtures or commit messages.
   Use synthetic values.
 - A change to what CodeParley claims or guarantees needs a matching change to [docs/security.md](docs/security.md).

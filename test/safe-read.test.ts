@@ -9,10 +9,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { readWorkingFile } from "../src/capture/safe-read.js";
 import { supported } from "./helpers/git-fixture.js";
+import { trackTemp } from "./helpers/temp-dirs.js";
 
 describe.skipIf(!supported)("safe read: a same-size write in place during the read", () => {
   it("is detected; the read is repeated and returns the file as it now is, never stale or mixed bytes", async () => {
-    const root = await realpath(await mkdtemp(join(tmpdir(), "cp-saferead-")));
+    const root = trackTemp(await realpath(await mkdtemp(join(tmpdir(), "cp-saferead-"))));
     const p = join(root, "big.bin");
     const size = 3 * 1024 * 1024; // more than one 1 MiB read chunk
     await writeFile(p, Buffer.alloc(size, 0x61));

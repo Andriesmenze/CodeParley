@@ -15,6 +15,7 @@ import { selfOwner } from "../../src/store/owner.js";
 import { parseUserConfig } from "../../src/schemas/config.js";
 import { uuidv7 } from "../../src/common/ids.js";
 import { listFiles } from "../../src/capture/export-writer.js";
+import { trackTemp } from "./temp-dirs.js";
 
 /**
  * Platform classification of the suite (M1.6 CI; Linux milestone, plan §1.13):
@@ -43,8 +44,9 @@ export async function gitExe(): Promise<string> {
   return gitExeCache;
 }
 
+/** A new directory under the system temporary directory (its final path), removed after the test file. */
 export async function tempDir(prefix: string): Promise<string> {
-  return realpath(await mkdtemp(join(tmpdir(), prefix)));
+  return trackTemp(await realpath(await mkdtemp(join(tmpdir(), prefix))));
 }
 
 let emptyGlobal: string | null = null;
@@ -52,6 +54,8 @@ function emptyGlobalConfig(): string {
   if (!emptyGlobal) {
     emptyGlobal = join(tmpdir(), `arl-empty-gitconfig-${process.pid}`);
     if (!existsSync(emptyGlobal)) writeFileSync(emptyGlobal, "");
+    // Removed after the test file, like the fixtures (helpers/temp-dirs.ts); a later file in this process writes it again.
+    trackTemp(emptyGlobal);
   }
   return emptyGlobal;
 }

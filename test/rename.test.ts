@@ -10,6 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DATA_DIR_NAME, LEGACY_DATA_DIR_NAME, defaultDataHomes, resolveDataHome } from "../src/store/paths.js";
 import { defaultHardExclusions } from "../src/workspace/scope.js";
+import { trackTemp } from "./helpers/temp-dirs.js";
 import { chooseRepoPreferences, LEGACY_REPO_PREFERENCES_PATH, REPO_PREFERENCES_PATH } from "../src/schemas/repo-preferences.js";
 import { PRODUCT_NAME, TOOL_VERSION } from "../src/common/version.js";
 import { SERVER_INSTRUCTIONS, SERVER_NAME, toolDefinitions } from "../src/server/tools.js";
@@ -104,7 +105,7 @@ describe.runIf(process.platform === "linux")("data and configuration on Linux: X
 
 describe.runIf(process.platform === "win32")("data home: CodeParley, with the legacy AIReviewLoop folder still found", () => {
   async function base(): Promise<string> {
-    return mkdtemp(join(tmpdir(), "cp-home-"));
+    return trackTemp(await mkdtemp(join(tmpdir(), "cp-home-")));
   }
 
   it("new installs use CodeParley; an existing AIReviewLoop folder is used until CodeParley exists", async () => {

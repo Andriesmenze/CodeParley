@@ -13,10 +13,11 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { isPlainDirectory, removeTreeNoFollow, treeSize } from "../src/store/remove-tree.js";
 import { sharedCompiledSrc } from "./helpers/compiled-src.js";
+import { trackTemp } from "./helpers/temp-dirs.js";
 import { mountIdOfDir, mountIdOfFd, parseMountInfo } from "../src/workspace/mounts.js";
 
 async function layout() {
-  const base = await mkdtemp(join(tmpdir(), "cp-rmtree-"));
+  const base = trackTemp(await mkdtemp(join(tmpdir(), "cp-rmtree-")));
   const outside = join(base, "outside");
   await mkdir(join(outside, "nested"), { recursive: true });
   await writeFile(join(outside, "keep.txt"), "outside");
@@ -132,7 +133,7 @@ describe.runIf(canUnshareMount())("mount points (Linux)", () => {
     const dist = sharedCompiledSrc(); // the shared build of src/ (test/global-setup.ts)
     expect(dist).not.toBeNull();
     if (!dist) return;
-    const base = await mkdtemp(join(tmpdir(), "cp-rmtree-mnt-"));
+    const base = trackTemp(await mkdtemp(join(tmpdir(), "cp-rmtree-mnt-")));
     const root = join(base, "run");
     const mnt = join(root, "ops", "mnt");
     await mkdir(mnt, { recursive: true });
@@ -192,7 +193,7 @@ describe("the Linux mount table (workspace/mounts.ts)", () => {
   });
 
   it.runIf(process.platform === "linux")("reads the mount id of an open file and of a directory: the same mount gives the same id", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "arl-mntid-"));
+    const dir = trackTemp(await mkdtemp(join(tmpdir(), "arl-mntid-")));
     await writeFile(join(dir, "f.txt"), "x");
     const fh = await open(join(dir, "f.txt"), "r");
     try {
