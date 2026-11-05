@@ -1888,7 +1888,8 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     const repoKey = identity.key;
     // Phase 5 F-i2-5 (GrantLedger.ListUserRecords): the snapshot section is served on the operator surface only.
     if (sections.includes("snapshot") && !operatorView) throw simError("CALLER_NOT_AUTHORIZED", "the snapshot section is served on the operator surface only");
-    const result: Record<string, unknown> = {};
+    // F-S71-1 (GrantLedger.ListSections): the identity the directory resolved to now, as every section is keyed.
+    const result: Record<string, unknown> = { repoKey };
     if (sections.includes("user")) {
       const log = (st.userLogs ??= {})[this.userLogKey(repoKey, runId)];
       result.governed = log !== undefined;

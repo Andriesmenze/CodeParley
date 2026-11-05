@@ -214,6 +214,9 @@ export interface UserRecordCommit {
  * and `logDigest` identify the snapshot (a successful empty log has `governed:false`/`revision:0`, which is
  * NOT the same as the custodian being unavailable — that throws). */
 export interface UserRecordListing {
+  /** F-S71-1: the identity the custodian resolved the repository path to for this listing (the key its records are
+   * held under); null from a custodian that does not report it (before Step 7.1's correction). */
+  repoKey: string | null;
   governed: boolean;
   revision: number;
   logDigest: string;

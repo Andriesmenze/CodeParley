@@ -166,6 +166,8 @@ export function userRecordListingOf(data: Record<string, unknown> | undefined): 
   const records = Array.isArray(data?.["records"]) ? (data!["records"] as Record<string, unknown>[]) : [];
   const recovered = data?.["recoveredAtRevision"];
   return {
+    // Absent, empty or not a string: unknown (null) — never matched against a record.
+    repoKey: typeof data?.["repoKey"] === "string" && data["repoKey"] !== "" ? (data["repoKey"] as string) : null,
     governed: Boolean(data?.["governed"]),
     revision: Number.isInteger(data?.["revision"]) ? Number(data!["revision"]) : 0,
     logDigest: typeof data?.["logDigest"] === "string" ? (data!["logDigest"] as string) : "",

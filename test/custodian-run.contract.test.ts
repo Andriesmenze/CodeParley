@@ -25,7 +25,7 @@ const CORPUS_PATH = join(ROOT, "test", "fixtures", "run-transition-corpus.json")
 
 type Json = Record<string, unknown>;
 interface Step extends Json {
-  op: "t" | "mint" | "bind" | "loop" | "replay" | "list" | "amend" | "decide" | "commit" | "dropRun" | "grant" | "config" | "revokeGlobal" | "recover" | "capture" | "tamper" | "restart" | "measure" | "derive" | "exports" | "orphan" | "sweep" | "advance" | "fixConfirm" | "held" | "orphanProposal" | "fixPrepare" | "fixRender" | "fixList" | "repo" | "moveRepo" | "unpin";
+  op: "t" | "mint" | "bind" | "loop" | "replay" | "list" | "amend" | "decide" | "commit" | "dropRun" | "grant" | "config" | "revokeGlobal" | "recover" | "capture" | "tamper" | "restart" | "measure" | "derive" | "exports" | "orphan" | "sweep" | "advance" | "fixConfirm" | "held" | "orphanProposal" | "fixPrepare" | "fixRender" | "fixList" | "repo" | "moveRepo" | "unpin" | "grantIdentity";
 }
 interface Scenario {
   name: string;
@@ -304,6 +304,16 @@ class Runner {
       }
       case "list":
         return this.t.send(surface, "list_user_records", { repositoryRoot: this.repo, runId: run, sections: ["user", "loop", "run", "config"] }, `list-${++this.generated}`);
+      case "grantIdentity": {
+        // F-S71-1: the identity list_user_records reports for the repository path, against the latest grant's key.
+        const l = await this.t.send(surface, "list_user_records", { repositoryRoot: this.repo, runId: run, sections: ["config"] }, `list-${++this.generated}`);
+        if (!l.ok) return l;
+        const g = await this.t.send("operator", "list_grants", {}, `grants-${++this.generated}`);
+        if (!g.ok) return g;
+        const key = typeof l.data?.["repoKey"] === "string" ? (l.data["repoKey"] as string) : null;
+        const last = ((g.data?.["grants"] as Json[] | undefined) ?? []).at(-1) ?? null;
+        return { ok: true, data: { reported: key !== null, matchesLatestGrant: last !== null && key !== null && last["repoKey"] === key, latestGrantActive: last?.["active"] === true } };
+      }
       case "config": {
         const action = String(s["action"]);
         const revision = Number(((await this.configSection())["repository"] as Json | null)?.["configRevision"] ?? 0);
@@ -519,7 +529,10 @@ function compare(expect: Json, res: CustodianResponse, list: boolean): string | 
   if (m) return m;
   const json = JSON.stringify(data);
   for (const p of (expect["present"] as string[] | undefined) ?? []) if (!(p in data)) return `'${p}' missing from ${json}`;
-  for (const a of (expect["absent"] as string[] | undefined) ?? []) if (json.includes(a)) return `'${a}' must not appear in ${json}`;
+  // F-S71-1: a listing reports the identity it was resolved under (its top-level repoKey); the projections below it must
+  // still carry no internal field, so they alone are scanned.
+  const scanned = list && "repoKey" in data ? JSON.stringify({ ...data, repoKey: undefined }) : json;
+  for (const a of (expect["absent"] as string[] | undefined) ?? []) if (scanned.includes(a)) return `'${a}' must not appear in ${json}`;
   // Phase 4 Increment 3: the rendering's text (the custodian's exact bytes) has — and lacks — these lines or fragments.
   const re = expect["rendering"] as { has?: string[]; lacks?: string[] } | undefined;
   if (re) {

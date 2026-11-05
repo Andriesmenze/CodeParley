@@ -327,6 +327,18 @@ internal static class RunCorpusSelfTest
             }
             case "list":
                 return ctx.Ledger.ListUserRecords(ctx.Repo, run, operatorView, ListedSections);
+            case "grantIdentity":
+            {
+                // F-S71-1: the identity list_user_records reports for the repository path, against the latest grant's key.
+                string? key = (string?)ctx.Ledger.ListUserRecords(ctx.Repo, run, operatorView, ConfigOnly)["repoKey"];
+                JsonNode? last = ctx.Ledger.ListGrants()["grants"]!.AsArray().LastOrDefault();
+                return new JsonObject
+                {
+                    ["reported"] = key is not null,
+                    ["matchesLatestGrant"] = last is not null && key is not null && (string?)last["repoKey"] == key,
+                    ["latestGrantActive"] = last?["active"]?.GetValue<bool>() ?? false,
+                };
+            }
             case "config":
             {
                 string action = (string)step["action"]!;
@@ -488,6 +500,7 @@ internal static class RunCorpusSelfTest
 
     /// <summary>The sections a corpus listing compares (the derivation section has its own step).</summary>
     private static readonly IReadOnlySet<string> ListedSections = new HashSet<string>(StringComparer.Ordinal) { "user", "loop", "run", "config" };
+    private static readonly IReadOnlySet<string> ConfigOnly = new HashSet<string>(StringComparer.Ordinal) { "config" };
 
     /// <summary>Run the pending check measurement of <paramref name="operationId"/> with the step's synthetic measurement
     /// (<c>sourceId</c>, <c>stable</c>, <c>fail</c>; default: the corpus's source, stable); returns its commit's result.</summary>
@@ -629,7 +642,12 @@ internal static class RunCorpusSelfTest
         string json = result.ToJsonString();
         string? missing = (expect["present"]?.AsArray() ?? []).Select(p => (string)p!).FirstOrDefault(p => !result.ContainsKey(p));
         if (missing is not null) return $"'{missing}' missing from {json}";
-        string? leaked = (expect["absent"]?.AsArray() ?? []).Select(a => (string)a!).FirstOrDefault(a => json.Contains(a, StringComparison.Ordinal));
+        // F-S71-1: a listing reports the identity it was resolved under (its top-level repoKey); the projections below it
+        // must still carry no internal field, so they alone are scanned.
+        JsonObject scanned = result;
+        if (list && result.ContainsKey("repoKey")) { scanned = (JsonObject)result.DeepClone(); scanned.Remove("repoKey"); }
+        string scannedJson = scanned.ToJsonString();
+        string? leaked = (expect["absent"]?.AsArray() ?? []).Select(a => (string)a!).FirstOrDefault(a => scannedJson.Contains(a, StringComparison.Ordinal));
         if (leaked is not null) return $"'{leaked}' must not appear in {json}";
         // Phase 4 Increment 3: the rendering's text (the custodian's exact bytes) has — and lacks — these lines or fragments.
         if (expect["rendering"] is JsonObject re)

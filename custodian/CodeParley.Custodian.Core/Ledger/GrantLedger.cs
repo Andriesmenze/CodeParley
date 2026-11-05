@@ -658,7 +658,10 @@ internal sealed partial class GrantLedger
         string repoKey = id.Key;
         lock (EnterGate())
         {
-            var result = new JsonObject();
+            // F-S71-1: the identity this directory resolved to now, as every section below is keyed. A client compares
+            // the custodian's records (a grant's repoKey) with it, never with a path: a directory replaced at the same
+            // path has another identity, and the old directory's records do not apply to it.
+            var result = new JsonObject { ["repoKey"] = repoKey };
             if (want.Contains("user"))
             {
                 UserRecordLog? log = ReadUserLog(repoKey, runId);

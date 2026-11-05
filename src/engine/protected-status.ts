@@ -277,6 +277,9 @@ function same(platform: NodeJS.Platform, a: string, b: string): boolean {
 export async function repositoryRecords(o: {
   platform: NodeJS.Platform;
   root: string;
+  /** F-S71-1: the identity the custodian resolved `root` to (`list_user_records`' repoKey); null when it reported none.
+   * A grant applies to this directory only if its repoKey is this one — as the custodian itself authorizes loops. */
+  repoKey: string | null;
   section: ConfigSection;
   grants: GrantSummary[] | null;
   hashFile: (path: string) => Promise<string | null>;
@@ -355,13 +358,22 @@ export async function repositoryRecords(o: {
   if (o.grants === null) {
     out.push({ record: "loop_grant", state: "missing", required: false, detail: "the grants could not be listed from this account", restore: `${op} loop allow --repo ${root} ${where}`, resumable: false });
   } else {
-    const mine = o.grants.filter((g) => g.repositoryRoot !== null && same(platform, g.repositoryRoot, root) && !g.revoked);
+    // F-S71-1: a grant is this directory's only by the identity the custodian resolved it to now (the custodian
+    // authorizes loops by that key), never by its path: a directory replaced at the same path is another directory.
+    // Without the identity, no grant is shown as in force.
+    const mine = o.repoKey === null ? [] : o.grants.filter((g) => g.repoKey === o.repoKey && !g.revoked);
     const active = mine.find((g) => g.active && g.loopsUsed < g.loopsTotal && Date.parse(g.expiresAt) > o.nowMs);
     const allow = `${op} setup --repo ${root} --loops <1-8> --minutes <1-180>`;
+    // Grants recorded at this path for another identity (a replaced directory, or before P3.4C-0): shown, never counted.
+    const elsewhere = o.grants.filter((g) => !g.revoked && g.repositoryRoot !== null && same(platform, g.repositoryRoot, root) && (o.repoKey === null || g.repoKey !== o.repoKey));
+    const staleActive = elsewhere.find((g) => g.active && g.loopsUsed < g.loopsTotal && Date.parse(g.expiresAt) > o.nowMs);
+    // This directory's own grants decide first; another directory's is only explained when this one has none.
     if (active) out.push({ record: "loop_grant", state: "in_force", required: false, detail: `grant ${active.grantId}: ${active.loopsTotal - active.loopsUsed} of ${active.loopsTotal} loop(s) left until ${active.expiresAt}`, restore: null, resumable: false });
     else if (mine.some((g) => g.suspended)) out.push({ record: "loop_grant", state: "suspended", required: false, detail: "the grant was suspended by a restart of the OS or a rollback (a grant never comes back: a new one is needed)", restore: allow, resumable: true });
     else if (mine.some((g) => g.loopsUsed >= g.loopsTotal)) out.push({ record: "loop_grant", state: "used_up", required: false, detail: "every granted loop was used", restore: allow, resumable: true });
     else if (mine.length) out.push({ record: "loop_grant", state: "expired", required: false, detail: "the grant expired", restore: allow, resumable: true });
+    else if (o.repoKey === null && staleActive) out.push({ record: "loop_grant", state: "missing", required: false, detail: `grant ${staleActive.grantId} names this path, but the custodian did not report this directory's identity (an older custodian), so no grant is shown as in force here; the custodian decides when a loop starts`, restore: allow, resumable: false });
+    else if (staleActive) out.push({ record: "loop_grant", state: "missing", required: false, detail: `grant ${staleActive.grantId} was made for another directory at this path (identity ${staleActive.repoKey}; this directory is ${o.repoKey}): it does not authorize loops here, so a new grant is needed (automated loops need one; attended runs do not)`, restore: allow, resumable: true });
     else out.push({ record: "loop_grant", state: "missing", required: false, detail: "no loop is granted for this repository (automated loops need one; attended runs do not)", restore: allow, resumable: false });
   }
   return out;
@@ -402,8 +414,11 @@ export async function protectedStatus(le: Loaded, o: { repositoryRoot?: string |
     if (state !== "ready" || on === null || !gate.available) repository = { root, state: "unknown", read_on: null, records: [] };
     else {
       let section: ConfigSection | null = null;
+      let repoKey: string | null = null;
       try {
-        section = (await new CustodianGrants(gate.transport).listUserRecords(on, root, CONFIG_VIEW_RUN, ["config"])).config ?? null;
+        const listing = await new CustodianGrants(gate.transport).listUserRecords(on, root, CONFIG_VIEW_RUN, ["config"]);
+        section = listing.config ?? null;
+        repoKey = listing.repoKey;
       } catch (e) {
         const why = isDomainError(e) || e instanceof Error ? e.message : String(e);
         explanation.push(`The repository's records could not be read (${why}).${/denied access/.test(why) ? " An administrator runs the installer's grant-repository for this repository." : ""}`);
@@ -417,7 +432,7 @@ export async function protectedStatus(le: Loaded, o: { repositoryRoot?: string |
       }
       if (!section) repository = { root, state: "unknown", read_on: on, records: [] };
       else {
-        const records = await repositoryRecords({ platform, root, section, grants, hashFile: o.hooks?.hashFile ?? sha256OfFile, ...(o.hooks?.exists ? { exists: o.hooks.exists } : {}), ...(o.hooks?.builtAt ? { builtAt: o.hooks.builtAt } : {}), ...(o.hooks?.installedRuntime ? { installedRuntime: o.hooks.installedRuntime } : {}), nowMs: o.nowMs ?? Date.now(), implementerHome: on === "implementer" ? (le.dataHome ?? null) : null });
+        const records = await repositoryRecords({ platform, root, repoKey, section, grants, hashFile: o.hooks?.hashFile ?? sha256OfFile, ...(o.hooks?.exists ? { exists: o.hooks.exists } : {}), ...(o.hooks?.builtAt ? { builtAt: o.hooks.builtAt } : {}), ...(o.hooks?.installedRuntime ? { installedRuntime: o.hooks.installedRuntime } : {}), nowMs: o.nowMs ?? Date.now(), implementerHome: on === "implementer" ? (le.dataHome ?? null) : null });
         repository = { root, state: records.some((r) => r.required && r.state !== "in_force") ? "misconfigured" : "ready", read_on: on, records };
         for (const r of records) if (r.restore && (r.required || r.state !== "missing")) next.push(r.restore);
       }

@@ -1234,6 +1234,22 @@
         {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":51,"truncated":true,"omittedPending":0,"entries":["pending selectable g11 - main","pending selectable g12 - main","pending selectable g13 - main","pending selectable g14 - main","pending selectable g15 - main","pending selectable g16 - main","pending selectable g17 - main","pending selectable g18 - main","pending selectable g19 - main","pending selectable g20 - main","pending selectable g21 - main","pending selectable g22 - main","pending selectable g23 - main","pending selectable g24 - main","pending selectable g25 - main","pending selectable g26 - main","pending selectable g27 - main","pending selectable g28 - main","pending selectable g29 - main","pending selectable g30 - main","pending selectable g31 - main","pending selectable g32 - main","pending selectable g33 - main","pending selectable g34 - main","pending selectable g35 - main","pending selectable g36 - main","pending selectable g37 - main","pending selectable g38 - main","pending selectable g39 - main","pending selectable g40 - main","pending selectable g41 - main","pending selectable g42 - main","pending selectable g43 - main","pending selectable g44 - main","pending selectable g45 - main","pending selectable g46 - main","pending selectable g47 - main","pending selectable g48 - main","pending selectable g49 - main","pending selectable g50 - main","ineligible - g1 content_unreadable main","ineligible - g2 content_unreadable main","ineligible - g3 content_unreadable main","ineligible - g4 content_unreadable main","ineligible - g5 content_unreadable main","ineligible - g6 content_unreadable main","ineligible - g7 content_unreadable main","ineligible - g8 content_unreadable main","ineligible - g9 content_unreadable main","ineligible - g10 content_unreadable main"]}}},
         {"op":"fixPrepare","run":"r1","of":"g1","decision":"confirm","expect":{"ok":false,"code":"EVIDENCE_NOT_HELD"}}
       ]
+    },
+    {
+      "name": "Step 7.1 F-S71-1: list_user_records reports the identity the custodian resolved the repository path to, the key its grants are authorized by; a directory replaced at the same path has another identity, so the old directory's grant is not its and opens no run; a new grant for the new directory opens a run and its loop is consumed",
+      "steps": [
+        {"op":"grantIdentity","run":"r9","expect":{"ok":true,"data":{"reported":true,"matchesLatestGrant":true,"latestGrantActive":true}}},
+        {"op":"moveRepo","to":"old","reuse":true,"expect":{"ok":true}},
+        {"op":"grantIdentity","run":"r9","expect":{"ok":true,"data":{"reported":true,"matchesLatestGrant":false,"latestGrantActive":true}}},
+        {"op":"config","action":"set","expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"open","fields":{"$template":"open"},"expect":{"ok":false,"code":"LOOP_NOT_AUTHORIZED"}},
+        {"op":"grant","loops":1},
+        {"op":"grantIdentity","run":"r9","expect":{"ok":true,"data":{"reported":true,"matchesLatestGrant":true,"latestGrantActive":true}}},
+        {"op":"t","run":"r1","kind":"open","fields":{"$template":"open"},"expect":{"ok":true}},
+        {"op":"mint","run":"r1","expect":{"ok":true}},
+        {"op":"grantIdentity","run":"r9","expect":{"ok":true,"data":{"reported":true,"matchesLatestGrant":true,"latestGrantActive":false}}},
+        {"op":"t","run":"r2","kind":"open","fields":{"$template":"open"},"expect":{"ok":false,"code":"LOOP_NOT_AUTHORIZED"}}
+      ]
     }
   ]
 }

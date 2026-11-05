@@ -11,13 +11,15 @@
 // Evidence class: simulation (the native VMs run the real custodian).
 
 import { describe, it, expect } from "vitest";
-import { copyFile, readFile, writeFile } from "node:fs/promises";
+import { copyFile, cp, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { REMEDY_CODES, remedyFor, remedyLines } from "../src/common/remedies.js";
 import { errorStructure } from "../src/server/result.js";
 import { runCli } from "../src/cli/cli.js";
 import { BUSY_LIMITATION, hostStateOf, protectedStatus, repositoryRecords, type SurfaceProbe } from "../src/engine/protected-status.js";
 import type { ConfigSection, GrantSummary } from "../src/custodian/protocol.js";
+import { CustodianGrants } from "../src/custodian/grants.js";
+import { CustodianRuns } from "../src/custodian/runs.js";
 import { nodeSupported } from "../src/engine/doctor.js";
 import { CustodianBusy, CustodianNotTrusted, CustodianUnavailable, type CustodianTransport } from "../src/custodian/transport.js";
 import type { Loaded } from "../src/engine/engine-env.js";
@@ -155,8 +157,8 @@ describe("Phase 6 Increment 3 — the repository's records as status names them"
   const rt = { runtimeId: "rt-1", globalRevision: 1, recordedAt: "t", root: "C:\\gone\\engine", gitRelative: null, gitPath: "C:\\git.exe", entryRelative: "dist/helper/main.js", nodeSha256: "a".repeat(64), gitSha256: "b".repeat(64), entrySha256: "c".repeat(64), treeDigest: "d".repeat(64), fileCount: 10, totalBytes: 100, revoked: false, lapsed: false, lapsedAtRecoveryId: null, usable: true };
   const section = (over: Partial<ConfigSection> = {}): ConfigSection => ({ globalRevision: 1, repository: null, acceptances: [], selftestConfirmations: [], engineRuntime: rt, ...over });
   const g = (over: Partial<GrantSummary>): GrantSummary => ({ grantId: "g1", repoKey: "k", repositoryRoot: "C:\\r", identity: "x", loopsUsed: 0, loopsTotal: 2, expiresAt: new Date(Date.now() + 60_000).toISOString(), revoked: false, suspended: false, active: true, assurance: "L1", ...over });
-  const recs = (grants: GrantSummary[] | null, exists = true, platform: NodeJS.Platform = "win32", home: string | null = null) =>
-    repositoryRecords({ platform, root: "C:\\r", section: section(), grants, hashFile: async () => null, nowMs: Date.now(), exists: async () => exists, implementerHome: home });
+  const recs = (grants: GrantSummary[] | null, exists = true, platform: NodeJS.Platform = "win32", home: string | null = null, repoKey: string | null = "k") =>
+    repositoryRecords({ platform, root: "C:\\r", repoKey, section: section(), grants, hashFile: async () => null, nowMs: Date.now(), exists: async () => exists, implementerHome: home });
   const of = async (p: ReturnType<typeof recs>, name: string) => (await p).find((r) => r.record === name)!;
 
   it("an approved runtime whose directory an upgrade removed is changed, not in force", async () => {
@@ -166,7 +168,7 @@ describe("Phase 6 Increment 3 — the repository's records as status names them"
 
   it("Windows: an upgrade that kept the approved version's directory is changed (VERIFIED on the Windows VM: vm.16 stayed approved after vm.18)", async () => {
     const at = (installed: string | null) =>
-      repositoryRecords({ platform: "win32", root: "C:\\r", section: section({ engineRuntime: { ...rt, root: "C:\\Program Files\\CodeParley\\engine\\0.4.0-vm.16" } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => null, installedRuntime: async () => installed });
+      repositoryRecords({ platform: "win32", root: "C:\\r", repoKey: "k", section: section({ engineRuntime: { ...rt, root: "C:\\Program Files\\CodeParley\\engine\\0.4.0-vm.16" } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => null, installedRuntime: async () => installed });
     // Paths compare without case on Windows.
     expect(await of(at("c:\\program files\\codeparley\\engine\\0.4.0-VM.16"), "engine_runtime")).toMatchObject({ state: "in_force" });
     expect(await of(at(null), "engine_runtime")).toMatchObject({ state: "in_force" });
@@ -176,7 +178,7 @@ describe("Phase 6 Increment 3 — the repository's records as status names them"
 
   it("an engine at the approved path built after the approval (reinstalled in place) is changed — before lapsed", async () => {
     const at = (builtAt: number | null, lapsed = false) =>
-      repositoryRecords({ platform: "linux", root: "/home/i/r", section: section({ engineRuntime: { ...rt, root: "/opt/codeparley/engine/0.4.0", recordedAt: "2026-10-29T10:00:00.000Z", lapsed, usable: !lapsed } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => builtAt, installedRuntime: async () => "/opt/codeparley/engine/0.4.0" });
+      repositoryRecords({ platform: "linux", root: "/home/i/r", repoKey: "k", section: section({ engineRuntime: { ...rt, root: "/opt/codeparley/engine/0.4.0", recordedAt: "2026-10-29T10:00:00.000Z", lapsed, usable: !lapsed } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => builtAt, installedRuntime: async () => "/opt/codeparley/engine/0.4.0" });
     expect(await of(at(Date.parse("2026-10-29T09:00:00Z")), "engine_runtime")).toMatchObject({ state: "in_force" });
     expect(await of(at(null), "engine_runtime")).toMatchObject({ state: "in_force" });
     // On Linux setup approves what `current` names by default: the restore names no directory.
@@ -188,7 +190,7 @@ describe("Phase 6 Increment 3 — the repository's records as status names them"
   it("Linux: `current` naming another version than the approved one (an upgrade keeps the previous directory) is changed", async () => {
     // VERIFIED on the Ubuntu VM: the custodian measures without following links, so `current` itself is never the approved root.
     const at = (installed: string | null, lapsed = false) =>
-      repositoryRecords({ platform: "linux", root: "/home/i/r", section: section({ engineRuntime: { ...rt, root: "/opt/codeparley/engine/0.4.0", recordedAt: "2026-10-29T10:00:00.000Z", lapsed, usable: !lapsed } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => null, installedRuntime: async () => installed });
+      repositoryRecords({ platform: "linux", root: "/home/i/r", repoKey: "k", section: section({ engineRuntime: { ...rt, root: "/opt/codeparley/engine/0.4.0", recordedAt: "2026-10-29T10:00:00.000Z", lapsed, usable: !lapsed } }), grants: [], hashFile: async () => null, nowMs: Date.now(), exists: async () => true, builtAt: async () => null, installedRuntime: async () => installed });
     expect(await of(at("/opt/codeparley/engine/0.4.0"), "engine_runtime")).toMatchObject({ state: "in_force" });
     expect(await of(at(null), "engine_runtime")).toMatchObject({ state: "in_force" });
     expect(await of(at("/opt/codeparley/engine/0.5.0"), "engine_runtime")).toMatchObject({ state: "changed", resumable: true, detail: expect.stringContaining("the installed engine runtime is /opt/codeparley/engine/0.5.0"), restore: "/usr/local/sbin/code-parley-operator setup --resume --repo /home/i/r" });
@@ -200,8 +202,35 @@ describe("Phase 6 Increment 3 — the repository's records as status names them"
     expect(await of(recs([g({ active: false, suspended: true })]), "loop_grant")).toMatchObject({ state: "suspended", resumable: true });
     expect(await of(recs([g({ active: false, loopsUsed: 2 })]), "loop_grant")).toMatchObject({ state: "used_up" });
     expect(await of(recs([g({ active: false, expiresAt: new Date(0).toISOString() })]), "loop_grant")).toMatchObject({ state: "expired" });
-    expect(await of(recs([g({ repositoryRoot: "C:\\other" })]), "loop_grant")).toMatchObject({ state: "missing", resumable: false });
+    expect(await of(recs([g({ repoKey: "other", repositoryRoot: "C:\\other" })]), "loop_grant")).toMatchObject({ state: "missing", resumable: false });
     expect(await of(recs(null), "loop_grant")).toMatchObject({ state: "missing", detail: expect.stringContaining("could not be listed") });
+  });
+
+  it("F-S71-1: a grant is the directory's by the identity the custodian resolved it to, never by its path", async () => {
+    // The same identity under another recorded spelling or location: the custodian authorizes it, so it is in force.
+    expect(await of(recs([g({ repositoryRoot: "C:\\moved" })]), "loop_grant")).toMatchObject({ state: "in_force" });
+    // Windows paths compare without case, but only for the display: a grant at "c:\R" for another identity is not ours.
+    for (const at of ["C:\\r", "c:\\R"]) {
+      const stale = await of(recs([g({ grantId: "old", repoKey: "replaced", repositoryRoot: at })]), "loop_grant");
+      expect(stale).toMatchObject({ state: "missing", resumable: true, restore: "code-parley setup --repo C:\\r --loops <1-8> --minutes <1-180>" });
+      expect(stale.detail).toMatch(/grant old was made for another directory at this path \(identity replaced; this directory is k\): it does not authorize loops here/);
+    }
+    // The current directory's own grant wins over an old one at the same path.
+    expect(await of(recs([g({ grantId: "old", repoKey: "replaced" }), g({ grantId: "new" })]), "loop_grant")).toMatchObject({ state: "in_force", detail: expect.stringContaining("grant new") });
+    // This directory's own grant, used up, is reported as such even while a replaced directory's grant is still active.
+    expect(await of(recs([g({ grantId: "old", repoKey: "replaced" }), g({ grantId: "new", active: false, loopsUsed: 2 })]), "loop_grant")).toMatchObject({ state: "used_up" });
+    // An old grant at the path that is no longer active is not presented as a replaced directory's authority.
+    expect(await of(recs([g({ repoKey: "replaced", active: false, expiresAt: new Date(0).toISOString() })]), "loop_grant")).toMatchObject({ state: "missing", detail: expect.stringContaining("no loop is granted") });
+    // A legacy grant (before P3.4C-0) is never active: never in force, never offered as this directory's.
+    expect(await of(recs([g({ repoKey: "C:\\r", identity: "legacy_text", active: false })]), "loop_grant")).toMatchObject({ state: "missing", detail: expect.stringContaining("no loop is granted") });
+  });
+
+  it("F-S71-1: without the custodian's identity of the directory (an older custodian) no grant is shown as in force", async () => {
+    expect(await of(recs([g({})], true, "win32", null, null), "loop_grant")).toMatchObject({ state: "missing", resumable: false, detail: expect.stringContaining("did not report this directory's identity") });
+    expect(await of(recs([g({ repositoryRoot: "C:\\elsewhere" })], true, "win32", null, null), "loop_grant")).toMatchObject({ state: "missing", detail: expect.stringContaining("no loop is granted") });
+    // Attended runs need no grant: the repository's required records decide readiness, not the grant.
+    const all = await recs([], true, "win32", null, null);
+    expect(all.find((r) => r.record === "loop_grant")).toMatchObject({ required: false });
   });
 
   it("Windows: the commands that read the implementer's approvals name its data home", async () => {
@@ -229,7 +258,7 @@ async function setupArgs(f: ContFixture): Promise<string[]> {
 async function statusJson(f: ContFixture) {
   const io = operatorIo("");
   const code = await runCli(["status", "--repo", f.repo, "--json", "--home", f.dataHome, "--git", f.git], { ...io, engineTestHooks: f.le.env.testHooks! });
-  return { code, s: JSON.parse(io.lines.join("\n")) as { state: string; repository: { state: string; read_on: string; records: { record: string; state: string; restore: string | null }[] } } };
+  return { code, s: JSON.parse(io.lines.join("\n")) as { state: string; repository: { state: string; read_on: string; records: { record: string; state: string; detail: string; restore: string | null }[] } } };
 }
 
 const states = (s: Awaited<ReturnType<typeof statusJson>>["s"]) => Object.fromEntries(s.repository.records.map((r) => [r.record, r.state]));
@@ -316,5 +345,43 @@ describe.skipIf(!supported)("Phase 6 Increment 3 — init + setup + status end t
     expect(reset.code, reset.err).toBe(0);
     expect(reset.out).toMatch(/Step 1: set the repository's protected configuration/);
     expect(states((await statusJson(f)).s)).toMatchObject({ repository: "in_force" });
+  }, 240_000);
+
+  it("F-S71-1: a repository directory replaced at the same path is another directory: status names the old grant as another directory's, setup grants anew, and the new grant opens a run and is consumed", async () => {
+    const f = await contFixture(okScenario(output({ findings: [] })), { accounts: true });
+    await storeFixtureSelfTest(f);
+    expect((await cli(f, ["setup", "--repo", f.repo, ...(await setupArgs(f))], terminal())).code).toBe(0);
+    expect(states((await statusJson(f)).s)).toMatchObject({ repository: "in_force", loop_grant: "in_force" });
+    const oldGrant = f.custodian.snapshot().grants[0]!;
+
+    // The directory is replaced: the same path, the same content, another directory (the custodian's identity).
+    await rename(f.repo, `${f.repo}-old`);
+    await cp(`${f.repo}-old`, f.repo, { recursive: true });
+    const after = await statusJson(f);
+    const grant = after.s.repository.records.find((r) => r.record === "loop_grant")!;
+    // Neither the old directory's configuration nor its grant is this directory's.
+    expect(states(after.s)).toMatchObject({ repository: "missing", loop_grant: "missing" });
+    expect(grant.detail).toContain(`grant ${oldGrant.grantId} was made for another directory at this path`);
+    expect(grant.restore).toMatch(/setup --repo .* --loops <1-8> --minutes <1-180>/);
+
+    // The custodian's refusal is unchanged: the old grant opens no run for the new directory.
+    const OPEN = { runJsonDigest: "a".repeat(64), budgets: { maxReviews: 5, maxCheckExecutions: 50 }, baseline: null };
+    f.custodian.seedConfig(f.repo); // its configuration in force, so only the grant decides
+    const refused = await new CustodianRuns(f.custodian).transition("implementer", { repositoryRoot: f.repo, runId: "run-replaced" }, "open", OPEN);
+    expect(refused).toMatchObject({ ok: false, code: "LOOP_NOT_AUTHORIZED" });
+
+    // setup offers (and records) a new grant for the directory that is there now.
+    const regrant = await cli(f, ["setup", "--repo", f.repo, ...(await setupArgs(f))], terminal());
+    expect(regrant.code, regrant.err).toBe(0);
+    expect(regrant.out).toMatch(/Step \d+: grant automated loops/);
+    const fresh = f.custodian.snapshot().grants.at(-1)!;
+    expect(fresh.repoKey).not.toBe(oldGrant.repoKey);
+    expect(states((await statusJson(f)).s)).toMatchObject({ loop_grant: "in_force" });
+
+    // The new grant opens a run and its one loop is consumed; then nothing is left.
+    const opened = await new CustodianRuns(f.custodian).transition("implementer", { repositoryRoot: f.repo, runId: "run-new" }, "open", OPEN);
+    expect(opened.ok).toBe(true);
+    await new CustodianGrants(f.custodian).consume(f.repo, "run-new");
+    expect(states((await statusJson(f)).s)).toMatchObject({ loop_grant: "used_up" });
   }, 240_000);
 });
