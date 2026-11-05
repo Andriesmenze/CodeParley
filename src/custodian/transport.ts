@@ -433,6 +433,8 @@ export class SimulatedCustodianTransport implements CustodianTransport {
   private synthetic: SimSyntheticMeasurement = {};
   private previousCaptures = new Map<string, PendingCapture>();
   private readonly runningCaptures = new Set<Promise<void>>();
+  /** Requests being handled, a caller's or one it stopped waiting for (TEST control: `settle`). */
+  private readonly runningRequests = new Set<Promise<void>>();
   private unavailable: string | null = null;
   private readonly faults = new Map<CustodianOp, SimulatedFault>();
   /** Every request that reached the simulated custodian (tests assert what was — and was not — sent). */
@@ -566,6 +568,13 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     while (this.runningCaptures.size) await Promise.all([...this.runningCaptures]);
   }
 
+  /** TEST control: wait until every request this transport received has been answered and every in-process capture it
+   * started has committed, including a request whose caller stopped waiting (SessionStart's bounded derivation): this
+   * custodian runs in the test's process, so its work must end before the test's directories are removed. */
+  async settle(): Promise<void> {
+    while (this.runningRequests.size || this.runningCaptures.size) await Promise.all([...this.runningRequests, ...this.runningCaptures]);
+  }
+
   /** TEST control: model a storage rollback or loss of config-records.json alone (contract §2.4): replace the
    * configuration store with `file` (an earlier version; `null`: lost). */
   replaceConfigStore(file: SimConfigFile | null): void {
@@ -624,7 +633,17 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     return recoveryId;
   }
 
-  async send(surface: CustodianSurface, op: CustodianOp, args: Record<string, unknown>, requestId: string): Promise<CustodianResponse> {
+  send(surface: CustodianSurface, op: CustodianOp, args: Record<string, unknown>, requestId: string): Promise<CustodianResponse> {
+    const res = this.handleRequest(surface, op, args, requestId);
+    const tracked: Promise<void> = res.then(
+      () => undefined,
+      () => undefined,
+    ).finally(() => this.runningRequests.delete(tracked));
+    this.runningRequests.add(tracked);
+    return res;
+  }
+
+  private async handleRequest(surface: CustodianSurface, op: CustodianOp, args: Record<string, unknown>, requestId: string): Promise<CustodianResponse> {
     if (this.unavailable !== null) throw new CustodianUnavailable(this.unavailable, "not_delivered");
     if (this.reachableSurface !== null && surface !== this.reachableSurface) {
       // Modelled OS pipe DACL: this account's process cannot even connect to the other surface's pipe, so the

@@ -10,7 +10,9 @@
 // Forged derivations — an unknown id, another run's derivation, and a route claimed in the request authorize nothing.
 
 import { describe, it, expect } from "vitest";
+import { readdirSync } from "node:fs";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { readState } from "../src/store/state-store.js";
 import { CustodianLoops, type LoopTarget } from "../src/custodian/loops.js";
 import { currentHandle, readCustodianLoop } from "../src/engine/custodian-loop.js";
@@ -76,6 +78,18 @@ async function custodianOpIs(f: ContFixture, run: RunHandle, kind: string, statu
     if (op?.status === status) return;
   }
   throw new Error(`the custodian never held a ${kind} operation ${status}`);
+}
+
+/** The derivation requests the custodian has received. */
+const derivationRequests = (f: ContFixture) =>
+  f.custodian.received.filter((r) => r.op === "list_user_records" && Array.isArray(r.args["sections"]) && (r.args["sections"] as unknown[]).includes("derivation")).length;
+
+/** Wait (bounded) until the custodian has received `count` derivation requests. */
+async function derivationRequested(f: ContFixture, count: number): Promise<void> {
+  for (const end = Date.now() + 30_000; Date.now() < end; await new Promise((r) => setTimeout(r, 20))) {
+    if (derivationRequests(f) >= count) return;
+  }
+  throw new Error(`the custodian never received derivation request ${count}`);
 }
 
 /** The repository's required check replaced (before the run is protected: the operator imports it then). */
@@ -277,10 +291,28 @@ describe.skipIf(!supported)("P3.4C-5 Increment 4 (§5.4) — SessionStart presen
     expect(s.verdict).toBe("context");
     expect(s.text).toMatch(/Next action: .*address_findings|Next action: .*respond_to_review/);
     expect(s.text).toMatch(/\(The next action is the custodian's derivation der-[0-9a-f]+; completion [a-z_]+\.\)/);
+    const asked = derivationRequests(f);
     f.le.env.testHooks!.continuation!.sessionStartDerivationMs = 1; // the custodian cannot answer within the bound
     const late = await A.sessionStart("startup");
     f.le.env.testHooks!.continuation!.sessionStartDerivationMs = undefined;
     expect(late.text).toContain("The custodian's derivation of the next action was not available within 0 s; the next Stop decides on it.");
     expect(late.text).not.toContain("Next action:");
+    // SessionStart stopped waiting for the derivation, which goes on: its request reaches this (in-process) custodian
+    // after run.json is read, and its measurement runs in this process. Wait for the request and join it, so nothing
+    // still writes the test's directories when they are removed; the measurement then has removed its export.
+    await derivationRequested(f, asked + 1);
+    await f.custodian.settle();
+    expect(readdirSync(join(f.scratch, "custodian-exports")).filter((n) => n.startsWith("der-"))).toEqual([]);
+  }, 180_000);
+
+  it("the simulated custodian's settle joins a derivation request nobody waits for, its measurement included", async () => {
+    const f = await contFixture(okScenario(output({ findings: [] })), { accounts: true });
+    const run = await protectedRun(f);
+    const runJson = (await readFile(run.paths.runJson)).toString("base64");
+    let answered = false;
+    void f.custodian.send("implementer", "list_user_records", { repositoryRoot: run.meta.repository_root, runId: run.runId, sections: ["derivation"], runJson }, `unawaited-${Date.now()}`).then(() => (answered = true));
+    await f.custodian.settle();
+    expect(answered).toBe(true);
+    expect(readdirSync(join(f.scratch, "custodian-exports")).filter((n) => n.startsWith("der-"))).toEqual([]);
   }, 180_000);
 });
