@@ -212,10 +212,18 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     }
   });
 
-  it("gives the Windows test shards, and only them, Git for Windows' own binary for the suite", () => {
-    // test/test-git.ts refuses any other git than the installation's own; the verify job keeps the runner's PATH.
-    const expr = "${{ matrix.platform == 'windows' && 'C:\\Program Files\\Git\\mingw64\\bin\\git.exe' || '' }}";
+  it("gives the Windows test shards, and only them, Git for Windows' own binary for the suite, found at run time", () => {
+    // test/test-git.ts finds and checks the binary (CP_TEST_GIT=auto); the verify job keeps the runner's PATH.
+    const expr = "${{ matrix.platform == 'windows' && 'auto' || '' }}";
     expect(jobs["test"]!.steps.find((s) => s.name === "Test")!.env).toEqual({ CP_TEST_SHARD: "${{ matrix.shard }}", CP_TEST_GIT: expr });
+    // What the expression gives each test leg, for pull requests and for pushes and manual runs.
+    const valueFor = (leg: Record<string, string>) => {
+      const m = /^\$\{\{ matrix\.platform == '(\w+)' && '([^']*)' \|\| '([^']*)' \}\}$/.exec(expr)!;
+      return leg["platform"] === m[1] ? m[2] : m[3];
+    };
+    const { pr, push } = matrixOf("test");
+    for (const leg of [...pr, ...push]) expect(valueFor(leg), JSON.stringify(leg)).toBe(leg["platform"] === "windows" ? "auto" : "");
+    expect(push.filter((l) => l["platform"] === "windows").length).toBe(8);
     for (const [name, job] of Object.entries(jobs)) {
       expect(job.env, name).not.toHaveProperty("CP_TEST_GIT");
       expect(job.steps.filter((s) => "CP_TEST_GIT" in s.env).map((s) => s.name), name).toEqual(name === "test" ? ["Test"] : []);

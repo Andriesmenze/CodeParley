@@ -48,8 +48,8 @@ log "T1 on $SHA in $REPO; HEAD $(git rev-parse HEAD); $(git status --porcelain |
 [ "$(git rev-parse HEAD)" = "$SHA" ] || { log "HEAD is not $SHA"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { log "the checkout is not clean"; exit 1; }
 
-# The Windows test job's CP_TEST_GIT, as the workflow computes it (Git for Windows' own binary, test/test-git.ts).
-WIN_TEST_GIT='C:\Program Files\Git\mingw64\bin\git.exe'
+# The Windows test job's CP_TEST_GIT, as the workflow computes it (test/test-git.ts finds Git for Windows' own binary).
+WIN_TEST_GIT=auto
 for job in verify test; do
   guard; log "$job windows node24"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" --log "$OUT/windows-node24-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
 done

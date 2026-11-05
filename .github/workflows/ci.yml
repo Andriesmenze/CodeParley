@@ -296,12 +296,14 @@ jobs:
         run: dotnet build custodian/CodeParley.Custodian.Linux/CodeParley.Custodian.Linux.csproj -c Release
 
       # Step 6: CP_TEST_SHARD, the matrix's shard, makes vitest exclude the test files dealt to the other shards of this
-      # platform and Node.js version (test/schedule.ts, by their recorded durations). On Windows, CP_TEST_GIT names Git
-      # for Windows' own binary: the suite puts its directory first on PATH (test/test-git.ts, which refuses any other
-      # git than the installation's), so its tens of thousands of git calls skip the launcher on the runner's PATH
-      # (bin\git.exe, a second process per call). Tests only: the verify job keeps the runner's PATH. Set on this step only.
+      # platform and Node.js version (test/schedule.ts, by their recorded durations). On Windows, CP_TEST_GIT=auto makes
+      # the suite find Git for Windows' own binary in the installation of the git on PATH and check it against the stable
+      # cmd\git.exe (test/test-git.ts; its location is internal to Git for Windows: mingw64 up to 2.55, ucrt64 from 2.56),
+      # then put it first on PATH, so the suite's tens of thousands of git calls skip the launcher (bin\git.exe, a second
+      # process per call). If no verified binary is found, the suite runs the git on PATH and logs and annotates the
+      # fallback. Tests only: the verify job keeps the runner's PATH. Set on this step only.
       - name: Test
         env:
           CP_TEST_SHARD: ${{ matrix.shard }}
-          CP_TEST_GIT: ${{ matrix.platform == 'windows' && 'C:\Program Files\Git\mingw64\bin\git.exe' || '' }}
+          CP_TEST_GIT: ${{ matrix.platform == 'windows' && 'auto' || '' }}
         run: npm test

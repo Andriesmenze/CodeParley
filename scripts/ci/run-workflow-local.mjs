@@ -15,7 +15,7 @@
 // the system npm), on Linux its own directory (which carries npm). --set gives a step environment value the workflow
 // computes with an expression (the identity job's EXPECTED_SHA and MERGE; the verify and test jobs' VERIFIED_SHA, and
 // the test job's CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `=2/4` one shard;
-// and its CP_TEST_GIT: on Windows the path of Git for Windows' own git.exe, on Linux empty).
+// and its CP_TEST_GIT: `auto` on Windows (test/test-git.ts finds Git for Windows' own git.exe), empty on Linux).
 import { spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

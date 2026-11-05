@@ -1,11 +1,9 @@
-import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
 import { BaseSequencer, type TestSpecification } from "vitest/node";
 import { excludedFiles, readDurations, startOrder, testFiles } from "./test/schedule.js";
-import { testGitDir, withFirstOnPath } from "./test/test-git.js";
+import { describeTestGit, selectTestGit, systemTestGitDeps, withFirstOnPath } from "./test/test-git.js";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -21,17 +19,21 @@ function scheduledSequencer(order: (files: string[]) => string[]) {
   };
 }
 
-/** Step 6 (test/test-git.ts): CP_TEST_GIT's directory goes first on PATH before any worker starts, so every git the
- * suite runs is that binary. Unset or empty, PATH is left as it is. */
+/** Step 6 (test/test-git.ts): the git CP_TEST_GIT selects goes first on PATH before any worker starts, so every git the
+ * suite runs is that binary; CP_TEST_GIT_SELECTED tells the workers which one. Unset or empty, PATH is left as it is. A
+ * fallback (`auto` found no verified native binary) is logged, and annotated on GitHub, but does not stop the run. */
 function useTestGit(): void {
-  const git = (exe: string) => {
-    const r = spawnSync(exe, ["--version"], { encoding: "utf8", windowsHide: true });
-    return `${r.stdout ?? ""}`.trim();
-  };
-  const dir = testGitDir(process.env["CP_TEST_GIT"], { exists: existsSync, version: git, pathVersion: () => git("git") });
-  if (dir === null) return;
-  process.env["PATH"] = withFirstOnPath(process.env["PATH"], dir);
-  console.log(`test git: ${process.env["CP_TEST_GIT"]} (${git("git")})`);
+  const selected = selectTestGit(process.env["CP_TEST_GIT"], systemTestGitDeps(root));
+  if (selected.mode === "off") return;
+  const line = describeTestGit(selected);
+  if (selected.mode === "fallback") {
+    console.warn(`\n${"!".repeat(80)}\n${line}\n${"!".repeat(80)}\n`);
+    if (process.env["GITHUB_ACTIONS"] === "true") console.log(`::warning title=CP_TEST_GIT fallback::${line}`);
+    return;
+  }
+  process.env["PATH"] = withFirstOnPath(process.env["PATH"], selected.dir);
+  process.env["CP_TEST_GIT_SELECTED"] = selected.exe;
+  console.log(line);
 }
 
 export default defineConfig(({ mode }) => {

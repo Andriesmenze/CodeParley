@@ -111,9 +111,12 @@ Each platform and Node.js version runs as one verify job and the test job's shar
 - `windows · Node 24.x · tests 1/4` to `4/4` (on Linux `1/2` and `2/2`) each build the custodian, which the suite's
   real-custodian contract tests run, and run a part of the test files (`CP_TEST_SHARD`), dealt by their recorded
   durations so that the parts take about as long. Together they run every test file once. On Windows the shards
-  name Git for Windows' own binary (`CP_TEST_GIT=C:\Program Files\Git\mingw64\bin\git.exe`): the suite then runs
-  git without the launcher on the runner's PATH (a second process per call), as a local run from Git Bash does.
-  `test/test-git.ts` refuses any other git than that installation's; the verify job keeps the runner's PATH.
+  set `CP_TEST_GIT=auto`: `test/test-git.ts` finds Git for Windows' own binary in the installation of the git on
+  PATH (`mingw64\bin\git.exe` up to 2.55, `ucrt64\bin\git.exe` from 2.56), checks it against the stable
+  `cmd\git.exe` and puts it first on PATH, so the suite runs git without the launcher (a second process per call),
+  as a local run from Git Bash does. The log's `test git:` line names the binary; if none is verified, the suite runs
+  the git on PATH and the line says `FALLBACK`. An explicit path is checked and refused if it is not that
+  installation's git. The verify job keeps the runner's PATH.
 
 A platform and Node.js version has passed only when its verify job and all its shards have.
 
