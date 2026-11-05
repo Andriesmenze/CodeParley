@@ -115,6 +115,8 @@ export type ErrorCode =
   // Phase 4 Increment 3 (contract §3.5, §3.6): the owner's confirmation and the application of a delegated fix.
   | "CONFIRMATION_CONTENT_MISMATCH"
   | "PROPOSAL_NOT_PENDING"
+  // Step 7.1: a guided selection (complete, well-formed) that no longer matches the custodian's evidence.
+  | "SELECTION_STALE"
   | "FIX_NOT_CONFIRMED"
   | "FIX_DECLINED"
   | "CONFIRMATION_EXPIRED"

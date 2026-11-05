@@ -676,6 +676,8 @@ const ENGINE_CODES: ReadonlySet<string> = new Set<ErrorCode>([
   // Phase 4 Increment 3 (contract §3.5, §3.6).
   "CONFIRMATION_CONTENT_MISMATCH", "PROPOSAL_NOT_PENDING", "FIX_NOT_CONFIRMED", "FIX_DECLINED", "CONFIRMATION_EXPIRED", "CONFIRMATION_CONSUMED",
   "APPLY_IN_PROGRESS", "FIX_STALE", "MEASUREMENT_FAILED", "MEASUREMENT_TIMEOUT", "MEASUREMENT_CANCELLED",
+  // Step 7.1: a guided selection that no longer matches the custodian's evidence.
+  "SELECTION_STALE",
   // Phase 5 (contract §4.12): the Linux custodian's Codex sandbox basis is not approvable or changed since its confirmation.
   "CODEX_ISOLATION_UNAVAILABLE",
   // Phase 5 F-i2-5: the custodian's redaction of an amendment could not be established.

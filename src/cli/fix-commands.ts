@@ -1,5 +1,8 @@
 // `code-parley fix …` (Phase 4 Increment 3, contract §3.1): the owner's decision on a delegated fix, and its reconciliation.
 //
+//   fix review [--repo <path>] [--no-pager]
+//                                      (operator, interactive; Step 7.1) the fixes waiting for a decision, chosen by number,
+//                                      the custodian's whole rendering, then confirm, reject or leave (fix-review.ts)
 //   fix show <run> [<proposal>]        the run's delegated fixes; with a proposal, the custodian's exact rendering of it
 //                                      (read only — the originating session's inspection uses it too, §3.7)
 //   fix show <run-id> [<proposal>] --repo <path>
@@ -32,6 +35,7 @@ import { reconcileApplications } from "../engine/fix-apply.js";
 import { commitFixDecision, prepareFixDecision } from "../engine/fix-decision.js";
 import { fixRenderingOf, fixRunSectionOf, type FixRunRef } from "../engine/fix-view.js";
 import { repoRoot } from "./loop-commands.js";
+import { runFixReview } from "./fix-review.js";
 import { selfOwner } from "../store/owner.js";
 import type { CliIo } from "./cli.js";
 
@@ -49,7 +53,7 @@ const NOT_ELEVATED = process.platform === "linux"
   ? "The CodeParley custodian accepts a delegated fix's confirmation only on its operator socket, from the operator account: run this command as the operator account through /usr/local/sbin/code-parley-operator. Nothing was recorded."
   : "The CodeParley custodian accepts a delegated fix's confirmation only from the operator surface with an elevated operator token: run this command in an elevated terminal (Run as administrator) as the operator account. Nothing was recorded.";
 
-const USAGE = "usage: code-parley fix (show <run> [<proposal>] [--repo <path>] | confirm <run-id> <proposal> --repo <path> | reject <run-id> <proposal> --repo <path> | reconcile <run> [--restore | --leave])";
+const USAGE = "usage: code-parley fix (review [--repo <path>] [--no-pager] | show <run> [<proposal>] [--repo <path>] | confirm <run-id> <proposal> --repo <path> | reject <run-id> <proposal> --repo <path> | reconcile <run> [--restore | --leave])";
 
 export async function runFixCli(a: FixArgs, io: CliIo): Promise<number> {
   const launch = {
@@ -60,6 +64,18 @@ export async function runFixCli(a: FixArgs, io: CliIo): Promise<number> {
     ...(a.one("--git") ? { git: a.one("--git")! } : {}),
   };
   if (a.has("--confirm")) throw new DomainError("INVALID_ARGUMENT", "fix has no --confirm: you confirm by typing at an interactive terminal (nothing skips that)");
+  // Step 7.1: the guided review is the operator's channel too (no engine, no data home), and takes no positional argument.
+  if (a.cmd === "review") {
+    if (a.refs.length > 0) throw new DomainError("INVALID_ARGUMENT", `fix review takes no run, fix or number (you choose at the terminal): ${USAGE}`);
+    const gate = protectedLoopGate(io.engineTestHooks?.custodian);
+    if (!gate.available) throw gate.error;
+    try {
+      return await runFixReview(gate.transport, io, { repo: a.one("--repo") ?? null, noPager: a.has("--no-pager") });
+    } catch (e) {
+      if (isDomainError(e) && e.code === "CALLER_NOT_AUTHORIZED") throw new DomainError("CALLER_NOT_AUTHORIZED", `${NOT_ELEVATED} (${e.message})`);
+      throw e;
+    }
+  }
   if (!a.refs[0] || !["show", "confirm", "reject", "reconcile"].includes(a.cmd ?? "")) throw new DomainError("INVALID_ARGUMENT", USAGE);
   // confirm/reject are the operator's channel (the operator surface): no engine and no data home (G-OP).
   if (a.cmd === "confirm" || a.cmd === "reject") {

@@ -764,7 +764,7 @@ Observed with Claude Code 2.1.286 and 2.1.289 and Claude Desktop 2.19675.0 (MSIX
 ## CLI reference
 
 `code-parley help` prints the same list. On Linux the operator runs the operator commands (`setup`,
-`decide`, `amend`, `loop`, `config`, `fix confirm`, `fix reject`, `runs stop --repo`) through
+`decide`, `amend`, `loop`, `config`, `fix review`, `fix confirm`, `fix reject`, `runs stop --repo`) through
 `/usr/local/sbin/code-parley-operator`, by that absolute path; on Windows the operator runs them as
 `code-parley` in an elevated terminal. `config propose` and `config propose-selftest` are the
 implementer's.
@@ -838,6 +838,7 @@ Protected configuration
   config revoke-selftest --repo <path> <confirmation-id>
 
 Delegated fixes
+  fix review     [--repo <path>] [--no-pager]
   fix show       <run-id> [<proposal>] [--repo <path>]
   fix confirm    <run-id> <proposal> --repo <path>
   fix reject     <run-id> <proposal> --repo <path>

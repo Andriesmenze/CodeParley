@@ -78,6 +78,8 @@ export interface CliIo {
   interactive?: boolean;
   env: NodeJS.ProcessEnv;
   cwd: string;
+  /** Step 7.1: the terminal's size now (the pager of `fix review`); absent: 100 columns, 30 rows. */
+  terminalSize?: () => { columns: number; rows: number };
   /**
    * TEST ONLY: engine test hooks for the commands that load the engine (P3.4C-0: a simulated grant
    * custodian). The CLI's own entry point never sets this, and nothing in configuration or the
@@ -97,7 +99,7 @@ interface Parsed {
 }
 
 const VALUE_FLAGS = new Set(["--max-fixes", "--out", "--proposal-file", "--repo", "--file", "--required-profile", "--test-glob", "--confirm", "--home", "--git", "--codex", "--backend", "--acceptance", "--config", "--allowed-root", "--operation", "--reason", "--wait", "--older-than", "--events", "--note", "--request-id", "--text", "--text-file", "--thread", "--replaces", "--loops", "--minutes", "--runtime", "--runtime-git", "--runtime-git-path"]);
-const BOOL_FLAGS = new Set(["--resume", "--no-grant", "--from-proposals", "--no-required-checks", "--force", "--json", "--abort", "--close", "--dry-run", "--retention", "--reveal-withheld", "--protected", "--fix", "--restore", "--leave", "--help"]);
+const BOOL_FLAGS = new Set(["--resume", "--no-grant", "--from-proposals", "--no-required-checks", "--force", "--json", "--abort", "--close", "--dry-run", "--retention", "--reveal-withheld", "--protected", "--fix", "--restore", "--leave", "--help", "--no-pager"]);
 
 function parseArgs(argv: readonly string[]): Parsed {
   const out: Parsed = { positional: [], flags: new Map() };
@@ -167,6 +169,7 @@ export const USAGE = [
   "  config approve-runtime --repo <path> --runtime <dir> (--runtime-git <rel git.exe> | --runtime-git-path <installed git.exe>)   (approve the engine runtime the custodian's helper runs; elevated, interactive)",
   "  config reconfirm-runtime | revoke-runtime --repo <path> <runtime-id>",
   "  config revoke-isolation --repo <path> <acceptance-id> | config revoke-selftest --repo <path> <confirmation-id>",
+  "  fix review     [--repo <path>] [--no-pager]   (the delegated fixes waiting for you: choose one by number, read the custodian's whole rendering, then confirm, reject or leave it; operator, interactive)",
   "  fix show       <run-id> [<proposal>] [--repo <path>]   (a delegated fix: the custodian's exact rendering of its proposal; with --repo, the run as the custodian holds it)",
   "  fix confirm    <run-id> <proposal> --repo <path>   (confirm exactly the rendered content, single use; operator, interactive)",
   "  fix reject     <run-id> <proposal> --repo <path>   (close the proposal; operator, interactive)",

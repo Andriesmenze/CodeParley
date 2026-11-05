@@ -23,6 +23,7 @@ const io: CliIo = {
     : null,
   env: process.env,
   cwd: process.cwd(),
+  terminalSize: () => ({ columns: process.stdout.columns ?? 100, rows: process.stdout.rows ?? 30 }),
 };
 
 process.exitCode = await runCli(process.argv.slice(2), io);

@@ -96,13 +96,23 @@ describe("Phase 4 Increment 3: no module produces a confirmation outside the ope
   });
 
   it("the owner's decision (engine/fix-decision.ts) is reachable from the CLI only — never from the MCP server, the hooks or the helper", () => {
-    expect(importers(FIX_DECISION)).toEqual(["cli/fix-commands.ts"]);
+    // Step 7.1: the guided review (cli/fix-review.ts, `fix review`) is the second CLI importer; it is reached from
+    // cli/fix-commands.ts only.
+    expect(importers(FIX_DECISION)).toEqual(["cli/fix-commands.ts", "cli/fix-review.ts"]);
+    expect(importers("cli/fix-review.ts")).toEqual(["cli/fix-commands.ts"]);
     for (const entry of ["server/main.ts", "server/server.ts", "server/tools.ts", "hooks/main.ts", "hooks/adapter.ts", "helper/main.ts"]) {
       const reach = reachable(entry);
       expect(reach.has(FIX_DECISION), `${entry} reaches the owner's decision`).toBe(false);
       expect(reach.has("custodian/operator.ts"), `${entry} reaches the operator client`).toBe(false);
+      expect(reach.has("cli/fix-review.ts"), `${entry} reaches fix review`).toBe(false);
     }
     expect(reachable("cli/main.ts").has(FIX_DECISION)).toBe(true);
+    expect(reachable("cli/main.ts").has("cli/fix-review.ts")).toBe(true);
+  });
+
+  it("Step 7.1: only the operator client sends list_fix_proposals (the protocol names it; the simulated custodian serves it)", () => {
+    const senders = allTsFiles(srcDir).filter((f) => /["']list_fix_proposals["']/.test(readFileSync(f, "utf8"))).map(srcRel).sort();
+    expect(senders).toEqual(["custodian/operator.ts", "custodian/protocol.ts", "custodian/transport.ts"]);
   });
 });
 

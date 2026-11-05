@@ -18,6 +18,13 @@ In the commands below, *operator* means:
 
 Operator records need an interactive terminal: you type the confirmation, and no flag skips it.
 
+**Opening the operator terminal on Windows.** Sign in to Windows as the operator account, or stay in
+your own session and start Windows Terminal or PowerShell with *Run as administrator*, entering the
+operator account's credentials at the UAC prompt (on a standard account, UAC asks for an
+administrator's credentials: give the operator account's). Check it with `whoami` (the operator
+account) and that the window title says *Administrator*. A terminal that is not elevated, or another
+account's, is refused by the custodian: nothing is recorded.
+
 ## The roles
 
 | Role | Who | Can | Cannot |
@@ -207,7 +214,24 @@ code-parley fix show <run-id> <proposal> --repo <path>   for an operator without
 
 Binary and non-UTF-8 content appears as sizes and hashes only, flagged: you cannot review it there.
 
-**5. You decide,** as the operator:
+**5. You decide,** as the operator. The guided way needs no identifier or path:
+
+```text
+code-parley fix review [--repo <path>] [--no-pager]
+```
+
+It lists the delegated fixes the custodian holds, across your repositories, with what the custodian
+itself knows: the repository, run, fix, files, sizes and expiry (never text the session wrote). You
+choose one by its number; the number only selects. The custodian's whole rendering follows, in
+CodeParley's own pager (Enter: next page, `b`: back, `g`/`G`: first and last page, `/text`: find,
+`q`: leave); `--no-pager` prints it at once. Only when every page has been shown does it offer
+`[c]onfirm`, `[r]eject` or `[l]eave pending`. The custodian then prepares the decision for exactly the
+proposal and the rendering you reviewed (refused `SELECTION_STALE` if anything changed: review it
+again), CodeParley checks that the prepared decision is that rendering, shows what the decision
+does, and asks you to type the word. A fix whose repository moved is listed but not selectable: run
+`fix review --repo <its new path>`, or set its configuration again at the new path.
+
+The same decision with the identifiers named:
 
 ```text
 fix confirm <run-id> <proposal> --repo <path>     you type "confirm"
