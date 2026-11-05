@@ -48,11 +48,13 @@ log "T1 on $SHA in $REPO; HEAD $(git rev-parse HEAD); $(git status --porcelain |
 [ "$(git rev-parse HEAD)" = "$SHA" ] || { log "HEAD is not $SHA"; exit 1; }
 [ -z "$(git status --porcelain)" ] || { log "the checkout is not clean"; exit 1; }
 
+# The Windows test job's CP_TEST_GIT, as the workflow computes it (Git for Windows' own binary, test/test-git.ts).
+WIN_TEST_GIT='C:\Program Files\Git\mingw64\bin\git.exe'
 for job in verify test; do
-  guard; log "$job windows node24"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --log "$OUT/windows-node24-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
+  guard; log "$job windows node24"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" --log "$OUT/windows-node24-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
 done
 for job in verify test; do
-  guard; log "$job windows node22"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --node "$NODE22" --log "$OUT/windows-node22-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
+  guard; log "$job windows node22"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" --node "$NODE22" --log "$OUT/windows-node22-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
 done
 
 guard; log "linux custodian cross-build"
@@ -70,7 +72,7 @@ for v in 24 22; do
   install -m 755 "$W_OUT/linux-cust/codeparley-custodian" custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
   for job in verify test; do
     echo "[\$(date +%H:%M:%S)] \$job linux node\$v"
-    PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job \$job --expect $SHA --set VERIFIED_SHA=$SHA --set CP_TEST_SHARD= --log "$W_OUT/linux-node\$v-\$job" \\
+    PATH="\$HOME/.local/opt/node\$v/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job \$job --expect $SHA --set VERIFIED_SHA=$SHA --set CP_TEST_SHARD= --set CP_TEST_GIT= --log "$W_OUT/linux-node\$v-\$job" \\
       --substitute "Versions=no .NET SDK in WSL: node, npm, git and the custodian's version verb are recorded in the run summary and the self-test step" \\
       --substitute "Build the Linux custodian=cross-built on Windows from the same clean commit with the pinned SDK (dotnet publish -r linux-x64 --self-contained), placed at the path the self-test step uses"
     echo "[\$(date +%H:%M:%S)] exit \$?"

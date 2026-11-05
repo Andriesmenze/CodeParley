@@ -1,8 +1,11 @@
+import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { configDefaults, defineConfig } from "vitest/config";
 import { BaseSequencer, type TestSpecification } from "vitest/node";
 import { excludedFiles, readDurations, startOrder, testFiles } from "./test/schedule.js";
+import { testGitDir, withFirstOnPath } from "./test/test-git.js";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -18,7 +21,21 @@ function scheduledSequencer(order: (files: string[]) => string[]) {
   };
 }
 
+/** Step 6 (test/test-git.ts): CP_TEST_GIT's directory goes first on PATH before any worker starts, so every git the
+ * suite runs is that binary. Unset or empty, PATH is left as it is. */
+function useTestGit(): void {
+  const git = (exe: string) => {
+    const r = spawnSync(exe, ["--version"], { encoding: "utf8", windowsHide: true });
+    return `${r.stdout ?? ""}`.trim();
+  };
+  const dir = testGitDir(process.env["CP_TEST_GIT"], { exists: existsSync, version: git, pathVersion: () => git("git") });
+  if (dir === null) return;
+  process.env["PATH"] = withFirstOnPath(process.env["PATH"], dir);
+  console.log(`test git: ${process.env["CP_TEST_GIT"]} (${git("git")})`);
+}
+
 export default defineConfig(({ mode }) => {
+  useTestGit();
   // Step 6 (test/schedule.ts): CP_TEST_SHARD=<index>/<count> runs one CI shard, `--mode quick` (npm run test:quick)
   // the quick tier. Both only exclude files from the include pattern below; unset, the whole suite runs as before.
   const files = testFiles(root);

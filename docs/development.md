@@ -110,7 +110,10 @@ Each platform and Node.js version runs as one verify job and the test job's shar
   diagnostic (the custodian's run corpus on its own), the install smoke test and the plugin build;
 - `windows · Node 24.x · tests 1/4` to `4/4` (on Linux `1/2` and `2/2`) each build the custodian, which the suite's
   real-custodian contract tests run, and run a part of the test files (`CP_TEST_SHARD`), dealt by their recorded
-  durations so that the parts take about as long. Together they run every test file once.
+  durations so that the parts take about as long. Together they run every test file once. On Windows the shards
+  name Git for Windows' own binary (`CP_TEST_GIT=C:\Program Files\Git\mingw64\bin\git.exe`): the suite then runs
+  git without the launcher on the runner's PATH (a second process per call), as a local run from Git Bash does.
+  `test/test-git.ts` refuses any other git than that installation's; the verify job keeps the runner's PATH.
 
 A platform and Node.js version has passed only when its verify job and all its shards have.
 

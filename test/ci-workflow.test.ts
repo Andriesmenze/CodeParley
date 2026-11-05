@@ -211,6 +211,16 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
       expect(job.steps.filter((s) => "CP_TEST_SHARD" in s.env).map((s) => s.name), name).toEqual(name === "test" ? ["Test"] : []);
     }
   });
+
+  it("gives the Windows test shards, and only them, Git for Windows' own binary for the suite", () => {
+    // test/test-git.ts refuses any other git than the installation's own; the verify job keeps the runner's PATH.
+    const expr = "${{ matrix.platform == 'windows' && 'C:\\Program Files\\Git\\mingw64\\bin\\git.exe' || '' }}";
+    expect(jobs["test"]!.steps.find((s) => s.name === "Test")!.env).toEqual({ CP_TEST_SHARD: "${{ matrix.shard }}", CP_TEST_GIT: expr });
+    for (const [name, job] of Object.entries(jobs)) {
+      expect(job.env, name).not.toHaveProperty("CP_TEST_GIT");
+      expect(job.steps.filter((s) => "CP_TEST_GIT" in s.env).map((s) => s.name), name).toEqual(name === "test" ? ["Test"] : []);
+    }
+  });
 });
 
 // The identity check (scripts/ci/verify-commit-identity.mjs) on an unsigned fixture commit. A gpg that does not exist

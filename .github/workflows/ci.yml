@@ -296,8 +296,12 @@ jobs:
         run: dotnet build custodian/CodeParley.Custodian.Linux/CodeParley.Custodian.Linux.csproj -c Release
 
       # Step 6: CP_TEST_SHARD, the matrix's shard, makes vitest exclude the test files dealt to the other shards of this
-      # platform and Node.js version (test/schedule.ts, by their recorded durations). Set on this step only.
+      # platform and Node.js version (test/schedule.ts, by their recorded durations). On Windows, CP_TEST_GIT names Git
+      # for Windows' own binary: the suite puts its directory first on PATH (test/test-git.ts, which refuses any other
+      # git than the installation's), so its tens of thousands of git calls skip the launcher on the runner's PATH
+      # (bin\git.exe, a second process per call). Tests only: the verify job keeps the runner's PATH. Set on this step only.
       - name: Test
         env:
           CP_TEST_SHARD: ${{ matrix.shard }}
+          CP_TEST_GIT: ${{ matrix.platform == 'windows' && 'C:\Program Files\Git\mingw64\bin\git.exe' || '' }}
         run: npm test

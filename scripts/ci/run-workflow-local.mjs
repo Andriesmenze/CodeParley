@@ -14,7 +14,8 @@
 // another Node.js: on Windows it gets a PATH directory of its own with node.exe and npm/npx shims (--npm-cli, default
 // the system npm), on Linux its own directory (which carries npm). --set gives a step environment value the workflow
 // computes with an expression (the identity job's EXPECTED_SHA and MERGE; the verify and test jobs' VERIFIED_SHA, and
-// the test job's CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `=2/4` one shard).
+// the test job's CP_TEST_SHARD, the matrix's shard: `--set CP_TEST_SHARD=` runs the whole suite, `=2/4` one shard;
+// and its CP_TEST_GIT: on Windows the path of Git for Windows' own git.exe, on Linux empty).
 import { spawnSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
