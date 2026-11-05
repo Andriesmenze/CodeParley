@@ -154,7 +154,7 @@ class Runner {
       if ((e["selectable"] === true) !== (typeof e["renderingDigest"] === "string")) where += "!digest";
       return `${String(e["state"])} ${e["selectable"] === true ? "selectable" : "-"} ${alias} ${typeof e["reasonCode"] === "string" ? e["reasonCode"] : "-"} ${where}`;
     });
-    return { schema: listing["schema"] ?? null, total: listing["total"] ?? null, truncated: listing["truncated"] ?? null, entries };
+    return { schema: listing["schema"] ?? null, total: listing["total"] ?? null, truncated: listing["truncated"] ?? null, omittedPending: listing["omittedPending"] ?? null, entries };
   }
 
   /** The corpus's Codex installation (variant 0 by default) written below the scenario's scratch directory. */

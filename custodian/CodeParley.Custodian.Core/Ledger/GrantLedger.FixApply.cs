@@ -406,27 +406,37 @@ internal sealed partial class GrantLedger
             };
             rows.Add((Array.IndexOf(ListedStates, state), expiresAt, entry, run, op, id));
         }
-        List<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)> listed = [.. rows
+        static List<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)> Ordered(
+            IEnumerable<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)> of) => [.. of
             .OrderBy(r => r.Rank).ThenBy(r => r.ExpiresAt, StringComparer.Ordinal).ThenBy(r => r.Run.RepoKey, StringComparer.Ordinal)
-            .ThenBy(r => r.Run.RunId, StringComparer.Ordinal).ThenBy(r => r.Op.OperationId, StringComparer.Ordinal).Take(MaxListedFixes)];
+            .ThenBy(r => r.Run.RunId, StringComparer.Ordinal).ThenBy(r => r.Op.OperationId, StringComparer.Ordinal)];
+        // The response is bounded: the first MaxListedFixes rows in the listing's order (pending first, the soonest to expire
+        // first). What is cut is counted, and the pending fixes among it are counted separately (never left out silently).
+        List<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)> ordered = Ordered(rows);
+        var listed = ordered.Take(MaxListedFixes).ToList();
+        int omittedPending = ordered.Skip(MaxListedFixes).Count(r => (string?)r.Entry["state"] == "pending");
         // A pending fix is selectable once the custodian has read, re-verified and rendered its held proposal now.
-        foreach ((_, _, JsonObject entry, RunRecord run, RunOperation op, RepoIdentity? id) in listed)
+        for (int i = 0; i < listed.Count; i++)
         {
+            (_, _, JsonObject entry, RunRecord run, RunOperation op, RepoIdentity? id) = listed[i];
             if ((string?)entry["state"] != "pending") continue;
             HeldProposalRead read = ReadHeldProposal(id!, run.RunId, op.OperationId);
             if (read.Problem is not null || read.Rendering is null || read.ProposalDigest != (string?)entry["proposalDigest"])
             {
                 entry["state"] = "ineligible";
                 entry["reasonCode"] = "content_unreadable";
+                listed[i] = listed[i] with { Rank = Array.IndexOf(ListedStates, "ineligible") };
                 continue;
             }
             entry["renderingDigest"] = read.Rendering.Digest;
             entry["selectable"] = true;
         }
-        var entries = new JsonArray([.. listed.Select(r => (JsonNode)r.Entry)]);
+        // A fix found unreadable now takes its place among the ineligible ones (the sections stay in order).
+        var entries = new JsonArray([.. Ordered(listed).Select(r => (JsonNode)r.Entry)]);
         return new JsonObject
         {
             ["schema"] = FixListingSchema, ["snapshotAt"] = Iso(now), ["total"] = rows.Count, ["truncated"] = rows.Count > MaxListedFixes,
+            ["omittedPending"] = omittedPending,
             ["listingDigest"] = Digest.Sha256Hex(Digest.Canonical(new JsonObject { ["entries"] = entries.DeepClone() })),
             ["entries"] = entries,
         };

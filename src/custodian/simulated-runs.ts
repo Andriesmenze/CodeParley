@@ -2182,7 +2182,7 @@ export function expectedSelectionOf(args: Record<string, unknown>): SimFixSelect
 export const FIX_LISTING_SCHEMA = "codeparley.custodian-fix-listing.v1";
 export const MAX_LISTED_FIXES = 50;
 export const MAX_LISTED_PATHS = 10;
-const LISTED_STATES = ["pending", "unavailable", "waiting", "expired", "ineligible"];
+export const LISTED_FIX_STATES = ["pending", "unavailable", "waiting", "expired", "ineligible"];
 
 /** A fix the listing considers, with the run it belongs to. */
 export interface SimListedFix {
@@ -2230,7 +2230,7 @@ export function listingEntry(f: SimListedFix, located: { id: { key: string; cano
   if (state === "pending" && located.id === null) [state, reason] = ["unavailable", "repository_unavailable"];
   const changed = (Array.isArray(p["changes"]) ? (p["changes"] as Record<string, unknown>[]) : []).map((x) => String(x["path"] ?? ""));
   return {
-    rank: LISTED_STATES.indexOf(state),
+    rank: LISTED_FIX_STATES.indexOf(state),
     expiresAt,
     entry: {
       state, selectable: false, reasonCode: reason, repoKey: f.run.repoKey,

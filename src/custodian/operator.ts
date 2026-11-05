@@ -179,6 +179,8 @@ export interface FixSelection {
 }
 
 export const FIX_LISTING_SCHEMA = "codeparley.custodian-fix-listing.v1";
+/** The custodian's bound on a listing's entries (GrantLedger.MaxListedFixes); a longer answer is refused. */
+export const MAX_LISTED_FIX_ENTRIES = 50;
 export const FIX_DECISION_FACTS_SCHEMA = "codeparley.custodian-fix-decision-prepared.v1";
 
 export type FixListingState = "pending" | "unavailable" | "waiting" | "expired" | "ineligible";
@@ -210,6 +212,8 @@ export interface FixListing {
   snapshotAt: string;
   total: number;
   truncated: boolean;
+  /** Of the fixes the listing did not include (truncated), how many await a decision. */
+  omittedPending: number;
   listingDigest: string;
   entries: FixListingEntry[];
 }
@@ -262,7 +266,14 @@ export function fixListingOf(d: Record<string, unknown>): FixListing {
       expiresAt: str(e["expiresAt"], "expiry"), confirmationExpiresAt: optStr(e["confirmationExpiresAt"], "expiry"),
     };
   });
-  return { snapshotAt: str(d["snapshotAt"], "listing time"), total: num(d["total"], "listing total"), truncated: d["truncated"] === true, listingDigest: str(d["listingDigest"], "listing digest"), entries };
+  // The bound and its accounting: never more than the custodian's bound, a cut reported as such, its pending ones counted.
+  const total = num(d["total"], "listing total");
+  const omittedPending = num(d["omittedPending"], "listing omission count");
+  if (typeof d["truncated"] !== "boolean" || entries.length > MAX_LISTED_FIX_ENTRIES || d["truncated"] !== total > entries.length
+    || (!d["truncated"] && total !== entries.length) || !Number.isInteger(omittedPending) || omittedPending < 0 || omittedPending > total - entries.length) {
+    throw malformed("listing bound");
+  }
+  return { snapshotAt: str(d["snapshotAt"], "listing time"), total, truncated: d["truncated"], omittedPending, listingDigest: str(d["listingDigest"], "listing digest"), entries };
 }
 
 /** A prepared decision's facts, checked; null when the custodian sent none (one that predates Step 7.1). */

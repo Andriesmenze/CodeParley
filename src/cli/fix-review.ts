@@ -95,7 +95,14 @@ function showListing(io: CliIo, listing: FixListing): FixListingEntry[] {
     io.out(`${label}  ${where}  run ${custodianText(e.runId)}  fix ${custodianText(e.operationId)}  ${files}  ${stateText(e)}`);
     if (e.paths.length > 0) io.out(`       ${e.paths.join(", ")}${e.pathCount > e.paths.length ? `, … (${e.pathCount} paths)` : ""}`);
   }
-  if (listing.truncated) io.out(`(${listing.entries.length} of ${listing.total} shown; narrow it with --repo <path>)`);
+  if (listing.truncated) {
+    // The custodian lists at most a bounded number, the soonest to expire first; what it left out is reported, never dropped.
+    const more = listing.total - listing.entries.length;
+    io.out(`${listing.entries.length} of ${listing.total} delegated fixes are shown; ${more} more ${more === 1 ? "is" : "are"} not.`);
+    io.out(listing.omittedPending > 0
+      ? `${listing.omittedPending} of those ${listing.omittedPending === 1 ? "waits" : "wait"} for your decision. The fixes that expire soonest are listed first: confirm or reject some of them and list again, or list one repository with: code-parley fix review --repo <path>`
+      : "None of those waits for your decision.");
+  }
   if (selectable.length === 0) io.out("No delegated fix is waiting for your decision.");
   return selectable;
 }

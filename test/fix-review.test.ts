@@ -172,6 +172,46 @@ describe.skipIf(!supported)("Step 7.1: fix review, the guided decision (simulate
     expect(io.errors.join(" ")).toContain("This custodian predates `fix review`");
   });
 
+  it("a listing the custodian cut is reported as cut, with the pending fixes it left out and the way to reach them; a listing beyond the bound, or whose cut is not accounted for, is refused", async () => {
+    const { f } = await proposed();
+    // The custodian's own cut (exactly 50 / beyond 50) is in the shared corpus; here the CLI's report of one.
+    const cut = (omittedPending: number) => altered(f.custodian, "list_fix_proposals", (res) => {
+      if (res.ok) Object.assign(res.data!, { total: 60, truncated: true, omittedPending });
+      return res;
+    });
+    const io = terminal(script("q"));
+    expect(await review(f, io, [], cut(7))).toBe(0);
+    const out = io.lines.join("\n");
+    expect(out).toMatch(/^ +1 {2}.*waiting for your decision/m); // what was listed stays selectable
+    expect(out).toContain("1 of 60 delegated fixes are shown; 59 more are not.");
+    expect(out).toContain("7 of those wait for your decision. The fixes that expire soonest are listed first: confirm or reject some of them and list again, or list one repository with: code-parley fix review --repo <path>");
+    const io2 = terminal(script("q"));
+    expect(await review(f, io2, [], cut(0))).toBe(0);
+    expect(io2.lines.join("\n")).toContain("None of those waits for your decision.");
+    // Answers no correct custodian gives: more entries than its bound, a cut not reported, more omitted than cut.
+    const prepares0 = sent(f, "prepare_fix_decision");
+    for (const change of [
+      (d: Record<string, unknown>) => {
+        const e = (d["entries"] as unknown[])[0];
+        d["entries"] = Array.from({ length: 51 }, () => structuredClone(e));
+        Object.assign(d, { total: 51, truncated: false, omittedPending: 0 });
+      },
+      (d: Record<string, unknown>) => Object.assign(d, { total: 60, truncated: false }),
+      (d: Record<string, unknown>) => Object.assign(d, { total: 60, truncated: true, omittedPending: 60 }),
+      (d: Record<string, unknown>) => delete d["omittedPending"],
+    ]) {
+      const t = altered(f.custodian, "list_fix_proposals", (res) => {
+        if (res.ok) change(res.data!);
+        return res;
+      });
+      const io3 = terminal(script("1", "q"));
+      expect(await review(f, io3, [], t)).not.toBe(0);
+      expect(io3.errors.join(" ")).toMatch(/listing (bound|omission count) is malformed/);
+      expect(io3.lines.join("\n")).not.toMatch(/^ +1 {2}/m);
+    }
+    expect(sent(f, "prepare_fix_decision")).toBe(prepares0);
+  });
+
   it("a prepared decision that is not the one reviewed is refused before the word is asked: nothing is committed", async () => {
     const { f } = await proposed();
     const commits0 = sent(f, "commit");

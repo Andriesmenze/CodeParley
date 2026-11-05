@@ -25,7 +25,7 @@ import {
   type SimBoundProcess, type SimClientCheck, type SimLoop, type SimProcessCheck, type SimRunView,
 } from "./simulated-loops.js";
 import {
-  FIX_LISTING_SCHEMA, MAX_LISTED_FIXES, compareListingRows, expectedSelectionOf, fixCandidatePaths, listableFixes, listingEntry,
+  FIX_LISTING_SCHEMA, LISTED_FIX_STATES, MAX_LISTED_FIXES, compareListingRows, expectedSelectionOf, fixCandidatePaths, listableFixes, listingEntry,
   applyFixDecision, applyRunTransition, commitCapture, proposalKey, commitCheckEnd, commitCheckStart, heldProposalRead, heldReadTarget, isRunTerminal, parseRunRequest, prepareFixDecision,
   reconcileCapturesAtStart, requireFreshFixDecision, retentionSweep, runKey, runLimits, runSection, evidenceKey, evidenceRefsOf, redactionBasisDigest, unestablishedAmendment,
   type SimApplyMeasure, type SimApplyPre, type SimCaptureEnd, type SimCaptureTicket, type SimExportRehash, type SimHeldProposal, type SimHeldRead, type SimRun, type SimRunStore, type SimWriter,
@@ -753,20 +753,25 @@ export class SimulatedCustodianTransport implements CustodianTransport {
       return result;
     };
     const rows = listableFixes(snap.runs, only?.key ?? null).map((f) => ({ ...listingEntry(f, locate(f.run), nowMs, escapeText), f }));
-    const listed = [...rows].sort(compareListingRows).slice(0, MAX_LISTED_FIXES);
+    // Bounded: the first MAX_LISTED_FIXES rows in the listing's order; the pending fixes cut are counted (never left out silently).
+    const ordered = [...rows].sort(compareListingRows);
+    const listed = ordered.slice(0, MAX_LISTED_FIXES);
+    const omittedPending = ordered.slice(MAX_LISTED_FIXES).filter((r) => r.entry["state"] === "pending").length;
     for (const r of listed) {
       if (r.entry["state"] !== "pending") continue;
       const read = await this.heldReadFor(String(r.entry["repositoryRoot"]), r.f.run.runId, r.f.op.operationId);
       if (!read || read.problem !== null || !read.rendering || read.proposalDigest !== r.entry["proposalDigest"]) {
         r.entry["state"] = "ineligible";
         r.entry["reasonCode"] = "content_unreadable";
+        r.rank = LISTED_FIX_STATES.indexOf("ineligible");
         continue;
       }
       r.entry["renderingDigest"] = read.rendering.digest;
       r.entry["selectable"] = true;
     }
-    const entries = listed.map((r) => r.entry);
-    return { schema: FIX_LISTING_SCHEMA, snapshotAt: new Date(nowMs).toISOString(), total: rows.length, truncated: rows.length > MAX_LISTED_FIXES, listingDigest: sha256OfCanonicalJson({ entries }), entries };
+    // A fix found unreadable now takes its place among the ineligible ones (the sections stay in order).
+    const entries = listed.sort(compareListingRows).map((r) => r.entry);
+    return { schema: FIX_LISTING_SCHEMA, snapshotAt: new Date(nowMs).toISOString(), total: rows.length, truncated: rows.length > MAX_LISTED_FIXES, omittedPending, listingDigest: sha256OfCanonicalJson({ entries }), entries };
   }
 
   /** Phase 4 Increment 3 (GrantLedger.FixApply.cs ReadHeldProposal): before the hold, a fix's held content re-verified against

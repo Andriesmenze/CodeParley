@@ -229,7 +229,10 @@ CodeParley's own pager (Enter: next page, `b`: back, `g`/`G`: first and last pag
 proposal and the rendering you reviewed (refused `SELECTION_STALE` if anything changed: review it
 again), CodeParley checks that the prepared decision is that rendering, shows what the decision
 does, and asks you to type the word. A fix whose repository moved is listed but not selectable: run
-`fix review --repo <its new path>`, or set its configuration again at the new path.
+`fix review --repo <its new path>`, or set its configuration again at the new path. The custodian
+lists at most 50 fixes, those waiting for your decision first and the soonest to expire first; when it
+holds more, the listing says how many are not shown and how many of those wait for you. Decide some
+of the listed ones and list again, or list one repository with `--repo`.
 
 The same decision with the identifiers named:
 

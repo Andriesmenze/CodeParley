@@ -578,7 +578,11 @@ internal static class RunCorpusSelfTest
             if ((bool)e["selectable"]! != (e["renderingDigest"] is JsonValue)) where += "!digest";
             entries.Add($"{(string)e["state"]!} {((bool)e["selectable"]! ? "selectable" : "-")} {alias} {(string?)e["reasonCode"] ?? "-"} {where}");
         }
-        return new JsonObject { ["schema"] = listing["schema"]?.DeepClone(), ["total"] = listing["total"]?.DeepClone(), ["truncated"] = listing["truncated"]?.DeepClone(), ["entries"] = entries };
+        return new JsonObject
+        {
+            ["schema"] = listing["schema"]?.DeepClone(), ["total"] = listing["total"]?.DeepClone(), ["truncated"] = listing["truncated"]?.DeepClone(),
+            ["omittedPending"] = listing["omittedPending"]?.DeepClone(), ["entries"] = entries,
+        };
     }
 
     private static JsonNode? Placeholder(Scenario ctx, string token) => token switch
