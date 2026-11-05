@@ -939,6 +939,92 @@
         { "op": "fixPrepare", "run": "r1", "of": "f5", "decision": "confirm", "expect": { "ok": false, "code": "RUN_TERMINAL" } },
         { "op": "held", "run": "r1", "of": "f5", "expect": { "ok": true, "data": { "held": false } } }
       ]
+    },
+    {
+      "name": "Step 7.1 list_fix_proposals and the guided decision: custodian-held facts per fix (pending, waiting, expired, ineligible), the path from the configuration history resolved to the run's identity; a complete selection prepares only the proposal and rendering reviewed (SELECTION_STALE otherwise, also for another repository's path or identity); one or two expected values, or a value of the wrong type, is MALFORMED_REQUEST; two decisions on one proposal: the first commit wins",
+      "steps": [
+        {"op":"t","run":"r1","kind":"open","fields":{"$template":"open","budgets":{"maxReviews":6,"maxCheckExecutions":50,"maxFixes":5}},"expect":{"ok":true}},
+        {"op":"mint","run":"r1","expect":{"ok":true}},
+        {"op":"bind","run":"r1","expect":{"ok":true}},
+        {"op":"fixConfirm","expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"reviewBegin","reviewId":"rv1"},"capture":{"op":"m1"},"expect":{"ok":true}},
+        {"op":"capture","run":"r1","of":"m1","tree":true,"expect":{"ok":true,"data":{"operationStatus":"captured"}}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:m1","outcome":{"$template":"reviewOutcome"},"promptDigest":"$hex:5","presented":{"$template":"presented"}},"expect":{"ok":true,"data":{"accepted":true}}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":0,"truncated":false,"entries":[]}}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"fixBegin","fixId":"fx1"},"capture":{"op":"f1"},"expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:f1","outcome":{"$template":"fixOutcome"}},"expect":{"ok":true,"data":{"operationStatus":"proposed"}}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"fixBegin","fixId":"fx2"},"capture":{"op":"f2"},"expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:f2","outcome":{"$template":"fixOutcome"}},"expect":{"ok":true,"data":{"operationStatus":"proposed"}}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"fixBegin","fixId":"fx3"},"capture":{"op":"f3"},"expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:f3","outcome":{"$template":"fixOutcome"}},"expect":{"ok":true,"data":{"operationStatus":"proposed"}}},
+        {"op":"fixList","select":{"of":"f1","as":"s1"},"expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":3,"truncated":false,"entries":["pending selectable f1 - main","pending selectable f2 - main","pending selectable f3 - main"]}}},
+        {"op":"fixList","select":{"of":"f2","as":"s2"},"expect":{"ok":true}},
+        {"op":"fixPrepare","run":"r1","of":"f1","decision":"confirm","expected":{"expectedRepoKey":"$sel:s1:repoKey","expectedProposalDigest":"$sel:s1:proposalDigest","expectedRenderingDigest":"$sel:s1:renderingDigest"},"capture":{"intent":"c1"},"expect":{"ok":true,"data":{"fixDecision":{"schema":"codeparley.custodian-fix-decision-prepared.v1","decision":"confirm","repoKey":"$sel:s1:repoKey","runId":"r1","operationId":"$op:f1","proposalDigest":"$sel:s1:proposalDigest","renderingDigest":"$sel:s1:renderingDigest","consequences":["applies_exactly_this_content_once","bound_to_this_rendering","rechecks_the_baseline","authorizes_no_commit_push_merge_tag_or_release"]}}}},
+        {"op":"commit","intent":"c1","expect":{"ok":true,"data":{"decision":"confirm","operationStatus":"confirmed"}}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":3,"truncated":false,"entries":["pending selectable f2 - main","pending selectable f3 - main","waiting - f1 - main"]}}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$hex:a","expectedRenderingDigest":"$sel:s2:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$hex:b"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s1:repoKey","expectedProposalDigest":"$sel:s1:proposalDigest","expectedRenderingDigest":"$sel:s1:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"repo","name":"other","expect":{"ok":true}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","repo":"other","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$key:other","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey"},"expect":{"ok":false,"code":"MALFORMED_REQUEST"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest"},"expect":{"ok":false,"code":"MALFORMED_REQUEST"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":7},"expect":{"ok":false,"code":"MALFORMED_REQUEST"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"ABCDEF","expectedRenderingDigest":"$sel:s2:renderingDigest"},"expect":{"ok":false,"code":"MALFORMED_REQUEST"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"reject","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"capture":{"intent":"x2"},"expect":{"ok":true,"data":{"fixDecision":{"decision":"reject","consequences":["closes_the_proposal","removes_its_content","applies_nothing"],"authorityFooter":""}}}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"capture":{"intent":"y2"},"expect":{"ok":true}},
+        {"op":"commit","intent":"x2","expect":{"ok":true,"data":{"decision":"reject","operationStatus":"declined"}}},
+        {"op":"commit","intent":"y2","expect":{"ok":false,"code":"CONFIRMATION_CONTENT_MISMATCH"}},
+        {"op":"fixPrepare","run":"r1","of":"f2","decision":"confirm","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"expect":{"ok":false,"code":"PROPOSAL_NOT_PENDING"}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":2,"truncated":false,"entries":["pending selectable f3 - main","waiting - f1 - main"]}}},
+        {"op":"advance","hours":2,"expect":{"ok":true}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":2,"truncated":false,"entries":["expired - f3 proposal_expired main","ineligible - f1 confirmation_expired main"]}}},
+        {"op":"fixPrepare","run":"r1","of":"f3","decision":"confirm","expect":{"ok":false,"code":"PROPOSAL_NOT_PENDING"}}
+      ]
+    },
+    {
+      "name": "Step 7.1 a moved repository and a reused path: the listing offers a fix only at a path that resolves to the run's identity now (unavailable otherwise, with the last recorded path); a selection prepared at a reused path, or at the moved path with the rendering reviewed at the old one, is SELECTION_STALE; listing at the new path makes it selectable again",
+      "steps": [
+        {"op":"t","run":"r1","kind":"open","fields":{"$template":"open","budgets":{"maxReviews":6,"maxCheckExecutions":50,"maxFixes":5}},"expect":{"ok":true}},
+        {"op":"mint","run":"r1","expect":{"ok":true}},
+        {"op":"bind","run":"r1","expect":{"ok":true}},
+        {"op":"fixConfirm","expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"reviewBegin","reviewId":"rv1"},"capture":{"op":"m1"},"expect":{"ok":true}},
+        {"op":"capture","run":"r1","of":"m1","tree":true,"expect":{"ok":true,"data":{"operationStatus":"captured"}}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:m1","outcome":{"$template":"reviewOutcome"},"promptDigest":"$hex:5","presented":{"$template":"presented"}},"expect":{"ok":true,"data":{"accepted":true}}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"fixBegin","fixId":"fx1"},"capture":{"op":"f1"},"expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:f1","outcome":{"$template":"fixOutcome"}},"expect":{"ok":true,"data":{"operationStatus":"proposed"}}},
+        {"op":"fixList","select":{"of":"f1","as":"s1"},"expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":1,"truncated":false,"entries":["pending selectable f1 - main"]}}},
+        {"op":"moveRepo","to":"moved","reuse":true,"expect":{"ok":true}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":1,"truncated":false,"entries":["unavailable - f1 repository_unavailable last:main"]}}},
+        {"op":"fixPrepare","run":"r1","of":"f1","decision":"confirm","expected":{"expectedRepoKey":"$sel:s1:repoKey","expectedProposalDigest":"$sel:s1:proposalDigest","expectedRenderingDigest":"$sel:s1:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixPrepare","run":"r1","of":"f1","decision":"confirm","repo":"moved","expected":{"expectedRepoKey":"$sel:s1:repoKey","expectedProposalDigest":"$sel:s1:proposalDigest","expectedRenderingDigest":"$sel:s1:renderingDigest"},"expect":{"ok":false,"code":"SELECTION_STALE"}},
+        {"op":"fixList","repo":"moved","select":{"of":"f1","as":"s2"},"expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":1,"truncated":false,"entries":["pending selectable f1 - moved"]}}},
+        {"op":"fixList","repo":"main","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":0,"truncated":false,"entries":[]}}},
+        {"op":"fixPrepare","run":"r1","of":"f1","decision":"confirm","repo":"moved","expected":{"expectedRepoKey":"$sel:s2:repoKey","expectedProposalDigest":"$sel:s2:proposalDigest","expectedRenderingDigest":"$sel:s2:renderingDigest"},"capture":{"intent":"c2"},"expect":{"ok":true}},
+        {"op":"commit","intent":"c2","expect":{"ok":true,"data":{"operationStatus":"confirmed"}}}
+      ]
+    },
+    {
+      "name": "Step 7.1 legacy records: a run with no configuration pinned at its open, and a repository whose configuration was revoked, are listed from the configuration history (the record on disk is not changed); the existing decision without expected values works as before",
+      "steps": [
+        {"op":"t","run":"r1","kind":"open","fields":{"$template":"open","budgets":{"maxReviews":6,"maxCheckExecutions":50,"maxFixes":5}},"expect":{"ok":true}},
+        {"op":"mint","run":"r1","expect":{"ok":true}},
+        {"op":"bind","run":"r1","expect":{"ok":true}},
+        {"op":"fixConfirm","expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"reviewBegin","reviewId":"rv1"},"capture":{"op":"m1"},"expect":{"ok":true}},
+        {"op":"capture","run":"r1","of":"m1","tree":true,"expect":{"ok":true,"data":{"operationStatus":"captured"}}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:m1","outcome":{"$template":"reviewOutcome"},"promptDigest":"$hex:5","presented":{"$template":"presented"}},"expect":{"ok":true,"data":{"accepted":true}}},
+        {"op":"t","run":"r1","kind":"op_begin","fields":{"$template":"fixBegin","fixId":"fx1"},"capture":{"op":"f1"},"expect":{"ok":true}},
+        {"op":"t","run":"r1","kind":"op_finish","fields":{"operationId":"$op:f1","outcome":{"$template":"fixOutcome"}},"expect":{"ok":true,"data":{"operationStatus":"proposed"}}},
+        {"op":"unpin","run":"r1","expect":{"ok":true}},
+        {"op":"fixList","select":{"of":"f1","as":"s1"},"expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":1,"truncated":false,"entries":["pending selectable f1 - main"]}}},
+        {"op":"config","action":"revoke","expect":{"ok":true}},
+        {"op":"fixList","expect":{"ok":true,"data":{"schema":"codeparley.custodian-fix-listing.v1","total":1,"truncated":false,"entries":["pending selectable f1 - main"]}}},
+        {"op":"fixPrepare","run":"r1","of":"f1","decision":"confirm","capture":{"intent":"c1"},"expect":{"ok":true,"rendering":{"has":["Confirm delegated fix ","It authorizes no commit, push, merge, tag or release."]}}},
+        {"op":"commit","intent":"c1","expect":{"ok":true,"data":{"operationStatus":"confirmed"}}}
+      ]
     }
   ]
 }

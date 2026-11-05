@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using CodeParley.Custodian.Ipc;
 using CodeParley.Custodian.Ledger;
+using CodeParley.Custodian.Security;
 
 namespace CodeParley.Custodian.Cli;
 
@@ -35,6 +36,41 @@ internal static partial class RunSelfTest
             !applyWithConfirmation.Ok && applyWithConfirmation.Code == ErrorCodes.MalformedRequest);
         Response render = core.Handle(CallerClass.Helper, Req("render_fix_proposal", new JsonObject { ["repositoryRoot"] = repo, ["runId"] = "r1", ["operationId"] = "fop-1-aaaaaaaaaaaa" }), null);
         failed += Check("the helper class is served no rendering (CALLER_NOT_AUTHORIZED)", !render.Ok && render.Code == ErrorCodes.CallerNotAuthorized);
+
+        // Step 7.1 (S1, S6): the listing is the operator's only; a guided selection names all three expected values or none.
+        foreach ((CallerClass who, string name) in new[] { (CallerClass.Implementer, "implementer"), (CallerClass.Helper, "helper") })
+        {
+            Response listed = core.Handle(who, Req("list_fix_proposals", new JsonObject()), null, 4242);
+            failed += Check($"7.1 S1: list_fix_proposals on the {name} surface → CALLER_NOT_AUTHORIZED, nothing listed",
+                !listed.Ok && listed.Code == ErrorCodes.CallerNotAuthorized && listed.Data is null);
+        }
+        Response operatorList = core.Handle(CallerClass.Operator, Req("list_fix_proposals", new JsonObject()), null);
+        failed += Check("7.1 S1: list_fix_proposals on the operator surface is served", operatorList.Ok && (string?)operatorList.Data?["schema"] == GrantLedger.FixListingSchema);
+        Response listForged = core.Handle(CallerClass.Operator, Req("list_fix_proposals", new JsonObject { ["includeNarrative"] = true }), null);
+        failed += Check("7.1: a listing request with an unknown field → MALFORMED_REQUEST", !listForged.Ok && listForged.Code == ErrorCodes.MalformedRequest);
+        JsonObject Prep(JsonObject extra)
+        {
+            var a = new JsonObject { ["repositoryRoot"] = repo, ["runId"] = "r1", ["operationId"] = "fop-1-aaaaaaaaaaaa", ["decision"] = "confirm" };
+            foreach ((string k, JsonNode? v) in extra) a[k] = v?.DeepClone();
+            return a;
+        }
+        string key = RepoIdentities.Resolve(repo).Key;
+        foreach ((string label, JsonObject extra) in new (string, JsonObject)[]
+        {
+            ("one of three", new JsonObject { ["expectedRepoKey"] = key }),
+            ("two of three", new JsonObject { ["expectedRepoKey"] = key, ["expectedProposalDigest"] = Hex }),
+            ("a number", new JsonObject { ["expectedRepoKey"] = key, ["expectedProposalDigest"] = 7, ["expectedRenderingDigest"] = Hex }),
+            ("a null", new JsonObject { ["expectedRepoKey"] = null, ["expectedProposalDigest"] = Hex, ["expectedRenderingDigest"] = Hex }),
+            ("upper-case hex", new JsonObject { ["expectedRepoKey"] = key, ["expectedProposalDigest"] = Hex.ToUpperInvariant(), ["expectedRenderingDigest"] = Hex }),
+            ("a key of another scheme", new JsonObject { ["expectedRepoKey"] = "legacy-" + key, ["expectedProposalDigest"] = Hex, ["expectedRenderingDigest"] = Hex }),
+        })
+        {
+            Response r = core.Handle(CallerClass.Operator, Req("prepare_fix_decision", Prep(extra)), null);
+            failed += Check($"7.1 S6: prepare_fix_decision with {label} of the expected values → MALFORMED_REQUEST", !r.Ok && r.Code == ErrorCodes.MalformedRequest);
+        }
+        Response implementerSelection = core.Handle(CallerClass.Implementer, Req("prepare_fix_decision", Prep(new JsonObject { ["expectedRepoKey"] = key })), null, 4242);
+        failed += Check("7.1: a malformed selection from the implementer surface is refused as the caller first (CALLER_NOT_AUTHORIZED)",
+            !implementerSelection.Ok && implementerSelection.Code == ErrorCodes.CallerNotAuthorized);
         return failed;
     }
 }

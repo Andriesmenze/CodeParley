@@ -85,6 +85,9 @@ internal static class ErrorCodes
     internal const string ConfirmationConsumed = "CONFIRMATION_CONSUMED";
     internal const string ApplyInProgress = "APPLY_IN_PROGRESS";
     internal const string FixStale = "FIX_STALE";
+    // Step 7.1: a guided selection (complete and well-formed) that no longer matches the custodian's evidence — another
+    // repository identity behind the path, another proposal, another rendering than the one reviewed.
+    internal const string SelectionStale = "SELECTION_STALE";
     // Phase 5 F-i2-5: the custodian could not produce the reviewer-visible redaction of an amendment text.
     internal const string RedactionRefused = "REDACTION_REFUSED";
     internal const string Internal = "INTERNAL";

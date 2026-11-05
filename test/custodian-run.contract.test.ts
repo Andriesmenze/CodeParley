@@ -8,13 +8,14 @@
 import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalize } from "../src/common/hash.js";
 import { CustodianOperator } from "../src/custodian/operator.js";
-import { SimulatedCustodianTransport } from "../src/custodian/transport.js";
+import { SimulatedCustodianTransport, filesystemIdentity } from "../src/custodian/transport.js";
+import { escapeText } from "../src/custodian/render-escape.js";
 import type { SimBoundProcess, SimProcessCheck } from "../src/custodian/simulated-loops.js";
 import type { SimWriter } from "../src/custodian/simulated-runs.js";
 import type { CustodianResponse, CustodianSurface } from "../src/custodian/protocol.js";
@@ -24,7 +25,7 @@ const CORPUS_PATH = join(ROOT, "test", "fixtures", "run-transition-corpus.json")
 
 type Json = Record<string, unknown>;
 interface Step extends Json {
-  op: "t" | "mint" | "bind" | "loop" | "replay" | "list" | "amend" | "decide" | "commit" | "dropRun" | "grant" | "config" | "revokeGlobal" | "recover" | "capture" | "tamper" | "restart" | "measure" | "derive" | "exports" | "orphan" | "sweep" | "advance" | "fixConfirm" | "held" | "orphanProposal" | "fixPrepare" | "fixRender";
+  op: "t" | "mint" | "bind" | "loop" | "replay" | "list" | "amend" | "decide" | "commit" | "dropRun" | "grant" | "config" | "revokeGlobal" | "recover" | "capture" | "tamper" | "restart" | "measure" | "derive" | "exports" | "orphan" | "sweep" | "advance" | "fixConfirm" | "held" | "orphanProposal" | "fixPrepare" | "fixRender" | "fixList" | "repo" | "moveRepo" | "unpin";
 }
 interface Scenario {
   name: string;
@@ -108,6 +109,10 @@ class Runner {
   private readonly amendments = new Map<string, string>();
   private readonly intents = new Map<string, string>();
   private readonly sent = new Map<string, Sent>();
+  /** Step 7.1: the scenario's named directories (main: the repository; other; moved) with their canonical paths when named,
+   * and the listing entries captured as selections (RunCorpusSelfTest). */
+  private readonly paths = new Map<string, { path: string; canonical: string }>();
+  private readonly selections = new Map<string, Json>();
   private generated = 0;
   private stepNo = 0;
   private acceptanceId: string | null = null;
@@ -124,6 +129,33 @@ class Runner {
     /** P3.4C-5 Increment 4: the scenario's clock (the `advance` step moves it). */
     private readonly clock: { now: number } = { now: Date.now() },
   ) {}
+
+  /** Step 7.1: the scenario's directory named `name` (main is the repository; any other a new directory beside it). */
+  private namedPath(name: string): string {
+    const known = this.paths.get(name);
+    if (known) return known.path;
+    const path = name === "main" ? this.repo : join(this.scratch, "repos", name);
+    mkdirSync(path, { recursive: true });
+    this.paths.set(name, { path, canonical: filesystemIdentity(path).canonicalPath });
+    return path;
+  }
+
+  /** Step 7.1: a listing as the corpus compares it (RunCorpusSelfTest.ListingSummary). */
+  private listingSummary(listing: Json): Json {
+    const nameOf = (p: unknown): string => {
+      if (typeof p !== "string") return "-";
+      for (const [name, { canonical }] of this.paths) if (process.platform === "win32" ? canonical.toLowerCase() === p.toLowerCase() : canonical === p) return name;
+      return "?";
+    };
+    const entries = ((listing["entries"] ?? []) as Json[]).map((e) => {
+      const alias = [...this.ops].find(([, id]) => id === e["operationId"])?.[0] ?? "?";
+      let where = typeof e["repositoryRoot"] === "string" ? nameOf(e["repositoryRoot"]) : typeof e["lastKnownPath"] === "string" ? `last:${nameOf(e["lastKnownPath"])}` : "-";
+      if (typeof e["repositoryRoot"] === "string" && e["repositoryDisplay"] !== escapeText(e["repositoryRoot"])) where += "!display";
+      if ((e["selectable"] === true) !== (typeof e["renderingDigest"] === "string")) where += "!digest";
+      return `${String(e["state"])} ${e["selectable"] === true ? "selectable" : "-"} ${alias} ${typeof e["reasonCode"] === "string" ? e["reasonCode"] : "-"} ${where}`;
+    });
+    return { schema: listing["schema"] ?? null, total: listing["total"] ?? null, truncated: listing["truncated"] ?? null, entries };
+  }
 
   /** The corpus's Codex installation (variant 0 by default) written below the scenario's scratch directory. */
   private pe(variant = 0): string {
@@ -297,8 +329,42 @@ class Runner {
       case "held":
         return { ok: true, data: this.t.heldProposalForTest(this.repo, run, this.ops.get(String(s["of"]))!) as Json };
       // ---- Phase 4 Increment 3: the owner's decision and the custodian's rendering (RunCorpusSelfTest) ----
-      case "fixPrepare":
-        return this.t.send("operator", "prepare_fix_decision", { repositoryRoot: this.repo, runId: run, operationId: this.ops.get(String(s["of"]))!, decision: s["decision"] }, `fixdecision-${++this.generated}`);
+      case "fixPrepare": {
+        // Step 7.1: `repo` names the directory the request names; `expected` the selection fields exactly as sent.
+        const repositoryRoot = typeof s["repo"] === "string" ? this.namedPath(s["repo"]) : this.repo;
+        const expected = s["expected"] ? (this.resolve(s["expected"]) as Json) : {};
+        const res = await this.t.send("operator", "prepare_fix_decision", { repositoryRoot, runId: run, operationId: this.ops.get(String(s["of"]))!, decision: s["decision"], ...expected }, `fixdecision-${++this.generated}`);
+        return res.ok ? { ok: true, data: { authorizationRequestId: res.data?.["authorizationRequestId"], action: res.data?.["action"], rendering: res.data?.["rendering"], fixDecision: res.data?.["fixDecision"] ?? null } } : res;
+      }
+      // ---- Step 7.1: the operator's listing (`fix review`; RunCorpusSelfTest) ----
+      case "fixList": {
+        this.namedPath("main");
+        const args = typeof s["repo"] === "string" ? { repositoryRoot: this.namedPath(s["repo"]) } : {};
+        const res = await this.t.send((s["surface"] as CustodianSurface | undefined) ?? "operator", "list_fix_proposals", args, `fixlist-${++this.generated}`);
+        if (!res.ok) return res;
+        const sel = s["select"] as Json | undefined;
+        if (sel) {
+          const id = this.ops.get(String(sel["of"]));
+          const entry = ((res.data?.["entries"] ?? []) as Json[]).find((e) => e["operationId"] === id);
+          if (!entry) throw new Error(`the listing has no entry for ${String(id)}`);
+          this.selections.set(String(sel["as"]), structuredClone(entry));
+        }
+        return { ok: true, data: this.listingSummary(res.data ?? {}) };
+      }
+      case "repo":
+        this.namedPath(String(s["name"]));
+        return { ok: true, data: {} };
+      case "moveRepo": {
+        this.namedPath("main");
+        const to = `${this.repo}-${String(s["to"])}`;
+        renameSync(this.repo, to);
+        this.paths.set(String(s["to"]), { path: to, canonical: filesystemIdentity(to).canonicalPath });
+        if (s["reuse"] === true) mkdirSync(this.repo, { recursive: true });
+        return { ok: true, data: {} };
+      }
+      case "unpin":
+        this.t.unpinRunForTest(this.namedPath("main"), run);
+        return { ok: true, data: {} };
       case "fixRender":
         return this.t.send(surface, "render_fix_proposal", { repositoryRoot: this.repo, runId: run, operationId: this.ops.get(String(s["of"]))! }, `render-${++this.generated}`);
       case "recover":
@@ -388,6 +454,12 @@ class Runner {
     if (v.startsWith("$hex:")) return v.slice(5).repeat(64);
     if (v.startsWith("$sha:")) return createHash("sha256").update(v.slice(5), "utf8").digest("hex");
     if (v.startsWith("$op:")) return this.ops.get(v.slice(4));
+    // Step 7.1: a field of a captured listing entry ($sel:alias:field), and a named directory's identity.
+    if (v.startsWith("$sel:")) {
+      const [alias, field] = v.slice(5).split(":") as [string, string];
+      return this.selections.get(alias)?.[field] ?? null;
+    }
+    if (v.startsWith("$key:")) return filesystemIdentity(this.namedPath(v.slice(5))).key;
     if (v.startsWith("$proposal:")) {
       const id = this.ops.get(v.slice(10));
       for (const r of Object.values(this.t.snapshot().runs ?? {})) {

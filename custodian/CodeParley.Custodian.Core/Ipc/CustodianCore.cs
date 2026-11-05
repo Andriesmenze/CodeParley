@@ -86,9 +86,38 @@ internal sealed class CustodianCore
         ["helper_check"] = ["repositoryRoot", "runId", "target", "keep"],
         // Phase 4 Increment 3 (§3.5): the owner's decision on a held proposal (operator only; committed by `commit`), and the
         // custodian's rendering of it (read only, both surfaces: `fix show` and the originating session's inspection).
-        ["prepare_fix_decision"] = ["repositoryRoot", "runId", "operationId", "decision"],
+        // Step 7.1: a guided selection names all three expected values, or none (the existing `fix confirm|reject`).
+        ["prepare_fix_decision"] = ["repositoryRoot", "runId", "operationId", "decision", "expectedRepoKey", "expectedProposalDigest", "expectedRenderingDigest"],
         ["render_fix_proposal"] = ["repositoryRoot", "runId", "operationId"],
+        // Step 7.1 (`fix review`): the operator's listing of the delegated fixes the custodian holds, across repositories (operator
+        // only); an optional repository narrows it to that identity.
+        ["list_fix_proposals"] = ["repositoryRoot"],
     };
+
+    private static readonly string[] SelectionKeys = ["expectedRepoKey", "expectedProposalDigest", "expectedRenderingDigest"];
+
+    /// <summary>Step 7.1: a guided selection's expected values — all three or none (the existing commands send none). One or
+    /// two, or a value of the wrong type or form, is <c>MALFORMED_REQUEST</c>; a complete selection that no longer matches the
+    /// custodian's evidence is <c>SELECTION_STALE</c> (the ledger's check).</summary>
+    private static GrantLedger.FixSelection? ExpectedSelection(Request r) => ExpectedSelectionOf(r.Args);
+
+    /// <summary>The same check over a request's arguments (the shared run corpus calls it as the dispatcher does).</summary>
+    internal static GrantLedger.FixSelection? ExpectedSelectionOf(JsonObject args)
+    {
+        int present = SelectionKeys.Count(args.ContainsKey);
+        if (present == 0) return null;
+        if (present != SelectionKeys.Length)
+            throw new CustodianRefusal(ErrorCodes.MalformedRequest, "a guided selection names all three expected values (expectedRepoKey, expectedProposalDigest, expectedRenderingDigest), or none");
+        static bool Hex(string s) => s.Length == 64 && s.All(char.IsAsciiHexDigitLower);
+        static bool Key(string s) => s.Length is > 0 and <= 256 && RepoIdentities.IsCurrent(s) && s.All(c => c is > ' ' and < (char)127);
+        string Value(string key, Func<string, bool> ok, string what)
+            => args[key] is JsonValue v && v.TryGetValue(out string? s) && s is not null && ok(s) ? s
+               : throw new CustodianRefusal(ErrorCodes.MalformedRequest, $"'{key}' must be {what}");
+        return new GrantLedger.FixSelection(
+            Value("expectedRepoKey", Key, "a repository identity of this custodian's scheme"),
+            Value("expectedProposalDigest", Hex, "64 lowercase hex digits"),
+            Value("expectedRenderingDigest", Hex, "64 lowercase hex digits"));
+    }
 
     /// <summary>Serve one classified request. <paramref name="clientProcessId"/> is the process connected to
     /// the pipe as the system reports it — correlation evidence for the loop-binding check only (D7).</summary>
@@ -142,7 +171,9 @@ internal sealed class CustodianCore
                 "hold_evidence" => Implementer(caller, () => _ledger.HoldEvidence(StrictStr(req, "repositoryRoot"), StrictStr(req, "runId"), StrictStr(req, "sha256"), StrictInt(req, "part"), StrictInt(req, "parts"), StrictStr(req, "data"))),
                 "loop_transition" => Audited(caller, req, clientProcessId, () => LoopTransition(caller, req, clientProofDigest, clientProcessId)),
                 "run_transition" => Audited(caller, req, clientProcessId, () => RunTransition(caller, req, clientProofDigest, clientProcessId)),
-                "prepare_fix_decision" => Operator(caller, () => Prepared(_ledger.PrepareFixDecision(StrictStr(req, "repositoryRoot"), StrictStr(req, "runId"), StrictStr(req, "operationId"), StrictStr(req, "decision"), req.RequestId))),
+                "prepare_fix_decision" => Operator(caller, () => Prepared(_ledger.PrepareFixDecision(StrictStr(req, "repositoryRoot"), StrictStr(req, "runId"), StrictStr(req, "operationId"), StrictStr(req, "decision"), req.RequestId, ExpectedSelection(req)))),
+                // Step 7.1: operator only — an implementer or helper caller is refused before anything is read or listed.
+                "list_fix_proposals" => Operator(caller, () => _ledger.ListFixProposals(OptStr(req, "repositoryRoot"))),
                 "render_fix_proposal" => caller is CallerClass.Operator or CallerClass.Implementer
                     ? Response.Success(_ledger.RenderFixProposal(StrictStr(req, "repositoryRoot"), StrictStr(req, "runId"), StrictStr(req, "operationId")))
                     : Response.Fail(ErrorCodes.CallerNotAuthorized, "not an authorized caller"),
@@ -227,15 +258,21 @@ internal sealed class CustodianCore
         => caller == CallerClass.Operator ? Response.Success(act())
            : Response.Fail(ErrorCodes.CallerNotAuthorized, $"this action requires the operator surface ({Platform.OperatorSurfaceRequirement})");
 
-    private static JsonObject Prepared(PreparedAuthorization p) => new()
+    private static JsonObject Prepared(PreparedAuthorization p)
     {
-        ["authorizationRequestId"] = p.RequestId,
-        ["action"] = p.Action,
-        ["rendering"] = p.Rendering,
-        ["digest"] = p.Digest,
-        ["challenge"] = p.Challenge,
-        ["expiresAt"] = p.ExpiresAt,
-    };
+        var o = new JsonObject
+        {
+            ["authorizationRequestId"] = p.RequestId,
+            ["action"] = p.Action,
+            ["rendering"] = p.Rendering,
+            ["digest"] = p.Digest,
+            ["challenge"] = p.Challenge,
+            ["expiresAt"] = p.ExpiresAt,
+        };
+        // Step 7.1: a fix decision's structured facts (versioned), so a client verifies what was prepared without parsing text.
+        if (p.Facts is not null) o["fixDecision"] = p.Facts.DeepClone();
+        return o;
+    }
 
     private static Response Classify(Exception e) => Response.Fail(CodeOf(e), e.Message);
 

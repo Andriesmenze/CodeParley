@@ -2091,8 +2091,12 @@ export function fixDecisionStateDigest(run: SimRun | null, operationId: string, 
 }
 
 /** PrepareFixDecision (the hold part): the intent's args, state digest and rendering text. */
-export function prepareFixDecision(store: SimRunStore, id: { canonicalPath: string; key: string }, runId: string, operationId: string, decision: string, read: SimHeldRead | null, nowMs: number): { args: Record<string, unknown>; stateDigest: string; rendering: string } {
+export function prepareFixDecision(store: SimRunStore, id: { canonicalPath: string; key: string }, runId: string, operationId: string, decision: string, read: SimHeldRead | null, nowMs: number, expected: SimFixSelection | null = null): { args: Record<string, unknown>; stateDigest: string; rendering: string; facts: Record<string, unknown> } {
   if (decision !== "confirm" && decision !== "reject") throw invalid("decision must be 'confirm' or 'reject'");
+  // Step 7.1: the path the operator's selection reached must still be the repository identity that was listed.
+  if (expected && id.key !== expected.repoKey) {
+    throw refuse("SELECTION_STALE", `the repository path now resolves to identity ${id.key}, not the identity that was selected (${expected.repoKey}); nothing was prepared — list and review again`);
+  }
   const run = store.runs[runKey(id.key, runId)];
   if (!run) throw refuse("RUN_NOT_OPEN", "the custodian holds no record of this run");
   const op = fixOperationOf(run, operationId);
@@ -2103,17 +2107,149 @@ export function prepareFixDecision(store: SimRunStore, id: { canonicalPath: stri
   if (p["proposalDigest"] !== read.proposalDigest || op.begin["boundaryDigest"] !== read.boundaryDigest || baselineDigestOf(baseline) !== read.baselineDigest) {
     throw refuse("CONFIRMATION_CONTENT_MISMATCH", "the proposal changed while the custodian rendered it; nothing was prepared — prepare it again");
   }
+  // Step 7.1: a guided selection is prepared only for the proposal and the exact rendering the operator reviewed.
+  if (expected && read.proposalDigest !== expected.proposalDigest) {
+    throw refuse("SELECTION_STALE", `delegated fix ${operationId} now holds another proposal than the one that was selected; nothing was prepared — list and review again`);
+  }
+  if (expected && read.rendering.digest !== expected.renderingDigest) {
+    throw refuse("SELECTION_STALE", `the custodian's rendering of delegated fix ${operationId} is not the one that was reviewed; nothing was prepared — review it again`);
+  }
   const args = {
     repositoryRoot: id.canonicalPath, repoKey: id.key, runId, operationId, decision, proposalDigest: read.proposalDigest, renderingDigest: read.rendering.digest, boundaryDigest: read.boundaryDigest,
     baselineDigest: read.baselineDigest, baselineSourceId: baseline["sourceId"] ?? null,
   };
-  const rendering = decision === "confirm"
-    ? `Confirm delegated fix ${operationId} of run ${runId}: CodeParley may apply EXACTLY the content below, once.\n\n${read.rendering.text}\n`
-      + "The confirmation is single use and bound to this rendering (sha256 above), the proposal digest, this repository and run, and the baseline source.\n"
-      + "The application re-checks that the working tree still matches the baseline (FIX_STALE otherwise) and writes only this content.\n"
-      + "It authorizes no commit, push, merge, tag or release."
-    : `Reject delegated fix ${operationId} of run ${runId}: the proposal below is closed and its content removed; nothing is applied.\n\n${read.rendering.text}`;
-  return { args, stateDigest: fixDecisionStateDigest(run, operationId, read.rendering.digest), rendering };
+  const authority = fixDecisionAuthority(decision, runId, operationId);
+  const rendering = authority.header + read.rendering.text + authority.footer;
+  const facts = {
+    schema: FIX_DECISION_FACTS_SCHEMA, decision, repoKey: id.key, repositoryRoot: id.canonicalPath, runId, operationId, proposalDigest: read.proposalDigest,
+    renderingDigest: read.rendering.digest, baselineSourceId: baseline["sourceId"] ?? null, authorityHeader: authority.header, authorityFooter: authority.footer,
+    consequences: authority.consequences,
+  };
+  return { args, stateDigest: fixDecisionStateDigest(run, operationId, read.rendering.digest), rendering, facts };
+}
+
+/** Step 7.1 (GrantLedger.FixDecisionFactsSchema): the structured facts of a prepared fix decision. */
+export const FIX_DECISION_FACTS_SCHEMA = "codeparley.custodian-fix-decision-prepared.v1";
+
+/** FixDecisionAuthority: the authority text around the custodian's rendering (header + rendering + footer) and its
+ * consequences as codes. */
+export function fixDecisionAuthority(decision: string, runId: string, operationId: string): { header: string; footer: string; consequences: string[] } {
+  return decision === "confirm"
+    ? {
+        header: `Confirm delegated fix ${operationId} of run ${runId}: CodeParley may apply EXACTLY the content below, once.\n\n`,
+        footer: "\nThe confirmation is single use and bound to this rendering (sha256 above), the proposal digest, this repository and run, and the baseline source.\n"
+          + "The application re-checks that the working tree still matches the baseline (FIX_STALE otherwise) and writes only this content.\n"
+          + "It authorizes no commit, push, merge, tag or release.",
+        consequences: ["applies_exactly_this_content_once", "bound_to_this_rendering", "rechecks_the_baseline", "authorizes_no_commit_push_merge_tag_or_release"],
+      }
+    : {
+        header: `Reject delegated fix ${operationId} of run ${runId}: the proposal below is closed and its content removed; nothing is applied.\n\n`,
+        footer: "",
+        consequences: ["closes_the_proposal", "removes_its_content", "applies_nothing"],
+      };
+}
+
+/** Step 7.1 (GrantLedger.FixSelection): a guided selection's expected values. */
+export interface SimFixSelection {
+  repoKey: string;
+  proposalDigest: string;
+  renderingDigest: string;
+}
+
+const SELECTION_KEYS = ["expectedRepoKey", "expectedProposalDigest", "expectedRenderingDigest"] as const;
+
+/** CustodianCore.ExpectedSelectionOf: all three or none; one or two, or a value of the wrong type or form, is MALFORMED_REQUEST. */
+export function expectedSelectionOf(args: Record<string, unknown>): SimFixSelection | null {
+  const present = SELECTION_KEYS.filter((k) => k in args).length;
+  if (present === 0) return null;
+  if (present !== SELECTION_KEYS.length) throw refuse("MALFORMED_REQUEST", "a guided selection names all three expected values (expectedRepoKey, expectedProposalDigest, expectedRenderingDigest), or none");
+  const hex = (s: string) => /^[0-9a-f]{64}$/.test(s);
+  const key = (s: string) => s.length > 0 && s.length <= 256 && /^[\x21-\x7e]+$/.test(s);
+  const value = (k: (typeof SELECTION_KEYS)[number], ok: (s: string) => boolean, what: string): string => {
+    const v = args[k];
+    if (typeof v !== "string" || !ok(v)) throw refuse("MALFORMED_REQUEST", `'${k}' must be ${what}`);
+    return v;
+  };
+  return {
+    repoKey: value("expectedRepoKey", key, "a repository identity of this custodian's scheme"),
+    proposalDigest: value("expectedProposalDigest", hex, "64 lowercase hex digits"),
+    renderingDigest: value("expectedRenderingDigest", hex, "64 lowercase hex digits"),
+  };
+}
+
+// ---- Step 7.1: the operator's listing of the delegated fixes (GrantLedger.ListFixProposals) ----
+
+export const FIX_LISTING_SCHEMA = "codeparley.custodian-fix-listing.v1";
+export const MAX_LISTED_FIXES = 50;
+export const MAX_LISTED_PATHS = 10;
+const LISTED_STATES = ["pending", "unavailable", "waiting", "expired", "ineligible"];
+
+/** A fix the listing considers, with the run it belongs to. */
+export interface SimListedFix {
+  run: SimRun;
+  op: SimRunOperation;
+}
+
+/** The fixes a listing considers: proposed or confirmed, with a proposal, of `only` (a repoKey) if given. */
+export function listableFixes(runs: SimRun[], only: string | null): SimListedFix[] {
+  const out: SimListedFix[] = [];
+  for (const run of runs) {
+    if (only !== null && run.repoKey !== only) continue;
+    for (const op of run.operations) if (op.kind === "fix" && proposalOf(op) !== null && (op.status === "proposed" || op.status === "confirmed")) out.push({ run, op });
+  }
+  return out;
+}
+
+/** CandidatePaths: the configuration history's paths for a run's identity — the latest version's, the pinned one, the others. */
+export function fixCandidatePaths(config: SimConfigFile | null, run: SimRun): string[] {
+  const versions = (config?.repositories ?? []).filter((r) => r.repoKey === run.repoKey).sort((a, b) => b.configRevision - a.configRevision);
+  const ordered: string[] = [];
+  const add = (p: string | null | undefined) => {
+    if (p && !ordered.includes(p)) ordered.push(p);
+  };
+  if (versions.length > 0) add(versions[0]!.repositoryRoot);
+  if (run.openedConfig) add(versions.find((v) => v.configRevision === run.openedConfig!.configRevision)?.repositoryRoot);
+  for (const v of versions) add(v.repositoryRoot);
+  return ordered;
+}
+
+/** One listing row before the held proposals are read (GrantLedger.ListFixProposals). `located`: the identity the path
+ * resolved to (null: none of the run's recorded paths reaches its identity) and the last recorded path. */
+export function listingEntry(f: SimListedFix, located: { id: { key: string; canonicalPath: string } | null; last: string | null }, nowMs: number, escape: (s: string) => string): { rank: number; expiresAt: string; entry: Record<string, unknown> } {
+  const p = proposalOf(f.op)!;
+  const c = (f.op.outcome?.["confirmation"] ?? null) as Record<string, unknown> | null;
+  const expiresAt = typeof p["expiresAt"] === "string" ? p["expiresAt"] : "";
+  let state: string;
+  let reason: string | null = null;
+  if (f.op.status === "confirmed") {
+    const lapsed = typeof c?.["expiresAt"] === "string" && Date.parse(c["expiresAt"]) <= nowMs;
+    [state, reason] = isRunTerminal(f.run) ? ["ineligible", "run_ended"] : lapsed ? ["ineligible", "confirmation_expired"] : ["waiting", null];
+  } else if (isRunTerminal(f.run)) [state, reason] = ["ineligible", "run_ended"];
+  else if (p["retiredAt"] != null || Date.parse(expiresAt) <= nowMs) [state, reason] = ["expired", "proposal_expired"];
+  else state = "pending";
+  if (state === "pending" && located.id === null) [state, reason] = ["unavailable", "repository_unavailable"];
+  const changed = (Array.isArray(p["changes"]) ? (p["changes"] as Record<string, unknown>[]) : []).map((x) => String(x["path"] ?? ""));
+  return {
+    rank: LISTED_STATES.indexOf(state),
+    expiresAt,
+    entry: {
+      state, selectable: false, reasonCode: reason, repoKey: f.run.repoKey,
+      repositoryRoot: located.id?.canonicalPath ?? null, repositoryDisplay: located.id ? escape(located.id.canonicalPath) : null,
+      lastKnownPath: located.id === null && located.last !== null ? escape(located.last) : null,
+      runId: f.run.runId, operationId: f.op.operationId, proposalDigest: p["proposalDigest"] ?? null, renderingDigest: null,
+      changeCount: typeof p["changeCount"] === "number" ? p["changeCount"] : changed.length, totalBytes: typeof p["totalBytes"] === "number" ? p["totalBytes"] : 0,
+      paths: changed.slice(0, MAX_LISTED_PATHS).map(escape), pathCount: changed.length,
+      proposedAt: p["createdAt"] ?? null, expiresAt,
+      confirmationExpiresAt: state === "waiting" ? (c?.["expiresAt"] ?? null) : null,
+    },
+  };
+}
+
+/** The listing's order: state (pending first), expiry, repository identity, run, fix. */
+export function compareListingRows(a: { rank: number; expiresAt: string; entry: Record<string, unknown> }, b: { rank: number; expiresAt: string; entry: Record<string, unknown> }): number {
+  const ord = (x: string, y: string) => (x < y ? -1 : x > y ? 1 : 0);
+  return a.rank - b.rank || ord(a.expiresAt, b.expiresAt) || ord(String(a.entry["repoKey"]), String(b.entry["repoKey"])) || ord(String(a.entry["runId"]), String(b.entry["runId"]))
+    || ord(String(a.entry["operationId"]), String(b.entry["operationId"]));
 }
 
 /** RequireFreshFixDecision: the commit's freshness (the rendering again, the state digest, the proposal still pending). */

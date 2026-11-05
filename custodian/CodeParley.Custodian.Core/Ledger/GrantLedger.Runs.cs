@@ -32,6 +32,12 @@ internal sealed partial class GrantLedger
     /// <see cref="Gate"/>.</summary>
     internal static void WriteRun(RunRecord run) => AtomicWrite(StorePaths.RunPath(run.RepoKey, run.RunId), JsonSerializer.Serialize(run, Json));
 
+    /// <summary>Write a run record in a hold of the lock (the self-tests only: Step 7.1's legacy-record cases).</summary>
+    internal static void WriteRunForTest(RunRecord run)
+    {
+        lock (EnterGate()) WriteRun(run);
+    }
+
     /// <summary>The run's record, read in a hold of the lock (for callers outside it: the self-tests).</summary>
     internal static RunRecord? ReadRunLocked(string repoKey, string runId)
     {

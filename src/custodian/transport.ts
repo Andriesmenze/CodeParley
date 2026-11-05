@@ -25,6 +25,7 @@ import {
   type SimBoundProcess, type SimClientCheck, type SimLoop, type SimProcessCheck, type SimRunView,
 } from "./simulated-loops.js";
 import {
+  FIX_LISTING_SCHEMA, MAX_LISTED_FIXES, compareListingRows, expectedSelectionOf, fixCandidatePaths, listableFixes, listingEntry,
   applyFixDecision, applyRunTransition, commitCapture, proposalKey, commitCheckEnd, commitCheckStart, heldProposalRead, heldReadTarget, isRunTerminal, parseRunRequest, prepareFixDecision,
   reconcileCapturesAtStart, requireFreshFixDecision, retentionSweep, runKey, runLimits, runSection, evidenceKey, evidenceRefsOf, redactionBasisDigest, unestablishedAmendment,
   type SimApplyMeasure, type SimApplyPre, type SimCaptureEnd, type SimCaptureTicket, type SimExportRehash, type SimHeldProposal, type SimHeldRead, type SimRun, type SimRunStore, type SimWriter,
@@ -40,6 +41,7 @@ import {
   syntheticMeasure, type SimCheckTicket, type SimDerivationEntry, type SimDerivationState, type SimMeasureOutcome, type SimSyntheticMeasurement,
 } from "./simulated-derivation.js";
 import type { ReviewTarget } from "../schemas/capture.js";
+import { escapeText } from "./render-escape.js";
 
 export interface CustodianTransport {
   /** Send one classified request. Resolves with the custodian's response envelope, or rejects with a
@@ -114,7 +116,7 @@ export type SimulatedCaller = "operator" | "implementer";
 const AUTH_TTL_MS = 120_000;
 
 /** Operations only the operator class may perform (they create or reduce authority, or probe the service). */
-const OPERATOR_ONLY_OPS: ReadonlySet<CustodianOp> = new Set<CustodianOp>(["prepare_grant", "prepare_revoke", "commit", "prepare_user_record", "prepare_config_record", "service_identity", "prepare_fix_decision"]);
+const OPERATOR_ONLY_OPS: ReadonlySet<CustodianOp> = new Set<CustodianOp>(["prepare_grant", "prepare_revoke", "commit", "prepare_user_record", "prepare_config_record", "service_identity", "prepare_fix_decision", "list_fix_proposals"]);
 /** The loop transitions that automate (contract §5): the custodian checks their session and connected process. */
 const AUTOMATION_KINDS: ReadonlySet<string> = new Set(["spend_continuation", "wake_arm", "wake_consume"]);
 /** P3.4C-3 (contract §3.5): the run transitions accepted only from the bound session's process tree. */
@@ -135,8 +137,9 @@ const ALLOWED_ARGS: Record<CustodianOp, readonly string[]> = {
   prepare_config_record: ["repositoryRoot", "recordKind", "action", "recordId", "payload", "baseRevision"],
   loop_transition: ["repositoryRoot", "runId", "loopId", "epoch", "baseLoopRevision", "kind", "fields"],
   run_transition: ["repositoryRoot", "runId", "kind", "fields"],
-  prepare_fix_decision: ["repositoryRoot", "runId", "operationId", "decision"],
+  prepare_fix_decision: ["repositoryRoot", "runId", "operationId", "decision", "expectedRepoKey", "expectedProposalDigest", "expectedRenderingDigest"],
   render_fix_proposal: ["repositoryRoot", "runId", "operationId"],
+  list_fix_proposals: ["repositoryRoot"],
   hold_evidence: ["repositoryRoot", "runId", "sha256", "part", "parts", "data"],
 };
 
@@ -595,6 +598,16 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     return { held: true, proposalDigest: p.proposalDigest, paths: p.changes.map((c) => c.path), preimages: p.changes.map((c) => c.preimage) };
   }
 
+  /** TEST control (Step 7.1): a run as a run opened before P3.4C-4 has it — no configuration pinned at its open. */
+  unpinRunForTest(repositoryRoot: string, runId: string): void {
+    const repoKey = this.identity(repositoryRoot).key;
+    this.withState((st) => {
+      const run = (st.runs ??= {})[runKey(repoKey, runId)];
+      if (!run) throw new Error(`no run ${runId}`);
+      run.openedConfig = null;
+    });
+  }
+
   dropRunRecord(repositoryRoot: string, runId: string): void {
     const repoKey = this.identity(repositoryRoot).key;
     this.withState((st) => {
@@ -656,7 +669,7 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     if (fault === "untrusted") throw new CustodianNotTrusted(`simulated: the endpoint for ${op} is not the custodian`, "not_delivered", { owner: "S-1-5-21-impostor" });
     this.received.push({ surface, op, args: structuredClone(args), requestId });
     // The custodian observes the processes itself before it decides — OS facts, never fields of the request.
-    const observed = await this.observe(op, args);
+    const observed = await this.observe(op, args, surface);
     // P3.4C-5 Increment 3 (§5.2, N5-17): a continuation or a wake is decided in three steps around a re-measurement.
     if (op === "loop_transition" && (args.kind === "spend_continuation" || args.kind === "wake_consume") && Object.keys(args).every((k) => ALLOWED_ARGS[op].includes(k))) {
       const res = await this.automationTransition(surface, args, requestId, observed);
@@ -683,7 +696,7 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     return res;
   }
 
-  private async observe(op: CustodianOp, args: Record<string, unknown>): Promise<SimObserved> {
+  private async observe(op: CustodianOp, args: Record<string, unknown>, surface: CustodianSurface = "implementer"): Promise<SimObserved> {
     const kind = String(args.kind);
     const loopOp = op === "loop_transition";
     const runOp = op === "run_transition";
@@ -697,7 +710,63 @@ export class SimulatedCustodianTransport implements CustodianTransport {
       applyPre: runOp ? await this.applyPreFor(args, kind) : null,
       heldRead: op === "prepare_fix_decision" || op === "render_fix_proposal" ? await this.heldReadFor(args.repositoryRoot, args.runId, args.operationId)
         : op === "commit" ? await this.heldReadForCommit(args.authorizationRequestId) : null,
+      // Step 7.1: the listing is built before the hold (as the real custodian builds it outside its lock), for the operator only.
+      fixListing: op === "list_fix_proposals" && (this.caller === "by_surface" ? surface === "operator" : this.caller === "operator") ? await this.fixListingFor(args) : null,
     };
+  }
+
+  /** Step 7.1 (GrantLedger.ListFixProposals): the operator's listing — the runs and the configuration history read, then the
+   * candidate paths resolved to identities and the pending fixes' held proposals read and rendered, all before the hold. A
+   * refusal (a repository the filter names that cannot be resolved) is returned as the error the request answers with. */
+  private async fixListingFor(args: Record<string, unknown>): Promise<Record<string, unknown> | Error> {
+    let only: { key: string; canonicalPath: string } | null = null;
+    if (args.repositoryRoot !== undefined && args.repositoryRoot !== null) {
+      if (typeof args.repositoryRoot !== "string") return simError("INVALID_ARGUMENT", "'repositoryRoot' must be a string");
+      try {
+        only = this.identity(args.repositoryRoot);
+      } catch (e) {
+        return e instanceof Error ? e : new Error(String(e));
+      }
+    }
+    const nowMs = this.now();
+    const snap = this.read((st) => ({ runs: structuredClone(Object.values(st.runs ?? {})), config: structuredClone(st.config ?? emptyConfig()) }));
+    const located = new Map<string, { id: { key: string; canonicalPath: string } | null; last: string | null }>();
+    const locate = (run: SimRun) => {
+      const memo = `${run.repoKey}|${run.openedConfig?.configRevision ?? "-"}`;
+      const known = located.get(memo);
+      if (known) return known;
+      const candidates = only ? [only.canonicalPath] : fixCandidatePaths(snap.config, run);
+      let result: { id: { key: string; canonicalPath: string } | null; last: string | null } = { id: null, last: candidates[0] ?? null };
+      for (const path of candidates) {
+        let id: { key: string; canonicalPath: string } | null = null;
+        try {
+          id = this.identity(path);
+        } catch {
+          // the path no longer reaches a directory
+        }
+        if (id && id.key === run.repoKey) {
+          result = { id, last: path };
+          break;
+        }
+      }
+      located.set(memo, result);
+      return result;
+    };
+    const rows = listableFixes(snap.runs, only?.key ?? null).map((f) => ({ ...listingEntry(f, locate(f.run), nowMs, escapeText), f }));
+    const listed = [...rows].sort(compareListingRows).slice(0, MAX_LISTED_FIXES);
+    for (const r of listed) {
+      if (r.entry["state"] !== "pending") continue;
+      const read = await this.heldReadFor(String(r.entry["repositoryRoot"]), r.f.run.runId, r.f.op.operationId);
+      if (!read || read.problem !== null || !read.rendering || read.proposalDigest !== r.entry["proposalDigest"]) {
+        r.entry["state"] = "ineligible";
+        r.entry["reasonCode"] = "content_unreadable";
+        continue;
+      }
+      r.entry["renderingDigest"] = read.rendering.digest;
+      r.entry["selectable"] = true;
+    }
+    const entries = listed.map((r) => r.entry);
+    return { schema: FIX_LISTING_SCHEMA, snapshotAt: new Date(nowMs).toISOString(), total: rows.length, truncated: rows.length > MAX_LISTED_FIXES, listingDigest: sha256OfCanonicalJson({ entries }), entries };
   }
 
   /** Phase 4 Increment 3 (GrantLedger.FixApply.cs ReadHeldProposal): before the hold, a fix's held content re-verified against
@@ -911,6 +980,10 @@ export class SimulatedCustodianTransport implements CustodianTransport {
         return this.prepareFixDecisionOp(st, args, requestId, observed.heldRead ?? null);
       case "render_fix_proposal":
         return this.renderFixProposalOp(st, args, observed.heldRead ?? null);
+      case "list_fix_proposals":
+        if (!observed.fixListing) throw simError("INTERNAL", "the listing was not built");
+        if (observed.fixListing instanceof Error) throw observed.fixListing;
+        return observed.fixListing;
       case "hold_evidence":
         return { ok: true, data: this.holdEvidence(st, args) };
       case "list_user_records":
@@ -1038,11 +1111,15 @@ export class SimulatedCustodianTransport implements CustodianTransport {
     if (typeof args.decision !== "string") throw simError("INVALID_ARGUMENT", "'decision' must be a string");
     if (args.decision !== "confirm" && args.decision !== "reject") throw simError("INVALID_ARGUMENT", "decision must be 'confirm' or 'reject'");
     if (typeof args.repositoryRoot !== "string") throw simError("INVALID_ARGUMENT", "'repositoryRoot' must be a string");
+    const expected = expectedSelectionOf(args);
     const identity = this.identity(args.repositoryRoot);
-    const prepared = prepareFixDecision(this.runStoreOf(st), identity, runId, operationId, args.decision, read, this.now());
+    const prepared = prepareFixDecision(this.runStoreOf(st), identity, runId, operationId, args.decision, read, this.now(), expected);
     this.assertRequestIdFree(st, requestId);
     st.intents[requestId] = { action: "fix_decision", args: prepared.args, repoKey: identity.key, stateDigest: prepared.stateDigest, expiresAtMs: this.now() + AUTH_TTL_MS, requestId };
-    return { authorizationRequestId: requestId, action: "fix_decision", rendering: prepared.rendering, digest: "simulated", challenge: "simulated", expiresAt: new Date(this.now() + AUTH_TTL_MS).toISOString() };
+    return {
+      authorizationRequestId: requestId, action: "fix_decision", rendering: prepared.rendering, digest: "simulated", challenge: "simulated", expiresAt: new Date(this.now() + AUTH_TTL_MS).toISOString(),
+      fixDecision: prepared.facts,
+    };
   }
 
   /** Phase 4 Increment 3 (RenderFixProposal): the custodian's rendering of a proposal it holds (read only, both surfaces). */
@@ -1900,6 +1977,8 @@ interface SimObserved {
   fixBaseline?: SimFixBaselineRead | null;
   /** Phase 4 Increment 3: an application's begin, finish or reconciliation: its content and measurement, before the hold. */
   applyPre?: SimApplyPre | null;
+  /** Step 7.1: the operator's listing (built before the hold), or the refusal it answers with. */
+  fixListing?: Record<string, unknown> | Error | null;
   /** Phase 4 Increment 3: a fix decision's prepare or commit, or a rendering: the held proposal read and rendered. */
   heldRead?: SimHeldRead | null;
 }

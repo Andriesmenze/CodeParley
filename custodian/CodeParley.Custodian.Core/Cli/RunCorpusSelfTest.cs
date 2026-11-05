@@ -80,6 +80,10 @@ internal static class RunCorpusSelfTest
         internal Dictionary<string, string> Amendments { get; } = [];
         internal Dictionary<string, string> Intents { get; } = [];
         internal Dictionary<string, Sent> SentRequests { get; } = [];
+        /** Step 7.1: the scenario's named repository directories (main: <see cref="Repo"/>; other; moved) with the canonical
+         * path each had when it was named, and the listing entries captured as selections. */
+        internal Dictionary<string, (string Path, string Canonical)> Paths { get; } = [];
+        internal Dictionary<string, JsonObject> Selections { get; } = [];
         internal int Generated { get; set; }
         internal string Next(string prefix) => $"{prefix}-{++Generated}";
     }
@@ -357,8 +361,46 @@ internal static class RunCorpusSelfTest
             case "fixPrepare":
             {
                 string rid = ctx.Next("fixdecision");
-                PreparedAuthorization p = ctx.Ledger.PrepareFixDecision(ctx.Repo, run, ctx.Ops[(string)step["of"]!], (string)step["decision"]!, rid);
-                return new JsonObject { ["authorizationRequestId"] = p.RequestId, ["action"] = p.Action, ["rendering"] = p.Rendering };
+                // Step 7.1: `repo` names the directory the request names; `expected` the selection fields exactly as sent (the
+                // dispatcher's own validation of them runs first, as on the pipe and the socket).
+                string path = step["repo"] is JsonValue rv ? NamedPath(ctx, (string)rv!) : ctx.Repo;
+                GrantLedger.FixSelection? expected = step["expected"] is JsonObject raw ? CustodianCore.ExpectedSelectionOf(Resolve(ctx, raw.DeepClone())!.AsObject()) : null;
+                PreparedAuthorization p = ctx.Ledger.PrepareFixDecision(path, run, ctx.Ops[(string)step["of"]!], (string)step["decision"]!, rid, expected);
+                return new JsonObject { ["authorizationRequestId"] = p.RequestId, ["action"] = p.Action, ["rendering"] = p.Rendering, ["fixDecision"] = p.Facts?.DeepClone() };
+            }
+            // ---- Step 7.1: the operator's listing (`fix review`) ----
+            case "fixList":
+            {
+                NamedPath(ctx, "main");
+                JsonObject listing = ctx.Ledger.ListFixProposals(step["repo"] is JsonValue rv ? NamedPath(ctx, (string)rv!) : null);
+                if (step["select"] is JsonObject sel)
+                {
+                    string id = ctx.Ops[(string)sel["of"]!];
+                    ctx.Selections[(string)sel["as"]!] = (JsonObject)(listing["entries"]!.AsArray().OfType<JsonObject>().FirstOrDefault(e => (string?)e["operationId"] == id)
+                        ?? throw new InvalidOperationException($"the listing has no entry for {id}")).DeepClone();
+                }
+                return ListingSummary(ctx, listing);
+            }
+            case "repo":
+                NamedPath(ctx, (string)step["name"]!);
+                return new JsonObject();
+            case "moveRepo":
+            {
+                // The repository directory moves (its identity follows it); with `reuse`, a new directory takes its old path.
+                NamedPath(ctx, "main");
+                string to = ctx.Repo + "-" + (string)step["to"]!;
+                Directory.Move(ctx.Repo, to);
+                ctx.Paths[(string)step["to"]!] = (to, RepoIdentities.Resolve(to).CanonicalPath);
+                if (step["reuse"] is JsonValue reuse && reuse.GetValue<bool>()) Directory.CreateDirectory(ctx.Repo);
+                return new JsonObject();
+            }
+            case "unpin":
+            {
+                // A run opened before P3.4C-4 pinned no configuration (OpenedConfig absent): the record as such a run has it.
+                string key = RepoIdentities.Resolve(NamedPath(ctx, "main")).Key;
+                RunRecord r = GrantLedger.ReadRunLocked(key, run) ?? throw new InvalidOperationException($"no run {run}");
+                GrantLedger.WriteRunForTest(r with { OpenedConfig = null });
+                return new JsonObject();
             }
             case "fixRender":
                 return ctx.Ledger.RenderFixProposal(ctx.Repo, run, ctx.Ops[(string)step["of"]!]);
@@ -505,8 +547,45 @@ internal static class RunCorpusSelfTest
         }
     }
 
+    /// <summary>Step 7.1: the scenario's directory named <paramref name="name"/> (main is the scenario's repository; any other
+    /// name a new directory beside it), recorded with its canonical path the first time it is named.</summary>
+    private static string NamedPath(Scenario ctx, string name)
+    {
+        if (ctx.Paths.TryGetValue(name, out var known)) return known.Path;
+        string path = name == "main" ? ctx.Repo : Directory.CreateDirectory(Path.Combine(ctx.Root, "repos", name)).FullName;
+        ctx.Paths[name] = (path, RepoIdentities.Resolve(path).CanonicalPath);
+        return path;
+    }
+
+    /// <summary>Step 7.1: a listing as the corpus compares it (mirrored in test/custodian-run.contract.test.ts): the total,
+    /// whether it was cut, and per entry "state selectable|- fix-alias reason|- path-name", the path named by the scenario
+    /// directory it is (repositoryRoot, else "last:" and the last recorded path's, else "-").</summary>
+    private static JsonObject ListingSummary(Scenario ctx, JsonObject listing)
+    {
+        string NameOf(string? path)
+        {
+            if (path is null) return "-";
+            foreach ((string name, (string _, string canonical)) in ctx.Paths)
+                if (string.Equals(canonical, path, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal)) return name;
+            return "?";
+        }
+        var entries = new JsonArray();
+        foreach (JsonObject e in listing["entries"]!.AsArray().OfType<JsonObject>())
+        {
+            string alias = ctx.Ops.FirstOrDefault(kv => kv.Value == (string?)e["operationId"]).Key ?? "?";
+            string where = e["repositoryRoot"] is JsonValue rr ? NameOf((string?)rr) : e["lastKnownPath"] is JsonValue lk ? "last:" + NameOf((string?)lk) : "-";
+            if (e["repositoryRoot"] is JsonValue r2 && (string?)e["repositoryDisplay"] != FixRendering.Escape((string)r2!)) where += "!display";
+            if ((bool)e["selectable"]! != (e["renderingDigest"] is JsonValue)) where += "!digest";
+            entries.Add($"{(string)e["state"]!} {((bool)e["selectable"]! ? "selectable" : "-")} {alias} {(string?)e["reasonCode"] ?? "-"} {where}");
+        }
+        return new JsonObject { ["schema"] = listing["schema"]?.DeepClone(), ["total"] = listing["total"]?.DeepClone(), ["truncated"] = listing["truncated"]?.DeepClone(), ["entries"] = entries };
+    }
+
     private static JsonNode? Placeholder(Scenario ctx, string token) => token switch
     {
+        // Step 7.1: a field of the listing entry captured as <alias> ($sel:alias:field), and a named directory's identity.
+        _ when token.StartsWith("$sel:", StringComparison.Ordinal) => ctx.Selections[token["$sel:".Length..].Split(':')[0]][token["$sel:".Length..].Split(':')[1]]?.DeepClone(),
+        _ when token.StartsWith("$key:", StringComparison.Ordinal) => RepoIdentities.Resolve(NamedPath(ctx, token["$key:".Length..])).Key,
         _ when token.StartsWith("$hex:", StringComparison.Ordinal) => string.Concat(Enumerable.Repeat(token["$hex:".Length..], 64)),
         _ when token.StartsWith("$sha:", StringComparison.Ordinal) => Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token["$sha:".Length..]))),
         _ when token.StartsWith("$op:", StringComparison.Ordinal) => ctx.Ops[token["$op:".Length..]],

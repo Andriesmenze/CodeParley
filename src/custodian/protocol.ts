@@ -44,6 +44,8 @@ export type CustodianOp =
   | "prepare_config_record"
   // Phase 4 Increment 3: the owner's decision on a held proposal (operator; committed by `commit`) and its rendering (read).
   | "prepare_fix_decision" | "render_fix_proposal"
+  // Step 7.1: the operator's listing of the delegated fixes the custodian holds (operator only).
+  | "list_fix_proposals"
   // Phase 5 F-i2-5: the bytes of a baseline capture or response disclosure record the run binds by digest (implementer).
   | "hold_evidence";
 
@@ -53,7 +55,7 @@ export const EVIDENCE_PART_BYTES = 512 * 1024;
 /** P3.4C-5: the operations whose answer waits for a measurement the custodian makes inside the request — an engine runtime
  * approval measures the whole runtime tree at `prepare_config_record` and again at `commit` (thousands of files hashed;
  * F-I4). A client gives them a longer response deadline. */
-export const CUSTODIAN_MEASURING_OPS: ReadonlySet<CustodianOp> = new Set<CustodianOp>(["prepare_config_record", "commit"]);
+export const CUSTODIAN_MEASURING_OPS: ReadonlySet<CustodianOp> = new Set<CustodianOp>(["prepare_config_record", "commit", "list_fix_proposals"]);
 
 export interface CustodianRequest {
   v: number;

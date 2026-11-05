@@ -250,12 +250,15 @@ internal sealed partial class GrantLedger
 
     /// <summary><c>prepare_fix_decision</c> (operator surface): render the held proposal and prepare a decision bound to
     /// exactly that rendering. Nothing is recorded until <see cref="Commit"/>.</summary>
-    internal PreparedAuthorization PrepareFixDecision(string repositoryRoot, string runId, string operationId, string decision, string requestId)
+    internal PreparedAuthorization PrepareFixDecision(string repositoryRoot, string runId, string operationId, string decision, string requestId, FixSelection? expected = null)
     {
         ValidateRunId(runId);
         RunFields.RequireToken("operationId", operationId, 64);
         if (decision is not ("confirm" or "reject")) throw new ArgumentException("decision must be 'confirm' or 'reject'");
         RepoIdentity id = RepoIdentities.Resolve(repositoryRoot);
+        // Step 7.1: the path the operator's selection reached must still be the repository identity that was listed.
+        if (expected is not null && id.Key != expected.RepoKey)
+            throw new CustodianRefusal(ErrorCodes.SelectionStale, $"the repository path now resolves to identity {id.Key}, not the identity that was selected ({expected.RepoKey}); nothing was prepared — list and review again");
         HeldProposalRead read = ReadHeldProposal(id, runId, operationId);
         lock (EnterGate())
         {
@@ -268,20 +271,181 @@ internal sealed partial class GrantLedger
             JsonObject baseline = op.Begin["custodianBaseline"]!.AsObject();
             if ((string?)p["proposalDigest"] != read.ProposalDigest || (string?)op.Begin["boundaryDigest"] != read.BoundaryDigest || BaselineDigestOf(baseline) != read.BaselineDigest)
                 throw new CustodianRefusal(ErrorCodes.ConfirmationContentMismatch, "the proposal changed while the custodian rendered it; nothing was prepared — prepare it again");
+            // Step 7.1: a guided selection is prepared only for the proposal and the exact rendering the operator reviewed.
+            if (expected is not null && read.ProposalDigest != expected.ProposalDigest)
+                throw new CustodianRefusal(ErrorCodes.SelectionStale, $"delegated fix {operationId} now holds another proposal than the one that was selected; nothing was prepared — list and review again");
+            if (expected is not null && read.Rendering.Digest != expected.RenderingDigest)
+                throw new CustodianRefusal(ErrorCodes.SelectionStale, $"the custodian's rendering of delegated fix {operationId} is not the one that was reviewed; nothing was prepared — review it again");
             var args = new JsonObject
             {
                 ["repositoryRoot"] = id.CanonicalPath, ["repoKey"] = id.Key, ["runId"] = runId, ["operationId"] = operationId, ["decision"] = decision,
                 ["proposalDigest"] = read.ProposalDigest, ["renderingDigest"] = read.Rendering.Digest, ["boundaryDigest"] = read.BoundaryDigest,
                 ["baselineDigest"] = read.BaselineDigest, ["baselineSourceId"] = (string?)baseline["sourceId"],
             };
-            string rendering = decision == "confirm"
-                ? $"Confirm delegated fix {operationId} of run {runId}: CodeParley may apply EXACTLY the content below, once.\n\n{read.Rendering.Text}\n"
-                  + "The confirmation is single use and bound to this rendering (sha256 above), the proposal digest, this repository and run, and the baseline source.\n"
-                  + "The application re-checks that the working tree still matches the baseline (FIX_STALE otherwise) and writes only this content.\n"
-                  + "It authorizes no commit, push, merge, tag or release."
-                : $"Reject delegated fix {operationId} of run {runId}: the proposal below is closed and its content removed; nothing is applied.\n\n{read.Rendering.Text}";
-            return PrepareIntent(FixDecisionAction, args, FixDecisionStateDigest(run, operationId, read.Rendering.Digest), requestId, rendering);
+            (string header, string footer, string[] consequences) = FixDecisionAuthority(decision, runId, operationId);
+            string rendering = header + read.Rendering.Text + footer;
+            var facts = new JsonObject
+            {
+                ["schema"] = FixDecisionFactsSchema, ["decision"] = decision, ["repoKey"] = id.Key, ["repositoryRoot"] = id.CanonicalPath,
+                ["runId"] = runId, ["operationId"] = operationId, ["proposalDigest"] = read.ProposalDigest, ["renderingDigest"] = read.Rendering.Digest,
+                ["baselineSourceId"] = (string?)baseline["sourceId"], ["authorityHeader"] = header, ["authorityFooter"] = footer,
+                ["consequences"] = new JsonArray([.. consequences.Select(c => (JsonNode)c)]),
+            };
+            return PrepareIntent(FixDecisionAction, args, FixDecisionStateDigest(run, operationId, read.Rendering.Digest), requestId, rendering) with { Facts = facts };
         }
+    }
+
+    /// <summary>Step 7.1: the structured facts of a prepared fix decision (<c>fixDecision</c> in the response).</summary>
+    internal const string FixDecisionFactsSchema = "codeparley.custodian-fix-decision-prepared.v1";
+
+    /// <summary>A fix decision's authority text around the custodian's rendering (the prepared rendering is exactly
+    /// header + rendering + footer) and its consequences as codes.</summary>
+    private static (string Header, string Footer, string[] Consequences) FixDecisionAuthority(string decision, string runId, string operationId)
+        => decision == "confirm"
+            ? ($"Confirm delegated fix {operationId} of run {runId}: CodeParley may apply EXACTLY the content below, once.\n\n",
+               "\nThe confirmation is single use and bound to this rendering (sha256 above), the proposal digest, this repository and run, and the baseline source.\n"
+               + "The application re-checks that the working tree still matches the baseline (FIX_STALE otherwise) and writes only this content.\n"
+               + "It authorizes no commit, push, merge, tag or release.",
+               ["applies_exactly_this_content_once", "bound_to_this_rendering", "rechecks_the_baseline", "authorizes_no_commit_push_merge_tag_or_release"])
+            : ($"Reject delegated fix {operationId} of run {runId}: the proposal below is closed and its content removed; nothing is applied.\n\n",
+               "",
+               ["closes_the_proposal", "removes_its_content", "applies_nothing"]);
+
+    // ---- operator: the delegated fixes across repositories (Step 7.1, `fix review`) ----
+
+    /// <summary>A guided selection's expected values (all three: the dispatcher refuses fewer).</summary>
+    internal sealed record FixSelection(string RepoKey, string ProposalDigest, string RenderingDigest);
+
+    internal const string FixListingSchema = "codeparley.custodian-fix-listing.v1";
+    internal const int MaxListedFixes = 50, MaxListedPaths = 10;
+
+    private static readonly string[] ListedStates = ["pending", "unavailable", "waiting", "expired", "ineligible"];
+
+    /// <summary>
+    /// <c>list_fix_proposals</c> (operator surface only): every delegated fix the custodian holds that awaits the owner
+    /// (pending), awaits its application (waiting), or no longer can be decided (expired, ineligible), across repositories,
+    /// or of the one identity <paramref name="repositoryRoot"/> resolves to. Facts the custodian holds only — never any text
+    /// the implementer wrote. A fix's repository path comes from the custodian's own repository configuration history (the
+    /// latest version's path, the one the run was opened under, then older ones), never from a run or grant; it is offered
+    /// only when it resolves to the run's exact repository identity now (else the fix is <c>unavailable</c>, with the last
+    /// recorded path). A run record that cannot be read fails the listing (nothing is silently left out).
+    /// </summary>
+    internal JsonObject ListFixProposals(string? repositoryRoot)
+    {
+        RepoIdentity? only = repositoryRoot is null ? null : RepoIdentities.Resolve(repositoryRoot);
+        DateTime now = _clock();
+        var found = new List<(RunRecord Run, RunOperation Op)>();
+        ConfigRecordsFile config;
+        lock (EnterGate())
+        {
+            config = ReadConfigRecords();
+            if (Directory.Exists(StorePaths.RunsDir))
+            {
+                foreach (string file in Directory.EnumerateFiles(StorePaths.RunsDir, "*.json", SearchOption.AllDirectories).Order(StringComparer.Ordinal))
+                {
+                    RunRecord run;
+                    try { run = JsonSerializer.Deserialize<RunRecord>(File.ReadAllText(file), Json) ?? throw new JsonException("empty"); }
+                    catch (Exception e) when (e is JsonException or NotSupportedException or IOException or UnauthorizedAccessException)
+                    {
+                        throw new InvalidDataException($"a run record is unreadable ({Path.GetFileName(file)}); no delegated fix is listed until it is restored (fail closed)");
+                    }
+                    if (only is not null && run.RepoKey != only.Key) continue;
+                    foreach (RunOperation op in run.Operations)
+                        if (op.Kind == "fix" && ProposalOf(op) is not null && (op.Status == RunOperationStatuses.Proposed || op.Status == FixConfirmed)) found.Add((run, op));
+                }
+            }
+        }
+
+        // Outside the gate: repository identities and held proposals are read from the file system.
+        var located = new Dictionary<string, (RepoIdentity? Id, string? Last)>(StringComparer.Ordinal);
+        (RepoIdentity? Id, string? Last) Locate(RunRecord run)
+        {
+            string memo = run.RepoKey + "|" + (run.OpenedConfig?.ConfigRevision.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "-");
+            if (located.TryGetValue(memo, out var known)) return known;
+            List<string> candidates = only is not null ? [only.CanonicalPath] : CandidatePaths(config, run);
+            (RepoIdentity? Id, string? Last) result = (null, candidates.FirstOrDefault());
+            foreach (string path in candidates)
+            {
+                RepoIdentity? id = null;
+                try { id = RepoIdentities.Resolve(path); }
+                catch (Exception e) when (e is not OutOfMemoryException) { /* the path no longer reaches a directory */ }
+                if (id is not null && id.Key == run.RepoKey) { result = (id, path); break; }
+            }
+            return located[memo] = result;
+        }
+
+        var rows = new List<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)>();
+        foreach ((RunRecord run, RunOperation op) in found)
+        {
+            JsonObject p = ProposalOf(op)!;
+            JsonObject? confirmation = op.Outcome?["confirmation"] as JsonObject;
+            string expiresAt = (string?)p["expiresAt"] ?? "";
+            string state;
+            string? reason = null;
+            if (op.Status == FixConfirmed)
+            {
+                bool lapsed = confirmation?["expiresAt"] is JsonValue cv && cv.TryGetValue(out string? ce) && ParseTime(ce) <= now;
+                (state, reason) = run.IsTerminal ? ("ineligible", "run_ended") : lapsed ? ("ineligible", "confirmation_expired") : ("waiting", null);
+            }
+            else if (run.IsTerminal) (state, reason) = ("ineligible", "run_ended");
+            else if (p["retiredAt"] is not null || ParseTime(expiresAt) <= now) (state, reason) = ("expired", "proposal_expired");
+            else state = "pending";
+            (RepoIdentity? id, string? last) = Locate(run);
+            if (state == "pending" && id is null) (state, reason) = ("unavailable", "repository_unavailable");
+            var changed = (p["changes"] as JsonArray ?? []).OfType<JsonObject>().Select(c => (string?)c["path"] ?? "").ToList();
+            var entry = new JsonObject
+            {
+                ["state"] = state, ["selectable"] = false, ["reasonCode"] = reason, ["repoKey"] = run.RepoKey,
+                ["repositoryRoot"] = id?.CanonicalPath, ["repositoryDisplay"] = id is null ? null : FixRendering.Escape(id.CanonicalPath),
+                ["lastKnownPath"] = id is null && last is not null ? FixRendering.Escape(last) : null,
+                ["runId"] = run.RunId, ["operationId"] = op.OperationId, ["proposalDigest"] = (string?)p["proposalDigest"], ["renderingDigest"] = null,
+                ["changeCount"] = RunFields.Integer(p["changeCount"]) ?? changed.Count, ["totalBytes"] = RunFields.Integer(p["totalBytes"]) ?? 0,
+                ["paths"] = new JsonArray([.. changed.Take(MaxListedPaths).Select(c => (JsonNode)FixRendering.Escape(c))]), ["pathCount"] = changed.Count,
+                ["proposedAt"] = (string?)p["createdAt"], ["expiresAt"] = expiresAt,
+                ["confirmationExpiresAt"] = state == "waiting" ? (string?)confirmation?["expiresAt"] : null,
+            };
+            rows.Add((Array.IndexOf(ListedStates, state), expiresAt, entry, run, op, id));
+        }
+        List<(int Rank, string ExpiresAt, JsonObject Entry, RunRecord Run, RunOperation Op, RepoIdentity? Id)> listed = [.. rows
+            .OrderBy(r => r.Rank).ThenBy(r => r.ExpiresAt, StringComparer.Ordinal).ThenBy(r => r.Run.RepoKey, StringComparer.Ordinal)
+            .ThenBy(r => r.Run.RunId, StringComparer.Ordinal).ThenBy(r => r.Op.OperationId, StringComparer.Ordinal).Take(MaxListedFixes)];
+        // A pending fix is selectable once the custodian has read, re-verified and rendered its held proposal now.
+        foreach ((_, _, JsonObject entry, RunRecord run, RunOperation op, RepoIdentity? id) in listed)
+        {
+            if ((string?)entry["state"] != "pending") continue;
+            HeldProposalRead read = ReadHeldProposal(id!, run.RunId, op.OperationId);
+            if (read.Problem is not null || read.Rendering is null || read.ProposalDigest != (string?)entry["proposalDigest"])
+            {
+                entry["state"] = "ineligible";
+                entry["reasonCode"] = "content_unreadable";
+                continue;
+            }
+            entry["renderingDigest"] = read.Rendering.Digest;
+            entry["selectable"] = true;
+        }
+        var entries = new JsonArray([.. listed.Select(r => (JsonNode)r.Entry)]);
+        return new JsonObject
+        {
+            ["schema"] = FixListingSchema, ["snapshotAt"] = Iso(now), ["total"] = rows.Count, ["truncated"] = rows.Count > MaxListedFixes,
+            ["listingDigest"] = Digest.Sha256Hex(Digest.Canonical(new JsonObject { ["entries"] = entries.DeepClone() })),
+            ["entries"] = entries,
+        };
+    }
+
+    /// <summary>The paths the custodian's configuration history records for a run's repository identity, in the order the
+    /// listing tries them: the latest version's, the version the run was opened under, then the others, newest first.</summary>
+    private static List<string> CandidatePaths(ConfigRecordsFile config, RunRecord run)
+    {
+        List<RepositoryConfig> versions = [.. config.Repositories.Where(r => r.RepoKey == run.RepoKey).OrderByDescending(r => r.ConfigRevision)];
+        var ordered = new List<string>();
+        void Add(string? path)
+        {
+            if (!string.IsNullOrEmpty(path) && !ordered.Contains(path, StringComparer.Ordinal)) ordered.Add(path);
+        }
+        if (versions.Count > 0) Add(versions[0].RepositoryRoot);
+        if (run.OpenedConfig is { } pin) Add(versions.FirstOrDefault(v => v.ConfigRevision == pin.ConfigRevision)?.RepositoryRoot);
+        foreach (RepositoryConfig v in versions) Add(v.RepositoryRoot);
+        return ordered;
     }
 
     /// <summary>For a pending fix decision's commit, its rendering again — before the gate. Null when the intent is not a fix

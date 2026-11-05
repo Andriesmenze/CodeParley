@@ -11,6 +11,7 @@
 // marked, and binary content (a NUL byte) or bytes that are not UTF-8 are shown as sizes and hashes only, flagged.
 
 import { createHash } from "node:crypto";
+import { escapeText } from "./render-escape.js";
 
 export interface SimRenderChange {
   path: string;
@@ -220,20 +221,5 @@ function hunks(ops: Op[], a: Line[], b: Line[]): string {
   return out;
 }
 
-/** Is this code point shown escaped (FixRendering.MustEscape)? */
-export function mustEscape(cp: number): boolean {
-  return (cp < 0x20 && cp !== 0x09) || cp === 0x7f || (cp >= 0x80 && cp <= 0x9f) || (cp >= 0x200b && cp <= 0x200f) || (cp >= 0x2028 && cp <= 0x202e)
-    || (cp >= 0x2060 && cp <= 0x2064) || (cp >= 0x2066 && cp <= 0x2069) || cp === 0xfeff || (cp >= 0xfff9 && cp <= 0xfffb);
-}
-
-/** The text as the operator's terminal must show it. A lone surrogate is U+FFFD (as .NET's rune enumeration gives it). */
-export function escapeText(s: string): string {
-  let out = "";
-  for (const ch of s) {
-    const cp = ch.codePointAt(0)!;
-    if (cp >= 0xd800 && cp <= 0xdfff) out += "�";
-    else if (mustEscape(cp)) out += `<U+${cp.toString(16).toUpperCase().padStart(4, "0")}>`;
-    else out += ch;
-  }
-  return out;
-}
+// The escaping rule itself is shared with the operator's `fix review` (render-escape.ts).
+export { mustEscape, escapeText } from "./render-escape.js";

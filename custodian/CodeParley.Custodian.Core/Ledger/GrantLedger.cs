@@ -53,7 +53,7 @@ internal sealed record UserRecordLog(string RepoKey, string RunId, int Revision,
 /// re-keying.</summary>
 internal sealed record UserRecordsFile(int Version, List<UserRecordLog> Logs, string? ContentKeyId = null);
 
-internal sealed record PreparedAuthorization(string RequestId, string Action, string Rendering, string Digest, string Challenge, string ExpiresAt);
+internal sealed record PreparedAuthorization(string RequestId, string Action, string Rendering, string Digest, string Challenge, string ExpiresAt, JsonObject? Facts = null);
 
 /// <summary>The named points inside a hold of the ledger's lock at which the self-test-only hold hook is called
 /// (P3.4C-3 N17/N18). Each is reached only after the hold's checks passed, before its write.</summary>
