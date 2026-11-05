@@ -33,9 +33,10 @@
 // a host runs against its record and against the intended build.
 
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { execFileSync, execSync } from "node:child_process";
-import { dirname, join, posix, relative, resolve, sep, win32 } from "node:path";
+import { execFileSync } from "node:child_process";
+import { dirname, join, posix, resolve, win32 } from "node:path";
 import { fileURLToPath } from "node:url";
+import { productionPackages } from "../scripts/package/lib/production-packages.mjs";
 import { BUILD_INFO, CONTENT_SCHEMA, EXCLUDED, contentDigest, contentFiles, versionOf } from "./plugin-content.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -106,18 +107,6 @@ function writeJson(p, v) {
   writeFileSync(p, `${JSON.stringify(v, null, 2)}\n`);
 }
 
-/** The production dependency closure, from the repository's own node_modules (offline). */
-function productionPackages() {
-  const out = execSync("npm ls --omit=dev --all --parseable", { cwd: repo, encoding: "utf8" });
-  const nm = join(repo, "node_modules") + sep;
-  return out
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter((l) => l.startsWith(nm))
-    .map((l) => relative(join(repo, "node_modules"), l))
-    .filter((rel) => !rel.includes(`${sep}node_modules${sep}`));
-}
-
 /** The checkout the build came from: its commit and whether the files a build packages had changes. */
 function sourceOf() {
   const git = (...a) => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", windowsHide: true }).trim();
@@ -140,7 +129,9 @@ function build(o) {
   cpSync(join(tpl, "bin"), join(root, "bin"), { recursive: true });
   // The application: compiled sources (no maps or declarations) and the production dependencies.
   cpSync(dist, join(root, "app", "dist"), { recursive: true, filter: (s) => !/\.(d\.ts|js\.map|d\.ts\.map)$/.test(s) });
-  for (const rel of productionPackages()) cpSync(join(repo, "node_modules", rel), join(root, "app", "node_modules", rel), { recursive: true });
+  // The production dependency closure, from the repository's own node_modules (offline; fail-closed:
+  // scripts/package/lib/production-packages.mjs).
+  for (const rel of productionPackages(repo)) cpSync(join(repo, "node_modules", rel), join(root, "app", "node_modules", rel), { recursive: true });
   // The reviewer's prompt templates (src/prompts/render.ts looks for prompts/ above dist/).
   cpSync(join(repo, "prompts"), join(root, "app", "prompts"), { recursive: true });
   writeJson(join(root, "app", "package.json"), { name: "code-parley-app", private: true, type: "module", version: JSON.parse(readFileSync(join(repo, "package.json"), "utf8")).version });

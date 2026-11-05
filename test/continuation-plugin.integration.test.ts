@@ -62,7 +62,7 @@ describe.skipIf(!supported)("the CodeParley Claude Code plugin package (Phase 3.
     const manifest = JSON.parse(readFileSync(join(root, ".claude-plugin", "plugin.json"), "utf8"));
     expect(manifest.name).toBe("code-parley");
     expect(manifest.description).toMatch(/^TEST BUILD \(scripted fake Codex/);
-    for (const p of ["app/dist/hooks/adapter.js", "app/dist/engine/continuation.js", "app/dist/server/server.js", "app/prompts/codex-reviewer.md", "app/node_modules/zod", "app/node_modules/@modelcontextprotocol/server", "bin/hook.mjs", "bin/server.mjs", "test/server-fake-codex.mjs", "test/hook-fake-custodian.mjs"]) expect(existsSync(join(root, p)), p).toBe(true);
+    for (const p of ["app/dist/hooks/adapter.js", "app/dist/engine/continuation.js", "app/dist/server/server.js", "app/prompts/codex-reviewer.md", "app/node_modules/zod", "app/node_modules/@modelcontextprotocol/server", "app/node_modules/@modelcontextprotocol/core", "bin/hook.mjs", "bin/server.mjs", "test/server-fake-codex.mjs", "test/hook-fake-custodian.mjs"]) expect(existsSync(join(root, p)), p).toBe(true);
     expect(existsSync(join(scenarioDir, "fake-codex.mjs"))).toBe(true);
     for (const dev of ["typescript", "vitest", "@modelcontextprotocol/client", "@modelcontextprotocol/sdk"]) expect(existsSync(join(root, "app", "node_modules", dev)), dev).toBe(false);
     const launch = JSON.parse(readFileSync(join(root, "launch.json"), "utf8")).argv as string[];

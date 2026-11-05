@@ -26,10 +26,11 @@
 // Exit status: 0 staged; 1 a check failed; 2 a usage or tool error.
 
 import { cpSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readSync, closeSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { execFileSync, execSync } from "node:child_process";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { execFileSync } from "node:child_process";
+import { dirname, join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { productionPackages } from "./lib/production-packages.mjs";
 import { buildId, buildManifest } from "./lib/release-manifest.mjs";
 import { satisfies } from "./lib/semver-lite.mjs";
 import { npmCli, runOk, sha256File } from "./lib/tools.mjs";
@@ -81,12 +82,6 @@ function archive(dir, file) {
   mkdirSync(dirname(file), { recursive: true });
   const tar = WIN ? join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "tar";
   execFileSync(tar, ["-czf", file, "-C", dir, "."], { stdio: "inherit", windowsHide: true });
-}
-
-function productionPackages() {
-  const out = execSync("npm ls --omit=dev --all --parseable", { cwd: REPO, encoding: "utf8" });
-  const nm = join(REPO, "node_modules") + sep;
-  return out.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.startsWith(nm)).map((l) => relative(join(REPO, "node_modules"), l)).filter((rel) => !rel.includes(`${sep}node_modules${sep}`));
 }
 
 function hasNativeAddon(dir) {
@@ -182,7 +177,7 @@ function main() {
     }
 
     // The engine runtimes: Node and the engine (no Git: §7 b).
-    const prod = productionPackages();
+    const prod = productionPackages(REPO);
     for (const [name, nodePath, nodeName, nodeV] of [["engine-runtime-windows-x64", o.nodeWin, "node.exe", nodeWin], ["engine-runtime-linux-x64", o.nodeLinux, "node", nodeLinux]]) {
       const dir = join(work, name);
       cpSync(dist, join(dir, "dist"), { recursive: true, filter: (s) => !/\.(d\.ts|js\.map|d\.ts\.map)$/.test(s) });
