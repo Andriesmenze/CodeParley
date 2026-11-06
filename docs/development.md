@@ -2,7 +2,8 @@
 
 ## Requirements
 
-- Node.js `^22.12.0 || ^24.0.0` (the range in `package.json` `engines`) with npm, and git.
+- Node.js `^26.13.0` (the range in `package.json` `engines`: Node.js 26 LTS, the one supported major) with its
+  bundled npm, and git. On Linux the official Node.js 26 build needs `libatomic1`.
 - The .NET SDK pinned by `custodian/global.json` (10.0.403, later feature bands allowed), for the custodian.
 - Windows 11 or Ubuntu 24.04 for the platform-specific suites. Each platform runs its own integration tests and skips
   the other's.
@@ -102,13 +103,13 @@ Opt-in suites:
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual runs. A pull request tests Linux on
-Node 22 and 24 and Windows on Node 24; `main` and manual runs test the full Windows and Linux by Node 22 and 24 matrix.
-Each platform and Node.js version runs as one verify job and the test job's shards, at the same time:
+`.github/workflows/ci.yml` runs on pull requests, pushes to `main` and manual runs, the same nine jobs each time:
+Windows and Linux on Node 26, the one supported Node.js major (`test/ci-workflow.test.ts` keeps the matrix on the major
+`package.json` `engines` names). Each platform runs as one verify job and the test job's shards, at the same time:
 
-- `windows · Node 24.x · verify` typechecks, builds, builds and self-tests the platform's custodian, runs the Windows
+- `windows · Node 26.x · verify` typechecks, builds, builds and self-tests the platform's custodian, runs the Windows
   diagnostic (the custodian's run corpus on its own), the install smoke test and the plugin build;
-- `windows · Node 24.x · tests 1/4` to `4/4` (on Linux `1/2` and `2/2`) each build the custodian, which the suite's
+- `windows · Node 26.x · tests 1/4` to `4/4` (on Linux `1/2` and `2/2`) each build the custodian, which the suite's
   real-custodian contract tests run, and run a part of the test files (`CP_TEST_SHARD`), dealt by their recorded
   durations so that the parts take about as long. Together they run every test file once. On Windows the shards
   set `CP_TEST_GIT=auto`: `test/test-git.ts` finds Git for Windows' own binary in the installation of the git on

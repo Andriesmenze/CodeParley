@@ -73,8 +73,10 @@ does not claim production-secure unattended operation.
 | Claude Code (CLI) | Manual review, protected loop, delegated fixes. The only supported host for the protected workflow. |
 | Claude Desktop | Manual review only, in the Chat and Code tabs. No protected or delegated-fix claim. Not available on Linux. |
 
-An npm install needs Node.js `^22.12 || ^24`. The installers bundle Node.js 24.22.2 and need no SDK or
-Node.js on the target. macOS is not supported.
+An npm install needs Node.js `^26.13`, the one supported Node.js major (Node.js 26 LTS). The installers bundle
+Node.js 26 and need no SDK or Node.js on the target (on Linux, the bundled Node.js needs `libatomic1`; see
+[docs/install.md](docs/install.md#linux-prerequisites)). Releases 1.0.0 and 1.0.1 support `^22.12 || ^24` and bundle
+Node.js 24.22.2. macOS is not supported.
 
 ## Quick start
 
@@ -183,7 +185,7 @@ A protected install has further requirements, listed in [docs/install.md](docs/i
 | Requirement | Supported |
 |---|---|
 | Windows | Windows 11, native (not WSL). Codex's **MXC** sandbox backend must pass the S1 self-test on your machine. |
-| Node.js | `^22.12` or `^24` |
+| Node.js | `^26.13` |
 | Git for Windows | 2.41 or later (2.45+ for partial clones) |
 | Codex CLI | **0.160.x**, native install (`codex.exe`, not only an npm `.cmd` shim), logged in (`codex login`, or `CODEX_API_KEY`). Other versions are refused. |
 | Repository locations | Local NTFS folders, paths over 260 characters, 8.3-shaped names, `subst` drives, a mapped network drive and a OneDrive folder (see [Troubleshooting](docs/troubleshooting.md) for the last two). Not validated: other network file systems, ReFS/Dev Drive volumes, removable media, `\\wsl$` paths. |
@@ -193,7 +195,7 @@ A protected install has further requirements, listed in [docs/install.md](docs/i
 | Requirement | Supported |
 |---|---|
 | Linux | x86-64, with **unprivileged user namespaces** available to Codex's bundled bubblewrap (on Ubuntu 23.10 and later that takes an AppArmor profile; see [Codex isolation](#codex-isolation)). |
-| Node.js | `^22.12` or `^24` |
+| Node.js | `^26.13` (its official Linux build needs `libatomic1`: `sudo apt install libatomic1`) |
 | git | 2.41 or later (2.45+ for partial clones) |
 | Codex CLI | **0.160.x**, for example `npm install -g @openai/codex@0.160.0` (CodeParley maps the npm launcher to the native binary it bundles), logged in (`codex login`). Its bundled bubblewrap must pass the S1 self-test (`code-parley codex selftest --backend bwrap`). |
 | Hosts | Claude Code (standalone CLI). Claude Desktop does not run on Linux. |
@@ -869,9 +871,9 @@ While developing, `npm run test:quick` runs the test files that are fast in CI a
 test/<file>.test.ts` a single file; `npm test` is the full suite a change has to pass
 ([docs/development.md](docs/development.md#fast-feedback-and-full-validation)).
 
-CI (`.github/workflows/ci.yml`) runs these on Windows and Linux with Node 22 and 24 for pushes
-to `main` and manual runs (`gh workflow run CI --ref <branch>`); pull requests, into any
-branch, run Linux on Node 22 and 24 and Windows on Node 24 only. A new commit on a pull request, or
+CI (`.github/workflows/ci.yml`) runs these on Windows and Linux with Node 26, the one supported
+Node.js major, for pull requests into any branch, pushes to `main` and manual runs
+(`gh workflow run CI --ref <branch>`): the same nine jobs every time. A new commit on a pull request, or
 a new manual run on the same branch, cancels the older run; a later merge does not cancel a `main`
 run. Plain branch pushes and documentation-only changes (Markdown at the repository root and in
 `docs/`; not `prompts/`, which holds the product's reviewer prompt) do not start

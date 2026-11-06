@@ -41,9 +41,9 @@ A release's artifacts are:
 | `codeparley-installer.sh`, `custodian-linux-x64.tar.gz`, `engine-runtime-linux-x64.tar.gz`, `plugin-linux.tar.gz` | Linux protected install |
 | `code-parley-1.0.1.tgz` | Manual review |
 
-Put them in one directory; this document calls it `<dir>`. The installers bundle Node.js 24.22.2 in
-the engine runtime and a self-contained .NET runtime in the custodian: the target needs no SDK or
-Node.js.
+Put them in one directory; this document calls it `<dir>`. The installers bundle Node.js 26 in the
+engine runtime (1.0.0 and 1.0.1: Node.js 24.22.2; each release's BUILD-IDs name its version) and a
+self-contained .NET runtime in the custodian: the target needs no SDK or Node.js.
 
 ## Verify a release
 
@@ -226,6 +226,11 @@ The custodian checks these at every start and refuses to serve if one fails:
 The installer and `grant-repository` also need:
 
 - Root, and `python3`.
+- The system libraries the bundled Node.js needs. Node.js 26's official Linux build needs
+  `libatomic1`, which a minimal Ubuntu 24.04 server may lack: `sudo apt install libatomic1`. The
+  installer reads what the bundled Node.js needs from the verified engine archive and refuses,
+  before it changes anything, while one is missing (it never installs packages itself). After
+  unpacking, it checks that the bundled Node.js starts before any service is stopped.
 - The tools `findmnt`, `dumpe2fs`, `setfacl`, `getfacl`, `runuser`, `systemctl`, `systemd-tmpfiles`,
   `useradd`, `groupadd`, `usermod`. Most are there by default; for the rest: `sudo apt install acl
   e2fsprogs`.
@@ -574,7 +579,7 @@ queued behind that can be refused `CUSTODIAN_BUSY`. See
 
 ## Manual review (any platform)
 
-You need Node.js `^22.12 || ^24`, git 2.41 or later, and Codex CLI 0.160.x, logged in. The
+You need Node.js `^26.13` (1.0.0 and 1.0.1: `^22.12 || ^24`), git 2.41 or later, and Codex CLI 0.160.x, logged in. The
 [README](../README.md#requirements-for-manual-review) has the details per platform. Installing the
 npm tarball gives you no custodian: protected loops and delegated fixes are refused.
 
