@@ -102,6 +102,72 @@ unpack() { # <archive> <destination> <artifact name> <version> <commit>: a root-
   python3 -I -c 'import json,sys; b=json.load(open(sys.argv[1])); sys.exit(0 if (b["artifact"],b["version"],b["commit"])==(sys.argv[2],sys.argv[3],sys.argv[4]) else 1)' "$2/BUILD-ID" "$3" "$4" "$5" || { rm -rf "$2"; die "the BUILD-ID inside $1 does not match the manifest"; }
 }
 
+# The system libraries the bundled Node.js needs (its ELF DT_NEEDED entries), read from the verified engine archive in
+# memory and resolved against the dynamic linker's cache, before anything is changed. Conditional on the runtime by
+# construction: a Node.js 25 or later official build needs libatomic.so.1 (not installed by default on a minimal Ubuntu),
+# a Node.js 24 build does not. The installer never installs packages itself.
+check_runtime_libraries() { # <engine archive>
+  local needed lib missing=() cache
+  needed=$(python3 -I - "$1" <<'PY'
+import struct, sys, tarfile
+with tarfile.open(sys.argv[1], "r:gz") as t:
+    m = next((m for m in t.getmembers() if m.name in ("./node", "node")), None)
+    if m is None or not m.isreg():
+        sys.exit("the engine archive has no node at its root")
+    b = t.extractfile(m).read()
+if b[:4] != b"\x7fELF" or b[4] != 2 or b[5] != 1:
+    sys.exit("the bundled node is not a 64-bit little-endian ELF image")
+phoff, = struct.unpack_from("<Q", b, 0x20)
+phentsize, phnum = struct.unpack_from("<HH", b, 0x36)
+loads, dyn = [], None
+for i in range(phnum):
+    p_type, _, p_offset, p_vaddr, _, p_filesz = struct.unpack_from("<IIQQQQ", b, phoff + i * phentsize)
+    if p_type == 1: loads.append((p_vaddr, p_offset, p_filesz))
+    if p_type == 2: dyn = (p_offset, p_filesz)
+if dyn is None:
+    sys.exit("the bundled node has no dynamic section")
+def off(vaddr):
+    for v, o, n in loads:
+        if v <= vaddr < v + n: return o + vaddr - v
+    sys.exit("the bundled node's string table is outside its loaded segments")
+strtab, needs = None, []
+for i in range(dyn[0], dyn[0] + dyn[1], 16):
+    tag, val = struct.unpack_from("<qQ", b, i)
+    if tag == 0: break
+    if tag == 5: strtab = val
+    if tag == 1: needs.append(val)
+if strtab is None:
+    sys.exit("the bundled node has no string table")
+base = off(strtab)
+for n in needs:
+    s = b[base + n:b.index(b"\0", base + n)].decode("ascii")
+    print(s)
+PY
+) || die "cannot read the bundled Node.js's library needs from $1; nothing was changed"
+  [ -n "$needed" ] || die "the bundled Node.js in $1 names no library; nothing was changed"
+  cache=$(ldconfig -p 2>/dev/null) || die "ldconfig -p failed: the libraries the bundled Node.js needs cannot be checked; nothing was changed"
+  while read -r lib; do
+    # ldconfig -p lists "<tab><soname> (libc6,x86-64[, OS ABI: ...]) => <path>".
+    grep -qF -- $'\t'"$lib (libc6,x86-64" <<<"$cache" || missing+=("$lib")
+  done <<<"$needed"
+  [ ${#missing[@]} = 0 ] && return 0
+  for lib in "${missing[@]}"; do
+    case $lib in
+      libatomic.so.1) echo "codeparley-installer: the bundled Node.js needs $lib, which is not installed (apt install libatomic1)" >&2 ;;
+      *) echo "codeparley-installer: the bundled Node.js needs $lib, which is not installed" >&2 ;;
+    esac
+  done
+  die "nothing was changed"
+}
+# The bundled Node.js starts, as the helper account with an empty environment, and is the version its BUILD-ID names.
+manifest_node() { # <artifact name>: the node version the manifest's BUILD-ID of that artifact names
+  python3 -I -c 'import json,sys; m=json.load(open(sys.argv[1])); e=[a for a in m["artifacts"] if a["name"]==sys.argv[2]]; print(e[0]["buildId"]["node"]) if len(e)==1 and e[0].get("buildId",{}).get("node") else sys.exit(1)' "$RELEASE/release-manifest.json" "$1"
+}
+runtime_starts() { # <engine dir> <expected version>
+  local got; got=$(runuser -u "$HELPER" -- env -i "$1/node" --version 2>/dev/null) || return 1
+  [ "$got" = "$2" ]
+}
+
 custodian_of() { echo "$OPT/custodian/$1/codeparley-custodian"; }
 # As the custodian's account and with the service's umask (UMask=0027): a store file the migration writes is then the
 # custodian's, group-readable at most, as its own start-time check requires.
@@ -180,6 +246,8 @@ do_install() {
   local version commit rc; read -r version commit rc < <(manifest)
   [ "$rc" = true ] || echo "warning: this manifest is NOT a release candidate (a dry run)" >&2
   local cust engine; cust=$(artifact custodian-linux-x64); engine=$(artifact engine-runtime-linux-x64)
+  local node; node=$(manifest_node engine-runtime-linux-x64) || die "the manifest's engine runtime names no Node.js version; nothing was changed"
+  check_runtime_libraries "$engine"
   for g in "${GROUPS_[@]}"; do getent group "$g" >/dev/null || groupadd --system "$g"; done
   id "$CUST" >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin --user-group "$CUST"
   id "$HELPER" >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin --user-group --groups codeparley-readers "$HELPER"
@@ -192,6 +260,7 @@ do_install() {
   ln -sfn "$version" "$OPT/custodian/current"
   unpack "$engine" "$OPT/engine/$version" engine-runtime-linux-x64 "$version" "$commit"
   chmod 0755 "$OPT/engine/$version/node"
+  runtime_starts "$OPT/engine/$version" "$node" || { rm -rf "${OPT:?}/engine/$version" "${OPT:?}/custodian/$version" "$OPT/custodian/current"; die "the bundled Node.js does not start as $HELPER or is not $node; its version directories were removed and no service was set up"; }
   ln -sfn "$version" "$OPT/engine/current"
   deploy_units "$OPT/custodian/$version"
   printf '{"implementer": "%s", "operator": "%s", "helper": "%s", "codexProfile": "%s"}\n' "$IMPLEMENTER" "$OPERATOR" "$HELPER" "$PROFILE" > "$ETC/custodian.json"
@@ -218,9 +287,12 @@ do_upgrade() {
   local version commit rc; read -r version commit rc < <(manifest)
   [ "$version" != "$cur" ] || die "CodeParley $version is already installed"
   local cust engine; cust=$(artifact custodian-linux-x64); engine=$(artifact engine-runtime-linux-x64)
+  local node; node=$(manifest_node engine-runtime-linux-x64) || die "the manifest's engine runtime names no Node.js version; nothing was changed"
+  check_runtime_libraries "$engine"
   assert_servable "$(store_status "$(custodian_of "$cur")")"
   unpack "$cust" "$OPT/custodian/$version" custodian-linux-x64 "$version" "$commit"; chmod 0755 "$(custodian_of "$version")"
   unpack "$engine" "$OPT/engine/$version" engine-runtime-linux-x64 "$version" "$commit"; chmod 0755 "$OPT/engine/$version/node"
+  runtime_starts "$OPT/engine/$version" "$node" || { rm -rf "${OPT:?}/engine/$version" "${OPT:?}/custodian/$version"; die "the bundled Node.js does not start as $HELPER or is not $node; its version directories were removed; $cur still runs and the store is unchanged"; }
   local before; before=$(store_status "$(custodian_of "$version")")
   assert_servable "$before"
   stop_all
@@ -255,6 +327,10 @@ do_rollback() {
   [ -n "$bfmt" ] && [ "$bfmt" = "$serves" ] || die "the backup holds store format ${bfmt:-unknown}, the previous build $prev serves format $serves: not a compatible rollback target; nothing was changed"
   # The archive is read whole before anything is changed: one that cannot be read leaves the store as it is.
   tar -tzf "$file" >/dev/null || die "the backup $file cannot be read; the store is unchanged"
+  # The previous engine still starts (a library removed since it was installed would stop it): checked before anything
+  # is stopped.
+  local pnode; pnode=$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1]))["node"])' "$OPT/engine/$prev/BUILD-ID") || die "the previous engine's BUILD-ID names no Node.js version; nothing was changed"
+  runtime_starts "$OPT/engine/$prev" "$pnode" || die "the previous engine's Node.js ($OPT/engine/$prev/node) does not start as $HELPER or is not $pnode; nothing was changed"
   stop_all
   step "restoring the store from $file"
   find "$STORE" -mindepth 1 -delete

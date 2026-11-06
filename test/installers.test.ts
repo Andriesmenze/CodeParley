@@ -4,7 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -128,5 +129,127 @@ describe("Phase 6 §6: the product installers", () => {
     expect(win).not.toMatch(/delayed-auto/);
     expect(win).toMatch(/actions= restart\/10000\/restart\/60000\/\/0/);
     for (const s of [win, lin]) expect(s).not.toMatch(/\bconfig approve-runtime\b[^\n]*operatorIo|\bprepare_config_record\b/);
+  });
+});
+
+/** The body of a shell function of the Linux installer: from `<name>() {` to its closing `}` line. */
+function body(name: string): string {
+  const at = lin.indexOf(`\n${name}() {`);
+  expect(at, name).toBeGreaterThan(0);
+  const end = lin.indexOf("\n}\n", at);
+  return lin.slice(at, end + 2);
+}
+
+// Node.js migration (D-98, plan amendment A): an official Node.js 25 or later Linux build needs libatomic.so.1, which a
+// minimal Ubuntu 24.04 lacks. The installer reads what the bundled node needs from the verified archive, before any state
+// changes, and refuses when a library is missing; after unpacking, the node must start (as the helper, with an empty
+// environment) and be the version its BUILD-ID names, before any service is stopped.
+describe("Node.js runtime prerequisites (Linux installer)", () => {
+  it("install and upgrade check the bundled node's libraries before any state changes, and its start before any service stops", () => {
+    const install = body("do_install");
+    expect(install.indexOf('check_runtime_libraries "$engine"')).toBeGreaterThan(install.indexOf('engine=$(artifact engine-runtime-linux-x64)'));
+    expect(install.indexOf('check_runtime_libraries "$engine"')).toBeLessThan(install.indexOf("groupadd --system"));
+    expect(install.indexOf('runtime_starts "$OPT/engine/$version" "$node"')).toBeGreaterThan(install.indexOf('unpack "$engine"'));
+    expect(install.indexOf('runtime_starts "$OPT/engine/$version" "$node"')).toBeLessThan(install.indexOf("deploy_units"));
+    expect(install.indexOf('runtime_starts "$OPT/engine/$version" "$node"')).toBeLessThan(install.indexOf('ln -sfn "$version" "$OPT/engine/current"'));
+    const upgrade = body("do_upgrade").slice(body("do_upgrade").indexOf('cur=$(record_get version)'));
+    expect(upgrade.indexOf('check_runtime_libraries "$engine"')).toBeGreaterThan(upgrade.indexOf('engine=$(artifact engine-runtime-linux-x64)'));
+    expect(upgrade.indexOf('check_runtime_libraries "$engine"')).toBeLessThan(upgrade.indexOf('unpack "$cust"'));
+    expect(upgrade.indexOf('runtime_starts "$OPT/engine/$version" "$node"')).toBeGreaterThan(upgrade.indexOf('unpack "$engine"'));
+    expect(upgrade.indexOf('runtime_starts "$OPT/engine/$version" "$node"')).toBeLessThan(upgrade.indexOf("stop_all"));
+    const rollback = body("do_rollback");
+    expect(rollback.indexOf('runtime_starts "$OPT/engine/$prev" "$pnode"')).toBeGreaterThan(0);
+    expect(rollback.indexOf('runtime_starts "$OPT/engine/$prev" "$pnode"')).toBeLessThan(rollback.indexOf("stop_all"));
+    // The installer never installs a package (no package-manager command runs); it names the one to install.
+    expect(lin).not.toMatch(/^\s*(?:apt|apt-get|dpkg)\s/m);
+    expect(body("check_runtime_libraries")).toMatch(/apt install libatomic1\)/);
+    // The start check: the helper account, an empty environment, the BUILD-ID's version.
+    expect(body("runtime_starts")).toMatch(/runuser -u "\$HELPER" -- env -i "\$1\/node" --version/);
+    expect(body("manifest_node")).toMatch(/\["buildId"\]\["node"\]/);
+  });
+
+  /** A minimal ELF64 image whose dynamic section names `needed`. */
+  function elf(needed: string[]): Buffer {
+    const strtab = Buffer.from(`\0${needed.join("\0")}\0`, "latin1");
+    const strOff = 176;
+    const dynOff = 512;
+    const vaddr = 0x400000;
+    const entries: [number, number][] = [];
+    let at = 1;
+    for (const n of needed) { entries.push([1, at]); at += n.length + 1; }
+    entries.push([5, vaddr + strOff], [0, 0]);
+    const size = dynOff + entries.length * 16;
+    const b = Buffer.alloc(size);
+    Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]).copy(b, 0);
+    b.writeUInt16LE(3, 0x10); // ET_DYN
+    b.writeUInt16LE(0x3e, 0x12); // x86-64
+    b.writeBigUInt64LE(64n, 0x20); // e_phoff
+    b.writeUInt16LE(56, 0x36); // e_phentsize
+    b.writeUInt16LE(2, 0x38); // e_phnum
+    const ph = (i: number, type: number, offset: number, va: number, filesz: number) => {
+      const o = 64 + i * 56;
+      b.writeUInt32LE(type, o);
+      b.writeBigUInt64LE(BigInt(offset), o + 8);
+      b.writeBigUInt64LE(BigInt(va), o + 16);
+      b.writeBigUInt64LE(BigInt(va), o + 24);
+      b.writeBigUInt64LE(BigInt(filesz), o + 32);
+      b.writeBigUInt64LE(BigInt(filesz), o + 40);
+    };
+    ph(0, 1, 0, vaddr, size); // PT_LOAD
+    ph(1, 2, dynOff, vaddr + dynOff, entries.length * 16); // PT_DYNAMIC
+    strtab.copy(b, strOff);
+    entries.forEach(([tag, val], i) => {
+      b.writeBigInt64LE(BigInt(tag), dynOff + i * 16);
+      b.writeBigUInt64LE(BigInt(val), dynOff + i * 16 + 8);
+    });
+    return b;
+  }
+
+  const LIBC = "\tlibc.so.6 (libc6,x86-64, OS ABI: Linux 3.2.0) => /lib/x86_64-linux-gnu/libc.so.6\n\tlibstdc++.so.6 (libc6,x86-64) => /lib/x86_64-linux-gnu/libstdc++.so.6\n";
+  const ATOMIC = "\tlibatomic.so.1 (libc6,x86-64) => /lib/x86_64-linux-gnu/libatomic.so.1\n";
+  const linuxOnly = it.runIf(process.platform === "linux" && spawnSync("python3", ["--version"]).status === 0);
+
+  /** Run the installer's check_runtime_libraries on an archive holding `files`, with `cache` as `ldconfig -p`. */
+  function check(files: Record<string, Buffer>, cache: string): { status: number | null; err: string } {
+    const dir = mkdtempSync(join(tmpdir(), "cp-rtlib-"));
+    try {
+      mkdirSync(join(dir, "tree"));
+      for (const [name, data] of Object.entries(files)) writeFileSync(join(dir, "tree", name), data);
+      expect(spawnSync("tar", ["-czf", join(dir, "engine.tar.gz"), "-C", join(dir, "tree"), "."]).status).toBe(0);
+      writeFileSync(join(dir, "cache.txt"), `${Object.keys(files).length} libs found in cache \`/etc/ld.so.cache'\n${cache}`);
+      const harness = [
+        'die() { echo "codeparley-installer: $*" >&2; exit 1; }',
+        `ldconfig() { cat '${join(dir, "cache.txt")}'; }`,
+        body("check_runtime_libraries"),
+        `check_runtime_libraries '${join(dir, "engine.tar.gz")}'`,
+      ].join("\n");
+      writeFileSync(join(dir, "h.sh"), `set -euo pipefail\n${harness}\n`);
+      const r = spawnSync("bash", [join(dir, "h.sh")], { encoding: "utf8" });
+      return { status: r.status, err: r.stderr };
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+
+  linuxOnly("a node that needs libatomic.so.1 is refused without it, naming the package, and accepted with it", () => {
+    const node26 = elf(["libatomic.so.1", "libstdc++.so.6", "libc.so.6"]);
+    const without = check({ node: node26 }, LIBC);
+    expect(without.status).toBe(1);
+    expect(without.err).toContain("the bundled Node.js needs libatomic.so.1, which is not installed (apt install libatomic1)");
+    expect(without.err).toContain("nothing was changed");
+    expect(check({ node: node26 }, LIBC + ATOMIC)).toEqual({ status: 0, err: "" });
+  });
+
+  linuxOnly("a node that does not need libatomic (a Node.js 24 build) is accepted without it", () => {
+    expect(check({ node: elf(["libstdc++.so.6", "libc.so.6"]) }, LIBC)).toEqual({ status: 0, err: "" });
+  });
+
+  linuxOnly("an archive without a readable node image is refused, failing closed", () => {
+    const none = check({ "not-node": elf(["libc.so.6"]) }, LIBC);
+    expect(none.status).toBe(1);
+    expect(none.err).toContain("cannot read the bundled Node.js's library needs");
+    const notElf = check({ node: Buffer.from("#!/bin/sh\n") }, LIBC);
+    expect(notElf.status).toBe(1);
+    expect(notElf.err).toContain("nothing was changed");
   });
 });
