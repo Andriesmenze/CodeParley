@@ -7,15 +7,13 @@
 # custodian services — is not part of CI (plan §18.2, §19; the RC gates, contract §10); see docs/validation/.
 name: CI
 
-# When it runs (plan M1.6-7; the owner's choices of 2026-10-05 to save Actions minutes: the
-# repository is private and Windows minutes count double): pull requests, pushes to main and
-# manual runs (Actions tab or `gh workflow run CI --ref <branch> [-f expected_sha=<sha>]`); plain
-# branch pushes and documentation-only changes do not start it. What runs (see the matrices): a pull
-# request, into any branch, tests Linux on Node 22 and 24 and Windows on Node 24; a push to main (a
-# merge) and a manual run test the full Windows/Linux x Node 22/24 matrix. Each platform and Node.js version runs as
-# one verify job and the test job's shards, which together run the whole suite (Step 6): its result is all of those
-# jobs'. Releases are tagged on main, so the release gate is the push run of the tagged commit (or of the last earlier
-# commit that changed more than documentation); a manual run gives a branch's head the full matrix before merging.
+# When it runs (plan M1.6-7): pull requests, pushes to main and manual runs (Actions tab or
+# `gh workflow run CI --ref <branch> [-f expected_sha=<sha>]`); plain branch pushes and documentation-only changes do
+# not start it. What runs is the same for every event: the one supported Node.js major (package.json engines, the
+# single-runtime policy; test/ci-workflow.test.ts keeps the matrix on it) on Windows and Linux, each platform as one
+# verify job and the test job's shards, which together run the whole suite (Step 6): its result is all of those jobs'.
+# Releases are tagged on main, so the release gate is the push run of the tagged commit (or of the last earlier commit
+# that changed more than documentation).
 on:
   push:
     branches: [main]
@@ -39,8 +37,7 @@ permissions:
 
 # A newer run cancels the one it supersedes: a new commit on a pull request, or a new manual run
 # on the same branch. Pushes to main are grouped by commit, so a later merge does not cancel
-# them: pull requests skip Windows on Node 22, which leaves each merge's own run as the only
-# full-matrix result for its commit.
+# them: each merge's own run is the release gate for its commit.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.ref }}
   cancel-in-progress: true
@@ -75,7 +72,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.x
+          node-version: 26.x
           package-manager-cache: false
 
       - name: Verify the commit and its signature
@@ -101,9 +98,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Supported runtimes (plan §6.1, package.json engines): Node 22 and 24 LTS. Pull requests
-        # skip Windows on Node 22 (the costliest); pushes to main and manual runs run both.
-        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"linux","node":"22.x"},{"platform":"linux","node":"24.x"},{"platform":"windows","node":"24.x"}]' || '[{"platform":"linux","node":"22.x"},{"platform":"linux","node":"24.x"},{"platform":"windows","node":"22.x"},{"platform":"windows","node":"24.x"}]') }}
+        # The supported runtime (package.json engines): Node.js 26 LTS only, the same for every event.
+        include:
+          - { platform: linux, node: 26.x }
+          - { platform: windows, node: 26.x }
     env:
       CI: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -218,8 +216,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The verify job's platforms and Node.js versions, each in shards 1/n to n/n.
-        include: ${{ fromJSON(github.event_name == 'pull_request' && '[{"platform":"linux","node":"22.x","shard":"1/2"},{"platform":"linux","node":"22.x","shard":"2/2"},{"platform":"linux","node":"24.x","shard":"1/2"},{"platform":"linux","node":"24.x","shard":"2/2"},{"platform":"windows","node":"24.x","shard":"1/4"},{"platform":"windows","node":"24.x","shard":"2/4"},{"platform":"windows","node":"24.x","shard":"3/4"},{"platform":"windows","node":"24.x","shard":"4/4"}]' || '[{"platform":"linux","node":"22.x","shard":"1/2"},{"platform":"linux","node":"22.x","shard":"2/2"},{"platform":"linux","node":"24.x","shard":"1/2"},{"platform":"linux","node":"24.x","shard":"2/2"},{"platform":"windows","node":"22.x","shard":"1/4"},{"platform":"windows","node":"22.x","shard":"2/4"},{"platform":"windows","node":"22.x","shard":"3/4"},{"platform":"windows","node":"22.x","shard":"4/4"},{"platform":"windows","node":"24.x","shard":"1/4"},{"platform":"windows","node":"24.x","shard":"2/4"},{"platform":"windows","node":"24.x","shard":"3/4"},{"platform":"windows","node":"24.x","shard":"4/4"}]') }}
+        # The verify job's platforms, each in shards 1/n to n/n.
+        include:
+          - { platform: linux, node: 26.x, shard: 1/2 }
+          - { platform: linux, node: 26.x, shard: 2/2 }
+          - { platform: windows, node: 26.x, shard: 1/4 }
+          - { platform: windows, node: 26.x, shard: 2/4 }
+          - { platform: windows, node: 26.x, shard: 3/4 }
+          - { platform: windows, node: 26.x, shard: 4/4 }
     env:
       CI: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "1"

@@ -52,6 +52,13 @@ internal static class RuntimeSelfTest
         File.WriteAllText(Path.Combine(root, "dist", "extra.js"), "x");
         failed += Check("an added file changes the tree digest", EngineRuntime.Differences(EngineRuntime.Content(m), EngineRuntime.Measure(root, "git/mingw64/bin/git.exe")).Contains("tree digest"));
         File.Delete(Path.Combine(root, "dist", "extra.js"));
+        // A Node.js upgrade (D-98): a replaced node image, still a native PE, is a difference in the node entry itself.
+        string nodeExe = Path.Combine(root, "node.exe");
+        byte[] nodeBytes = File.ReadAllBytes(nodeExe);
+        File.AppendAllText(nodeExe, "another node build");
+        List<string> nodeDiff = EngineRuntime.Differences(EngineRuntime.Content(m), EngineRuntime.Measure(root, "git/mingw64/bin/git.exe"));
+        failed += Check("a replaced node image (a Node.js upgrade) is a difference in node.exe and the tree digest", nodeDiff.Contains("node.exe") && nodeDiff.Contains("tree digest"));
+        File.WriteAllBytes(nodeExe, nodeBytes);
 
         string linkRoot = Path.Combine(work, "engine", "link-to-rt1");
         if (Cmd($"/c mklink /J \"{linkRoot}\" \"{root}\"") && Directory.Exists(linkRoot))
@@ -151,6 +158,13 @@ internal static class RuntimeSelfTest
         failed += Check("re-confirming a runtime that changed since its approval is refused (CONFIG_MISMATCH)",
             Refuses(() => led.PrepareConfigRecord(null, ConfigKinds.EngineRuntime, ConfigKinds.Reconfirm, id2, null, G(), "rt-rc-1"), "CONFIG_MISMATCH"));
         File.WriteAllText(Path.Combine(root, "prompts", "p.md"), "changed between prepare and commit"); // back to the approved bytes
+        // A Node.js upgrade (D-98): a replaced node image is not re-confirmed; the operator approves the new runtime.
+        string nodeExe = Path.Combine(root, "node.exe");
+        byte[] nodeBytes = File.ReadAllBytes(nodeExe);
+        File.AppendAllText(nodeExe, "another node build");
+        failed += Check("re-confirming a runtime whose node image was replaced is refused (CONFIG_MISMATCH)",
+            Refuses(() => led.PrepareConfigRecord(null, ConfigKinds.EngineRuntime, ConfigKinds.Reconfirm, id2, null, G(), "rt-rc-node"), "CONFIG_MISMATCH") && (bool?)Section()!["usable"] == false);
+        File.WriteAllBytes(nodeExe, nodeBytes);
         led.PrepareConfigRecord(null, ConfigKinds.EngineRuntime, ConfigKinds.Reconfirm, id2, null, G(), "rt-rc-2");
         led.Commit("rt-rc-2", null);
         failed += Check("re-confirming the unchanged runtime restores it (usable)", (bool?)Section()!["usable"] == true);

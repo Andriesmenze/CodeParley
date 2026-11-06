@@ -38,12 +38,32 @@ function selectedBy(github: Record<string, unknown>): string {
   return operands.map((p) => value(p)).find((v) => typeof v === "string" && v !== "") as string;
 }
 
-/** A job's matrix: its legs for a pull request, and for a push or manual run. */
-function matrixOf(job: string): { pr: Record<string, string>[]; push: Record<string, string>[] } {
+/**
+ * A job's matrix: its legs, the same for every event (the single-runtime policy). Read from `include:` as a YAML list
+ * of flow mappings (`- { platform: linux, node: 26.x, shard: 1/2 }`) or one `fromJSON('<list>')`; a matrix that
+ * depends on the event (`github.event_name`) is refused.
+ */
+function matrixOf(job: string): Record<string, string>[] {
   const section = new RegExp(`^ {2}${job}:\\n((?: {4}.*\\n|\\n)*)`, "m").exec(`${code}\n`)?.[1] ?? "";
-  const m = /^ {8}include: \$\{\{ fromJSON\(github\.event_name == 'pull_request' && '(\[[^']*\])' \|\| '(\[[^']*\])'\) \}\}$/m.exec(section);
-  expect(m, `the ${job} job's matrix: one list for pull requests, one for pushes and manual runs`).not.toBeNull();
-  return { pr: JSON.parse(m![1]!) as Record<string, string>[], push: JSON.parse(m![2]!) as Record<string, string>[] };
+  const strategy = /^ {4}strategy:\n((?: {6}.*\n)+)/m.exec(section)?.[1] ?? "";
+  expect(strategy, `the ${job} job's matrix`).toMatch(/^ {6}matrix:$/m);
+  expect(strategy, `the ${job} job's matrix does not depend on the event`).not.toMatch(/event_name/);
+  const json = /^ {8}include: \$\{\{ fromJSON\('(\[[^']*\])'\) \}\}$/m.exec(section);
+  if (json) return JSON.parse(json[1]!) as Record<string, string>[];
+  const list = /^ {8}include:\n((?: {10}- \{.*\}\n)+)/m.exec(section);
+  expect(list, `the ${job} job's matrix: one include list for every event`).not.toBeNull();
+  return list![1]!.trim().split("\n").map((line) => {
+    const body = /^- \{ (.*) \}$/.exec(line.trim())![1]!;
+    return Object.fromEntries(body.split(", ").map((kv) => kv.split(": ").map((x) => x.trim()) as [string, string]));
+  });
+}
+
+/** The major of package.json engines.node, which must be one `^<major>.<minor>.<patch>` range. */
+function enginesMajor(): string {
+  const range = (JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as { engines: { node: string } }).engines.node;
+  const m = /^\^(\d+)\.\d+\.\d+$/.exec(range);
+  expect(m, `package.json engines.node names one major: ${range}`).not.toBeNull();
+  return m![1]!;
 }
 
 /** Legs grouped by platform and Node.js version: the shards of each (verify legs have none). */
@@ -149,7 +169,7 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     expect(code).not.toMatch(/actions\/cache@|^\s*cache-dependency-path:/m);
   });
 
-  it("verifies once per platform and Node.js version: typecheck, build, both custodians built with the pinned SDK and self-tested, the diagnostic, the install smoke and the plugin check", () => {
+  it("verifies once per platform: typecheck, build, both custodians built with the pinned SDK and self-tested, the diagnostic, the install smoke and the plugin check", () => {
     const steps = jobs["verify"]!.steps;
     const run = (name: string) => steps.find((s) => s.name === name);
     expect(steps.find((s) => s.uses?.startsWith("actions/setup-dotnet@"))).toBeDefined();
@@ -186,23 +206,27 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     expect(order.at(-1)).toBe("Test");
   });
 
-  // Step 6: a platform and Node.js version is green only when its verify job and all its shards are, and the shards
-  // must add up to the whole suite.
-  it("covers each supported platform and Node.js version with one verify job and test shards 1/n to n/n", () => {
+  // Step 6: a platform is green only when its verify job and all its shards are, and the shards must add up to the whole
+  // suite. The single-runtime policy: one Node.js major, the one package.json engines names, for every event.
+  it("covers each supported platform on the one supported Node.js major with one verify job and test shards 1/n to n/n", () => {
+    const node = `${enginesMajor()}.x`;
     const verify = matrixOf("verify");
     const test = matrixOf("test");
-    for (const [event, expected] of [["pr", ["linux 22.x", "linux 24.x", "windows 24.x"]], ["push", ["linux 22.x", "linux 24.x", "windows 22.x", "windows 24.x"]]] as const) {
-      const v = combos(verify[event]);
-      const t = combos(test[event]);
-      expect(Object.keys(v).sort(), `verify (${event})`).toEqual(expected);
-      for (const [combo, legs] of Object.entries(v)) expect(legs, `verify ${combo} (${event})`).toEqual([""]);
-      expect(Object.keys(t).sort(), `test (${event})`).toEqual(expected);
-      for (const [combo, shards] of Object.entries(t)) {
-        const n = shards.length;
-        expect(shards, `test ${combo} (${event})`).toEqual(n === 1 && shards[0] === "" ? [""] : Array.from({ length: n }, (_, i) => `${i + 1}/${n}`));
-        for (const s of shards) expect(() => parseShard(s), `${combo} ${s}`).not.toThrow();
-      }
-    }
+    const v = combos(verify);
+    const t = combos(test);
+    expect(Object.keys(v).sort(), "verify").toEqual([`linux ${node}`, `windows ${node}`]);
+    for (const [combo, legs] of Object.entries(v)) expect(legs, `verify ${combo}`).toEqual([""]);
+    expect(Object.keys(t).sort(), "test").toEqual([`linux ${node}`, `windows ${node}`]);
+    expect(t[`linux ${node}`], "linux shards").toEqual(["1/2", "2/2"]);
+    expect(t[`windows ${node}`], "windows shards").toEqual(["1/4", "2/4", "3/4", "4/4"]);
+    for (const [combo, shards] of Object.entries(t)) for (const s of shards) expect(() => parseShard(s), `${combo} ${s}`).not.toThrow();
+    // Exactly one Node.js major in the workflow: the engines major, in the identity job too.
+    expect(new Set([...verify, ...test].map((l) => l["node"]))).toEqual(new Set([node]));
+    const versions = [...code.matchAll(/^ {10}node-version: (.*)$/gm)].map((m) => m[1]!);
+    expect(versions.filter((x) => x !== "${{ matrix.node }}"), "the identity job's node-version").toEqual([node]);
+    expect(versions.filter((x) => x === "${{ matrix.node }}")).toHaveLength(CHECKED.length);
+    // Nine jobs per run: identity, two verify legs, six test shards.
+    expect(1 + verify.length + test.length).toBe(9);
     // The shard reaches the test job's Test step alone, which runs the whole `npm test` command.
     const steps = jobs["test"]!.steps;
     expect(steps.find((s) => s.name === "Test")).toMatchObject({ run: "npm test", env: { CP_TEST_SHARD: "${{ matrix.shard }}" } });
@@ -216,14 +240,14 @@ describe("CI workflow restrictions (Phase 6 Increment 1)", () => {
     // test/test-git.ts finds and checks the binary (CP_TEST_GIT=auto); the verify job keeps the runner's PATH.
     const expr = "${{ matrix.platform == 'windows' && 'auto' || '' }}";
     expect(jobs["test"]!.steps.find((s) => s.name === "Test")!.env).toEqual({ CP_TEST_SHARD: "${{ matrix.shard }}", CP_TEST_GIT: expr });
-    // What the expression gives each test leg, for pull requests and for pushes and manual runs.
+    // What the expression gives each test leg (the same legs for every event).
     const valueFor = (leg: Record<string, string>) => {
       const m = /^\$\{\{ matrix\.platform == '(\w+)' && '([^']*)' \|\| '([^']*)' \}\}$/.exec(expr)!;
       return leg["platform"] === m[1] ? m[2] : m[3];
     };
-    const { pr, push } = matrixOf("test");
-    for (const leg of [...pr, ...push]) expect(valueFor(leg), JSON.stringify(leg)).toBe(leg["platform"] === "windows" ? "auto" : "");
-    expect(push.filter((l) => l["platform"] === "windows").length).toBe(8);
+    const legs = matrixOf("test");
+    for (const leg of legs) expect(valueFor(leg), JSON.stringify(leg)).toBe(leg["platform"] === "windows" ? "auto" : "");
+    expect(legs.filter((l) => l["platform"] === "windows").length).toBe(4);
     for (const [name, job] of Object.entries(jobs)) {
       expect(job.env, name).not.toHaveProperty("CP_TEST_GIT");
       expect(job.steps.filter((s) => "CP_TEST_GIT" in s.env).map((s) => s.name), name).toEqual(name === "test" ? ["Test"] : []);

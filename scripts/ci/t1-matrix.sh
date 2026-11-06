@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # Phase 6 Increment 1 (contract §4.1, T1): one full local matrix run of .github/workflows/ci.yml on the exact signed
-# commit, sequentially (the process-tree tests are load-sensitive): Windows on Node 24 and on a second Node.js, then
-# Linux (WSL2) on Node 24 and 22 in an ext4 mirror with .git, then the identity job. Run from Git Bash on Windows, in
-# the checkout to validate, with a clean tree at the commit. Each platform and Node.js version runs the verify job and
-# then the test job with the whole suite (CP_TEST_SHARD empty): one machine runs all of its CI shards (Step 6).
+# commit, sequentially (the process-tree tests are load-sensitive): Windows, then Linux (WSL2) in an ext4 mirror with
+# .git, on the one supported Node.js major (package.json engines; the single-runtime policy), then the identity job. Run
+# from Git Bash on Windows, in the checkout to validate, with a clean tree at the commit. Each platform runs the verify
+# job and then the test job with the whole suite (CP_TEST_SHARD empty): one machine runs all of its CI shards (Step 6).
 #
-#   bash scripts/ci/t1-matrix.sh --sha <full commit id> --out <run dir> [--node22 <node.exe>] [--min-free-gb <n>]
+#   bash scripts/ci/t1-matrix.sh --sha <full commit id> --out <run dir> [--node <node.exe>] [--wsl-node <major>]
+#        [--compare-node <node.exe>] [--compare-wsl-node <major>] [--min-free-gb <n>]
+#
+# --node is the Windows node.exe (default: the node on PATH); --wsl-node the WSL Node.js under ~/.local/opt/node<major>
+# (default 26). --compare-node / --compare-wsl-node add a run on another Node.js only for a targeted comparison (a
+# suspected regression of the supported major); the default run has none.
 #
 # Disk guard (an earlier run exhausted C:): before each job it removes the test fixtures THIS run left in %TEMP% (the
 # suites' arl-*, cp-*, cps-* folders created since the run started and idle for 2 minutes — nothing older, nothing
@@ -17,18 +22,22 @@
 # SDK and placed where the workflow's self-test step runs it; the runner records "Build the Linux custodian" and
 # "Versions" as substituted.
 set -u
-SHA="" OUT="" NODE22="C:/Program Files/Common Files/Adobe/Creative Cloud Libraries/libs/node.exe" MIN_FREE=1
+SHA="" OUT="" NODE="" WSL_NODE=26 COMPARE_NODE="" COMPARE_WSL="" MIN_FREE=1
 while [ $# -gt 0 ]; do
   case "$1" in
     --sha) SHA=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
-    --node22) NODE22=$2; shift 2 ;;
+    --node) NODE=$2; shift 2 ;;
+    --wsl-node) WSL_NODE=$2; shift 2 ;;
+    --compare-node) COMPARE_NODE=$2; shift 2 ;;
+    --compare-wsl-node) COMPARE_WSL=$2; shift 2 ;;
     --min-free-gb) MIN_FREE=$2; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
 [[ $SHA =~ ^[0-9a-f]{40}$ ]] || { echo "--sha must be a full 40-character commit id" >&2; exit 2; }
 [ -n "$OUT" ] || { echo "--out is required" >&2; exit 2; }
+for m in "$WSL_NODE" ${COMPARE_WSL:+"$COMPARE_WSL"}; do [[ $m =~ ^[0-9]+$ ]] || { echo "a WSL Node.js is given by its major" >&2; exit 2; }; done
 REPO=$(git rev-parse --show-toplevel)
 mkdir -p "$OUT"
 OUT=$(cd "$OUT" && pwd -W)
@@ -50,12 +59,15 @@ log "T1 on $SHA in $REPO; HEAD $(git rev-parse HEAD); $(git status --porcelain |
 
 # The Windows test job's CP_TEST_GIT, as the workflow computes it (test/test-git.ts finds Git for Windows' own binary).
 WIN_TEST_GIT=auto
-for job in verify test; do
-  guard; log "$job windows node24"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" --log "$OUT/windows-node24-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
-done
-for job in verify test; do
-  guard; log "$job windows node22"; node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" --node "$NODE22" --log "$OUT/windows-node22-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
-done
+windows() { # <node.exe or empty for the node on PATH> <label>
+  local job
+  for job in verify test; do
+    guard; log "$job windows $2 ($("${1:-node}" --version))"
+    node scripts/ci/run-workflow-local.mjs --job $job --expect "$SHA" --set VERIFIED_SHA="$SHA" --set CP_TEST_SHARD= --set CP_TEST_GIT="$WIN_TEST_GIT" ${1:+--node "$1"} --log "$OUT/windows-$2-$job" >> "$OUT/driver.log" 2>&1; log "exit $?"
+  done
+}
+windows "$NODE" node
+[ -z "$COMPARE_NODE" ] || windows "$COMPARE_NODE" compare
 
 guard; log "linux custodian cross-build"
 rm -rf "$OUT/linux-cust"
@@ -67,7 +79,7 @@ set -u
 M=\$HOME/src/CodeParley-ci
 bash "$W_REPO/scripts/ci/linux-mirror.sh" "$W_GIT" $SHA "\$M" || exit 1
 cd "\$M"
-for v in 24 22; do
+for v in $WSL_NODE $COMPARE_WSL; do
   mkdir -p custodian/CodeParley.Custodian.Linux/bin/Release/net10.0
   install -m 755 "$W_OUT/linux-cust/codeparley-custodian" custodian/CodeParley.Custodian.Linux/bin/Release/net10.0/codeparley-custodian
   for job in verify test; do
@@ -80,7 +92,7 @@ for v in 24 22; do
   find /tmp -maxdepth 1 -newer "\$M/package.json" \\( -name 'arl-*' -o -name 'cp-*' -o -name 'cps-*' \\) -exec rm -rf {} + 2>/dev/null
 done
 echo "[\$(date +%H:%M:%S)] identity (Linux)"
-PATH="\$HOME/.local/opt/node24/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job identity --expect $SHA --log "$W_OUT/identity-linux" --set EXPECTED_SHA=$SHA --set REQUESTED_SHA=$SHA --set MERGE=
+PATH="\$HOME/.local/opt/node$WSL_NODE/bin:\$PATH" node scripts/ci/run-workflow-local.mjs --job identity --expect $SHA --log "$W_OUT/identity-linux" --set EXPECTED_SHA=$SHA --set REQUESTED_SHA=$SHA --set MERGE=
 echo "[\$(date +%H:%M:%S)] exit \$?"
 EOF
 guard; log "linux runs"

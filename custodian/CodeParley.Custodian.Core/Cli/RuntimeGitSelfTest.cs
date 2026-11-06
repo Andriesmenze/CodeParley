@@ -37,6 +37,11 @@ internal static class RuntimeGitSelfTest
             failed += Check("a changed installed git is a difference", EngineRuntime.Differences(EngineRuntime.Content(m), EngineRuntime.Measure(runtime, null, git)).Contains("git"));
             failed += Check("an installed git under another name is refused", Refused(() => EngineRuntime.Measure(runtime, null, Path.Combine(gitDir, "sh"))));
             failed += Check("exactly one git: neither is refused", Refused(() => EngineRuntime.Measure(runtime, null, null)));
+            // A Node.js upgrade (D-98): the measured runtime's node replaced by another image of the host's form.
+            MeasuredRuntime before = EngineRuntime.Measure(runtime, null, git);
+            File.WriteAllBytes(Path.Combine(runtime, Platform.Images.NodeName), Platform.Images.FixtureImage(4));
+            List<string> nodeDiff = EngineRuntime.Differences(EngineRuntime.Content(before), EngineRuntime.Measure(runtime, null, git));
+            failed += Check("a replaced node image (a Node.js upgrade) is a difference in the node entry and the tree digest", nodeDiff.Contains("node.exe") && nodeDiff.Contains("tree digest"));
         }
         catch (Exception e)
         {

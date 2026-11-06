@@ -121,17 +121,17 @@ async function linuxFacts(dataHome: string): Promise<LinuxFacts> {
   };
 }
 
-/** package.json engines: ^22.12.0 || ^24.0.0 (an unsupported Node.js used to run silently). */
+/** package.json engines: ^26.13.0 (an unsupported Node.js used to run silently). */
 export function nodeSupported(version: string): boolean {
   const m = /^v?(\d+)\.(\d+)\.(\d+)/.exec(version);
   if (!m) return false;
   const [maj, min] = [Number(m[1]), Number(m[2])];
-  return (maj === 22 && min >= 12) || maj === 24;
+  return maj === 26 && min >= 13;
 }
 
 export async function doctor(le: Loaded): Promise<DoctorReport> {
   const problems: string[] = [];
-  if (!nodeSupported(process.version)) problems.push(`Node.js ${process.version} is not supported (CodeParley needs ^22.12.0 or ^24.0.0): install a supported version`);
+  if (!nodeSupported(process.version)) problems.push(`Node.js ${process.version} is not supported (CodeParley needs ^26.13.0): install a supported version`);
   const env = le.env.sourceEnv;
   if (le.allowedRoots.length === 0) problems.push("no allowed roots are configured (config.json allowed_roots or --allowed-root): every run is refused with SCOPE_NOT_CONFIGURED");
 

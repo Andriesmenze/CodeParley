@@ -205,8 +205,10 @@ async function nodeServer(name: string, answer: ((s: Socket) => void) | null): P
   const received: Buffer[] = [];
   const srv = createServer((s) => {
     s.on("data", (d) => {
-      received.push(d);
-      if (answer && d.includes(10)) answer(s);
+      // No encoding is set, so a chunk is a Buffer (@types/node 26 types it string | Buffer).
+      const b = typeof d === "string" ? Buffer.from(d) : d;
+      received.push(b);
+      if (answer && b.includes(10)) answer(s);
     });
     s.on("error", () => undefined);
   });

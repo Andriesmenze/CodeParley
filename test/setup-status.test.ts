@@ -91,11 +91,12 @@ describe("Phase 6 Increment 3 — the remediation catalog (the tested table)", (
   });
 
   it("doctor warns about an unsupported Node.js", () => {
-    expect(nodeSupported("v22.12.0")).toBe(true);
-    expect(nodeSupported("v24.1.0")).toBe(true);
-    expect(nodeSupported("v22.11.0")).toBe(false);
-    expect(nodeSupported("v20.18.0")).toBe(false);
-    expect(nodeSupported("v23.0.0")).toBe(false);
+    expect(nodeSupported("v26.13.0")).toBe(true);
+    expect(nodeSupported("v26.14.2")).toBe(true);
+    expect(nodeSupported("v26.12.1")).toBe(false);
+    expect(nodeSupported("v24.22.2")).toBe(false);
+    expect(nodeSupported("v22.23.4")).toBe(false);
+    expect(nodeSupported("v27.0.0")).toBe(false);
   });
 });
 
