@@ -56,8 +56,8 @@ import type { EventLimits } from "../agents/codex/events.js";
 import { decideIsolation, isolationUnavailableError, loadAcceptances } from "../agents/codex/isolation.js";
 import { reviewOutputJsonSchema } from "../agents/codex/output-schema.js";
 import { assertCanonicalGrant, probeCodex, type CodexProbe } from "../agents/codex/probe.js";
-import { ensureSelfTest, loadSelfTest, SelfTestInterruptedError, type SelfTestDeps } from "../agents/codex/selftest.js";
-import { approvedCodexImage, confirmedSelfTest, heldAcceptances, heldCaptureRules, heldCaptureRulesDigest, heldConfigFor, requireUsableHeld, type HeldConfig } from "./protected-config.js";
+import { ensureSelfTest, SelfTestInterruptedError, type SelfTestDeps } from "../agents/codex/selftest.js";
+import { approvedCodexImage, confirmedSelfTest, heldCaptureRules, protectedIsolationDecision, reviewBackends, storedS1SelfTest, heldCaptureRulesDigest, heldConfigFor, requireUsableHeld, type HeldConfig } from "./protected-config.js";
 import { buildChildEnv, lookupEnv } from "../process/env.js";
 import { checkOperationTermination, snapshotProcessTable, type SweepDeps, type TerminationCheck } from "../process/proc-table.js";
 import { carryForward } from "../policy/carry-forward.js";
@@ -1034,7 +1034,7 @@ async function discussionWithheld(ctx: ReviewEngineContext, st0: StateRecord, ma
 
 async function resolveIsolation(ctx: ReviewEngineContext, probe: CodexProbe, signal: AbortSignal): Promise<{ isolation: EffectiveIsolation; argv: IsolationArgvInput }> {
   // Windows: the configured backend or the probe-confirmed preference (mxc); Linux: the compatibility row's (bwrap).
-  const backends: SandboxBackend[] = process.platform === "win32" && ctx.codex.windows_sandbox ? [ctx.codex.windows_sandbox] : [...probe.compat.preferredBackends];
+  const backends: SandboxBackend[] = reviewBackends(process.platform, ctx.codex.windows_sandbox, probe);
   // The install-directory grant must not contain the user profile, the run store or the
   // repository (all canonical): such a grant would widen S1 far beyond the export (F1).
   const protectedPaths: string[] = [];
@@ -1055,10 +1055,10 @@ async function resolveIsolation(ctx: ReviewEngineContext, probe: CodexProbe, sig
   const held = ctx.heldConfig ? await ctx.heldConfig() : null;
   if (held) {
     for (const b of backends) {
-      const rec = await loadSelfTest(ctx.selftestDir, probe.version, { mode: "S1", backend: b, installDir: probe.installDir, webSearchDisabledValue: probe.compat.webSearchDisabledValue, acceptanceId: null });
+      const rec = await storedS1SelfTest(ctx.selftestDir, probe, b);
       selfTests.set(b, rec && confirmedSelfTest(held.section, rec) ? rec : null);
     }
-    const d = decideIsolation({ compat: probe.compat, codexVersion: probe.version, installDir: probe.installDir, backends, selfTests, acceptances: heldAcceptances(held.section), userHooksPresent: probe.userHooksPresent });
+    const d = protectedIsolationDecision(held.section, probe, backends, selfTests);
     if (!d.ok) throw isolationUnavailableError([...d.reasons, "on a protected run only an S1 self-test the operator confirmed with the custodian (code-parley config confirm-selftest) or a custodian-held acceptance (code-parley config accept-isolation) counts"]);
     return { isolation: d.isolation, argv: d.argv };
   }

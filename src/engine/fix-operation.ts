@@ -44,7 +44,7 @@ import { readState } from "../store/state-store.js";
 import { custodianEvidenceFor, reconcileCustodianRun, type CustodianEvidence } from "./custodian-evidence.js";
 import { SimulatedKill } from "./simulated-kill.js";
 import { evidenceSelection, type Loaded, type RunHandle } from "./engine-env.js";
-import { approvedCodexImage, heldConfigFor } from "./protected-config.js";
+import { approvedCodexImage, confirmedFixSelfTest, heldConfigFor } from "./protected-config.js";
 import { fixBackendFor, storedFixSelfTest } from "./fix-confirmation.js";
 
 /** The custodian's hard caps (CustodianConstants.cs), mirrored to refuse an out-of-range request before it is sent. */
@@ -194,7 +194,7 @@ export async function delegateFix(le: Loaded, run: RunHandle, input: DelegateFix
   const { sha256: codexSha256 } = await approvedCodexImage(held.section, probe.launcher.exe, (a, b) => caseKey(a) === caseKey(b));
   const local = await storedFixSelfTest(le.layout.selftestDir, le.dataHome, backend, probe);
   if (local.codexSha256 !== codexSha256) throw new DomainError("CODEX_ISOLATION_UNAVAILABLE", "the stored cp_fix self-test is not for the approved Codex binary; nothing was begun", { retryable: false });
-  const confirmation = held.section.selftestConfirmations.find((c) => c.mode === "FIX" && c.usable && c.selftestId === local.record.selftest_id && c.codexSha256 === codexSha256 && c.profileDigest === local.profileDigest);
+  const confirmation = confirmedFixSelfTest(held.section, { selftestId: local.record.selftest_id, codexSha256, profileDigest: local.profileDigest });
   if (!confirmation) {
     throw new DomainError("CODEX_ISOLATION_UNAVAILABLE", `the custodian holds no operator-confirmed FIX self-test for Codex ${probe.version} (${codexSha256.slice(0, 12)}) on ${backend}: a local cp_fix self-test confers no authority by itself — the operator confirms it with \`code-parley config confirm-selftest --fix\` (an S1 confirmation does not count); nothing was begun`, { retryable: false });
   }
