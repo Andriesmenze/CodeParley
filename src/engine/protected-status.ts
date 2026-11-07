@@ -23,6 +23,11 @@ import { CUSTODIAN_SERVICE_NAME, type CustodianPresence } from "../custodian/ser
 import { CustodianBusy, CustodianNotTrusted, custodianClientDeadline, setCustodianClientDeadline, type CustodianTransport } from "../custodian/transport.js";
 import { runProcess } from "../process/spawn.js";
 import type { Loaded } from "./engine-env.js";
+import type { SandboxBackend } from "../agents/codex/argv.js";
+import type { IsolationDecision } from "../agents/codex/isolation.js";
+import { probeCodex, type CodexProbe } from "../agents/codex/probe.js";
+import type { SelfTestRecord } from "../schemas/review.js";
+import { confirmedFixSelfTest, confirmedSelfTest, namesFixRecord, namesS1Record, protectedIsolationDecision, reviewBackends, storedS1SelfTest, type StoredFixIdentity } from "./protected-config.js";
 
 /** The host's state, most decisive first. Every value is backed by an observation (see {@link hostStateOf}). */
 export type HostState =
@@ -54,7 +59,14 @@ export interface SurfaceProbe {
 }
 
 export type RecordName = "engine_runtime" | "repository" | "isolation" | "fix_confirmation" | "loop_grant";
-export type RecordStateValue = "in_force" | "lapsed" | "changed" | "missing" | "revoked" | "suspended" | "used_up" | "expired";
+export type RecordStateValue = "in_force" | "lapsed" | "changed" | "missing" | "revoked" | "suspended" | "used_up" | "expired" | "unconfirmed" | "unverified";
+
+/**
+ * Step 7.2 (F-S71-2): why a self-test row is what it is. `record_*`: the stored record protected execution would use was
+ * read (missing, not passing, or not the one the custodian's confirmation covers) — `unconfirmed`. The others: it could
+ * not be read or compared from this account — `unverified`, which is NOT established, never "misconfigured".
+ */
+export type RecordReason = "record_missing" | "record_failed" | "record_changed" | "store_inaccessible" | "not_compared" | "probe_failed" | "no_installation";
 
 export interface RecordState {
   record: RecordName;
@@ -66,6 +78,19 @@ export interface RecordState {
   restore: string | null;
   /** Whether `setup --resume` restores it (it was in force before and lapsed, changed or was suspended). */
   resumable: boolean;
+  /** Step 7.2: for the S1 and FIX rows, why they are unconfirmed or unverified. */
+  reason?: RecordReason;
+}
+
+/** Step 7.2: what a protected review and a delegated fix would use on this host (null fields: not determined). */
+export interface ProtectedPath {
+  /** The approved Codex installation the custodian holds (what both launch). */
+  codex_path: string;
+  codex_version: string | null;
+  /** The backends a protected review considers, in order (the review's own rule). */
+  s1_backends: string[];
+  /** The backend a delegated fix runs on (the delegation's own rule). */
+  fix_backend: string | null;
 }
 
 export interface ProtectedStatus {
@@ -77,7 +102,7 @@ export interface ProtectedStatus {
   state: HostState;
   /** Why the state is what it is, and what it means (the busy limitation included). */
   explanation: string[];
-  repository: { root: string; state: RepositoryState; read_on: CustodianSurface | null; records: RecordState[] } | null;
+  repository: { root: string; state: RepositoryState; read_on: CustodianSurface | null; records: RecordState[]; protected_path?: ProtectedPath | null } | null;
   /** The commands to run next, in order. */
   next: string[];
 }
@@ -266,6 +291,111 @@ function explain(s: Pick<ProtectedStatus, "platform" | "state" | "surfaces" | "c
 }
 
 // ---------------------------------------------------------------------------
+// Step 7.2 (F-S71-2): the stored self-tests protected execution would use
+// ---------------------------------------------------------------------------
+
+/** What a protected review would load and decide: its backends, the stored S1 record per backend, and its isolation
+ * decision over the custodian's records — computed with the review's own functions (engine/protected-config.ts). */
+export interface S1Evidence {
+  codexVersion: string;
+  backends: SandboxBackend[];
+  stored: { backend: SandboxBackend; record: SelfTestRecord | null }[];
+  decision: IsolationDecision;
+}
+
+/** What a delegated fix would use: the stored FIX self-test as the delegation reads it (null, with the delegation's own
+ * refusal in `why`, when it has none it could use). */
+export interface FixEvidence {
+  codexVersion: string;
+  backend: string;
+  local: StoredFixIdentity | null;
+  why: string | null;
+}
+
+/** Why the stored self-tests could not be observed from this account. */
+export type NotObservedReason = Extract<RecordReason, "store_inaccessible" | "not_compared" | "probe_failed" | "no_installation">;
+
+/** An observation of the implementer's stored self-tests, or why it could not be made from this account. `s2`: the
+ * acceptance of reduced isolation a review would use without any S1 record (S2 needs no stored record). */
+export type Observed<T> =
+  | { ok: true; value: T }
+  | { ok: false; reason: NotObservedReason; why: string; verify: string | null; s2?: { acceptanceId: string; backend: string } | null };
+
+/** Reads the stored FIX self-test the delegation would use. Supplied by the CLI: this module imports no fixer module. */
+export type FixEvidenceReader = (probe: CodexProbe) => Promise<FixEvidence>;
+
+function s2Of(d: IsolationDecision): { acceptanceId: string; backend: string } | null {
+  return d.ok && d.isolation.mode === "S2" && d.isolation.acceptance_id ? { acceptanceId: d.isolation.acceptance_id, backend: d.isolation.backend } : null;
+}
+
+function notObserved<T>(reason: NotObservedReason, why: string, verify: string | null, s2: { acceptanceId: string; backend: string } | null = null): Observed<T> {
+  return { ok: false, reason, why, verify, s2 };
+}
+
+/** Observe, read-only, the stored self-tests a protected review (S1) and a delegated fix (FIX) of this repository would
+ * use, with the functions they use themselves. Nothing is run, written or confirmed. */
+export async function observeStoredSelfTests(le: Loaded, o: { platform: NodeJS.Platform; root: string; on: CustodianSurface; section: ConfigSection; fix?: FixEvidenceReader }): Promise<{ s1: Observed<S1Evidence>; fix: Observed<FixEvidence>; path: ProtectedPath | null }> {
+  const { platform, root, on, section } = o;
+  const repo = section.repository;
+  const inst = repo && !repo.revoked ? repo.codexInstallation : null;
+  if (!inst) {
+    const why = "no approved Codex installation is held, so the stored self-test protected execution would use cannot be determined";
+    return { s1: notObserved("no_installation", why, null), fix: notObserved("no_installation", why, null), path: null };
+  }
+  const unread: ProtectedPath = { codex_path: inst.path, codex_version: null, s1_backends: [], fix_backend: null };
+  const implementerStatus = `the implementer: code-parley status --repo ${root}`;
+  // Linux: the operator account cannot read the implementer's files, by design (Phase 5 G-OP); nothing is tried.
+  if (platform === "linux" && on === "operator") {
+    const why = "the implementer's self-test store is not readable from the operator account (by design); the implementer's own status compares it with the custodian's confirmations";
+    return { s1: notObserved("store_inaccessible", why, implementerStatus), fix: notObserved("store_inaccessible", why, implementerStatus), path: unread };
+  }
+  let probe: CodexProbe;
+  try {
+    probe = await probeCodex({ configured: inst.path, sourceEnv: le.env.sourceEnv, testLauncher: le.env.testHooks?.review?.codexLauncher ?? null });
+  } catch (e) {
+    const why = `the approved Codex installation ${inst.path} could not be probed (${(e instanceof Error ? e.message : String(e)).slice(0, 200)})`;
+    return { s1: notObserved("probe_failed", why, "code-parley doctor"), fix: notObserved("probe_failed", why, "code-parley doctor"), path: unread };
+  }
+  // The review's rules on this host (the review decides with process.platform).
+  const backends = reviewBackends(process.platform, le.cfg.config.codex.windows_sandbox, probe);
+  const path: ProtectedPath = { codex_path: inst.path, codex_version: probe.version, s1_backends: [...backends], fix_backend: null };
+  const s2 = s2Of(protectedIsolationDecision(section, probe, backends, new Map()));
+  // Windows: the elevated operator reads the implementer's store only through --home (as setup's commands do).
+  if (platform === "win32" && on === "operator" && !le.env.launch.home) {
+    const why = "this account's data home is not the implementer's, so the stored self-tests were not compared";
+    const verify = `${operatorCli(platform)} status --repo ${root} --home "<the implementer's data home>" (or ${implementerStatus})`;
+    return { s1: notObserved("not_compared", why, verify, s2), fix: notObserved("not_compared", why, verify), path };
+  }
+  const homeGone = await stat(le.dataHome).then(
+    () => null,
+    (e: NodeJS.ErrnoException) => (e.code === "ENOENT" ? `there is no CodeParley data home at ${le.dataHome}` : `the data home ${le.dataHome} cannot be read (${e.code ?? e.message})`),
+  );
+  if (homeGone) return { s1: notObserved("store_inaccessible", homeGone, implementerStatus, s2), fix: notObserved("store_inaccessible", homeGone, implementerStatus), path };
+  let s1: Observed<S1Evidence>;
+  try {
+    const stored: S1Evidence["stored"] = [];
+    for (const b of backends) stored.push({ backend: b, record: await storedS1SelfTest(le.layout.selftestDir, probe, b) });
+    // Exactly the review's selection: a stored record counts only if a usable confirmation covers it.
+    const selfTests = new Map(stored.map((x) => [x.backend, x.record && confirmedSelfTest(section, x.record) ? x.record : null] as const));
+    s1 = { ok: true, value: { codexVersion: probe.version, backends, stored, decision: protectedIsolationDecision(section, probe, backends, selfTests) } };
+  } catch (e) {
+    s1 = notObserved("store_inaccessible", `the stored S1 self-tests cannot be read (${(e as NodeJS.ErrnoException).code ?? (e as Error).message})`, implementerStatus, s2);
+  }
+  let fix: Observed<FixEvidence>;
+  if (!o.fix) fix = notObserved("not_compared", "the stored FIX self-test is compared by `code-parley status`", `code-parley status --repo ${root}`);
+  else {
+    try {
+      const value = await o.fix(probe);
+      path.fix_backend = value.backend;
+      fix = { ok: true, value };
+    } catch (e) {
+      fix = notObserved("store_inaccessible", `the stored FIX self-test cannot be read (${(e as NodeJS.ErrnoException).code ?? (e as Error).message})`, implementerStatus);
+    }
+  }
+  return { s1, fix, path };
+}
+
+// ---------------------------------------------------------------------------
 // The repository's records
 // ---------------------------------------------------------------------------
 
@@ -291,6 +421,10 @@ export async function repositoryRecords(o: {
   builtAt?: (root: string) => Promise<number | null>;
   /** The installed engine runtime's versioned directory (null: none, e.g. a development checkout). */
   installedRuntime?: () => Promise<string | null>;
+  /** Step 7.2: the stored S1 and FIX self-tests protected execution would use, as observed from this account (absent:
+   * not compared). Every S1/FIX row is classified against them, never on the custodian's records alone. */
+  s1?: Observed<S1Evidence>;
+  fix?: Observed<FixEvidence>;
 }): Promise<RecordState[]> {
   const { platform, root, section } = o;
   const op = operatorCli(platform);
@@ -342,18 +476,97 @@ export async function repositoryRecords(o: {
   const proposal = (fix: boolean) => `the implementer: code-parley codex ${fix ? "fix-selftest" : "selftest"}, then code-parley config propose-selftest${fix ? " --fix" : ""} --repo ${root} --out <file>; then`;
   const isolationRestore = (fix: boolean, lapsed: boolean): string =>
     linux ? `${proposal(fix)} ${lapsed ? resume : `${op} setup${fix ? " --fix" : ""} --repo ${root}`} --proposal-file <file>` : `${lapsed ? resume : `${op} setup${fix ? " --fix" : ""} --repo ${root}`}${home}`;
-  if (s1.some((c) => c.usable) || acc.some((a) => a.usable)) {
-    const c = s1.find((x) => x.usable);
-    out.push({ record: "isolation", state: "in_force", required: true, detail: c ? `S1 self-test confirmation ${c.confirmationId} (Codex ${c.codexVersion}, ${c.backend})` : `reduced-isolation acceptance ${acc.find((a) => a.usable)!.acceptanceId}`, restore: null, resumable: false });
-  } else if (s1.some((c) => c.lapsed) || acc.some((a) => a.lapsed)) {
+  // Step 7.2 (F-S71-2): a confirmation counts only for the stored record protected execution would use, observed with
+  // the execution path's own functions; a custodian-only fact (lapsed, revoked, missing) only where no local fact decides.
+  const notObservedRow = (record: "isolation" | "fix_confirmation", required: boolean, o: Exclude<Observed<unknown>, { ok: true }> | undefined): RecordState => {
+    const reason = o?.reason ?? "not_compared";
+    const why = o?.why ?? "the stored self-test was not compared";
+    const verify = o ? o.verify : `code-parley status --repo ${root}`;
+    return { record, state: "unverified", required, detail: `a usable confirmation is held, but it is not established that it covers the stored self-test: ${why}`, restore: verify, resumable: false, reason };
+  };
+  // The commands that confirm the current stored record (rerun: the implementer runs the self-test first).
+  const step = (fix: boolean, resumeIt: boolean) => (resumeIt ? `${resume}${fix ? " --fix" : ""}` : `${op} setup${fix ? " --fix" : ""} --repo ${root}`);
+  const confirmCmd = (fix: boolean, resumeIt: boolean, rerun: string | null): string =>
+    linux
+      ? `the implementer: ${rerun !== null ? `code-parley codex ${fix ? "fix-selftest" : "selftest"}, then ` : ""}code-parley config propose-selftest${fix ? " --fix" : ""} --repo ${root} --out <file>; then ${step(fix, resumeIt)} --proposal-file <file>`
+      : `${rerun !== null ? `the implementer: code-parley codex ${fix ? "fix-selftest" : "selftest"}${rerun ? ` --backend ${rerun}` : ""} in an interactive desktop session; then ` : ""}${step(fix, resumeIt)}${home}`;
+  const covers = (cs: typeof section.selftestConfirmations) => cs.map((c) => `confirmation ${c.confirmationId} covers self-test ${c.selftestId} (Codex ${c.codexVersion}, ${c.backend}${c.lapsed ? ", lapsed" : ""})`).join("; ");
+
+  const allS1 = section.selftestConfirmations.filter((c) => c.mode !== "FIX");
+  const revokedS1 = allS1.filter((c) => c.revoked);
+  const lapsedRow = (): RecordState =>
     // A Linux S1 confirmation is bound to its boot and is never re-confirmed: a new self-test and its proposal.
-    out.push({ record: "isolation", state: "lapsed", required: true, detail: linux ? "the S1 self-test confirmation lapsed with the boot it was made on (it is not re-confirmed: a new self-test)" : "the S1 self-test confirmation lapsed after a restart of the OS or a rollback", restore: isolationRestore(false, true), resumable: true });
+    ({ record: "isolation", state: "lapsed", required: true, detail: linux ? "the S1 self-test confirmation lapsed with the boot it was made on (it is not re-confirmed: a new self-test)" : "the S1 self-test confirmation lapsed after a restart of the OS or a rollback", restore: isolationRestore(false, true), resumable: true });
+  const ev = o.s1;
+  if (ev?.ok) {
+    const { decision: d, stored, codexVersion, backends } = ev.value;
+    const recs = stored.filter((x): x is { backend: SandboxBackend; record: SelfTestRecord } => x.record !== null);
+    if (d.ok && d.isolation.mode === "S1") {
+      const rec = recs.find((x) => x.backend === d.isolation.backend)!.record;
+      const c = s1.find((x) => x.usable && namesS1Record(x, rec));
+      out.push({ record: "isolation", state: "in_force", required: true, detail: `S1 self-test confirmation ${c?.confirmationId ?? "?"} covers the stored self-test ${rec.selftest_id} (Codex ${codexVersion}, ${rec.backend})`, restore: null, resumable: false });
+    } else {
+      // What the stored record(s) are against the custodian's confirmations, for the detail and the restore.
+      const usableOrLapsed = s1.filter((c) => c.usable || c.lapsed);
+      const passing = recs.filter((x) => x.record.profile_runs && x.record.s1_available);
+      const reason: RecordReason = !recs.length ? "record_missing" : !passing.length ? "record_failed" : "record_changed";
+      const s1Why =
+        reason === "record_missing"
+          ? `no stored S1 self-test of Codex ${codexVersion} on ${backends.join(" or ")} (the installation the custodian approved)`
+          : reason === "record_failed"
+            ? `the stored S1 self-test ${recs[0]!.record.selftest_id} (Codex ${codexVersion}, ${recs[0]!.backend}) did not pass`
+            : `the stored S1 self-test ${passing[0]!.record.selftest_id} (Codex ${codexVersion}, ${passing[0]!.backend}) is not the one confirmed${usableOrLapsed.length ? ` (${covers(usableOrLapsed)})` : ""}`;
+      if (d.ok) {
+        // Explicitly accepted reduced isolation (S2): the review would run with it; S1 is named beside it.
+        out.push({ record: "isolation", state: "in_force", required: true, detail: `reduced isolation (S2): the operator's acceptance ${d.isolation.acceptance_id} for ${d.isolation.backend}; S1 is not established (${s1Why})`, restore: null, resumable: false });
+      } else if (recs.some((x) => s1.some((c) => c.lapsed && namesS1Record(c, x.record))) || acc.some((a) => a.lapsed)) {
+        out.push(lapsedRow());
+      } else if (recs.some((x) => revokedS1.some((c) => namesS1Record(c, x.record)))) {
+        // The operator revoked the confirmation of THIS record: never restored by --resume.
+        out.push({ record: "isolation", state: "revoked", required: true, detail: `the confirmation of the stored S1 self-test ${recs.find((x) => revokedS1.some((c) => namesS1Record(c, x.record)))!.record.selftest_id} was revoked (setup --resume does not restore it)`, restore: confirmCmd(false, false, null), resumable: false });
+      } else if (usableOrLapsed.length || acc.length) {
+        // A historical confirmation exists, but not for the record a protected review would use (F-S71-2).
+        out.push({ record: "isolation", state: "unconfirmed", required: true, detail: `${usableOrLapsed.some((c) => c.usable) ? "a usable S1 confirmation is held, but " : ""}${s1Why}: a protected review is refused (CODEX_ISOLATION_UNAVAILABLE) until the operator confirms the stored one`, restore: confirmCmd(false, true, reason === "record_changed" ? null : (backends[0] ?? "")), resumable: true, reason });
+      } else if (revokedS1.length || section.acceptances.some((a) => a.revoked)) {
+        out.push({ record: "isolation", state: "revoked", required: true, detail: "every S1 self-test confirmation (or acceptance) was revoked (setup --resume does not restore it)", restore: isolationRestore(false, false), resumable: false });
+      } else out.push({ record: "isolation", state: "missing", required: true, detail: "no S1 self-test confirmation (or reduced-isolation acceptance) is in force", restore: isolationRestore(false, false), resumable: false });
+    }
+  } else if (ev && !ev.ok && ev.s2) {
+    out.push({ record: "isolation", state: "in_force", required: true, detail: `reduced isolation (S2): the operator's acceptance ${ev.s2.acceptanceId} for ${ev.s2.backend}; whether a confirmed S1 self-test applies was not compared (${ev.why})`, restore: null, resumable: false });
+  } else if (s1.some((c) => c.usable) || acc.some((a) => a.usable)) {
+    out.push(notObservedRow("isolation", true, ev));
+  } else if (s1.some((c) => c.lapsed) || acc.some((a) => a.lapsed)) {
+    out.push(lapsedRow());
+  } else if (revokedS1.length || section.acceptances.some((a) => a.revoked)) {
+    out.push({ record: "isolation", state: "revoked", required: true, detail: "every S1 self-test confirmation (or acceptance) was revoked (setup --resume does not restore it)", restore: isolationRestore(false, false), resumable: false });
   } else out.push({ record: "isolation", state: "missing", required: true, detail: "no S1 self-test confirmation (or reduced-isolation acceptance) is in force", restore: isolationRestore(false, false), resumable: false });
 
-  const fixes = section.selftestConfirmations.filter((c) => c.mode === "FIX" && !c.revoked);
-  if (fixes.some((c) => c.usable)) out.push({ record: "fix_confirmation", state: "in_force", required: false, detail: `FIX self-test confirmation ${fixes.find((c) => c.usable)!.confirmationId}`, restore: null, resumable: false });
-  else if (fixes.some((c) => c.lapsed)) out.push({ record: "fix_confirmation", state: "lapsed", required: false, detail: "the FIX self-test confirmation lapsed (delegated fixes only)", restore: isolationRestore(true, true).replace(resume, `${resume} --fix`), resumable: true });
-  else out.push({ record: "fix_confirmation", state: "missing", required: false, detail: "no FIX self-test confirmation (needed for delegated fixes only)", restore: isolationRestore(true, false), resumable: false });
+  // The FIX confirmation (delegated fixes only; optional for readiness).
+  const allFix = section.selftestConfirmations.filter((c) => c.mode === "FIX");
+  const fixes = allFix.filter((c) => !c.revoked);
+  const revokedFix = allFix.filter((c) => c.revoked);
+  const fixLapsedRow = (): RecordState => ({ record: "fix_confirmation", state: "lapsed", required: false, detail: "the FIX self-test confirmation lapsed (delegated fixes only)", restore: isolationRestore(true, true).replace(resume, `${resume} --fix`), resumable: true });
+  const fixMissingRow = (): RecordState => ({ record: "fix_confirmation", state: "missing", required: false, detail: "no FIX self-test confirmation (needed for delegated fixes only)", restore: isolationRestore(true, false), resumable: false });
+  const fixRevokedRow = (what: string): RecordState => ({ record: "fix_confirmation", state: "revoked", required: false, detail: `${what} (setup --resume does not restore it; delegated fixes only)`, restore: confirmCmd(true, false, null), resumable: false });
+  const fx = o.fix;
+  if (fx?.ok) {
+    const { local, why, backend, codexVersion } = fx.value;
+    const c = local ? confirmedFixSelfTest(section, local) : undefined;
+    if (local && c) out.push({ record: "fix_confirmation", state: "in_force", required: false, detail: `FIX self-test confirmation ${c.confirmationId} covers the stored FIX self-test ${local.selftestId} (Codex ${codexVersion}, ${backend})`, restore: null, resumable: false });
+    else if (local && fixes.some((x) => x.lapsed && namesFixRecord(x, local))) out.push(fixLapsedRow());
+    else if (local && revokedFix.some((x) => namesFixRecord(x, local))) out.push(fixRevokedRow(`the confirmation of the stored FIX self-test ${local.selftestId} was revoked`));
+    else if (fixes.length) {
+      const reason: RecordReason = local ? "record_changed" : "record_missing";
+      const what = local
+        ? `the stored FIX self-test ${local.selftestId} (Codex ${codexVersion}, binary ${local.codexSha256.slice(0, 12)}…, ${backend}) is not the one confirmed (${fixes.map((x) => `confirmation ${x.confirmationId} covers self-test ${x.selftestId}, binary ${(x.codexSha256 ?? "none").slice(0, 12)}…`).join("; ")})`
+        : `no stored FIX self-test the delegation could use (${why ?? "none"})`;
+      out.push({ record: "fix_confirmation", state: "unconfirmed", required: false, detail: `${fixes.some((x) => x.usable) ? "a usable FIX confirmation is held, but " : ""}${what}: a delegated fix is refused until the operator confirms the stored one`, restore: confirmCmd(true, true, local ? null : backend), resumable: true, reason });
+    } else if (revokedFix.length) out.push(fixRevokedRow("every FIX self-test confirmation was revoked"));
+    else out.push(fixMissingRow());
+  } else if (fixes.some((c) => c.usable)) out.push(notObservedRow("fix_confirmation", false, fx));
+  else if (fixes.some((c) => c.lapsed)) out.push(fixLapsedRow());
+  else if (revokedFix.length) out.push(fixRevokedRow("every FIX self-test confirmation was revoked"));
+  else out.push(fixMissingRow());
 
   if (o.grants === null) {
     out.push({ record: "loop_grant", state: "missing", required: false, detail: "the grants could not be listed from this account", restore: `${op} loop allow --repo ${root} ${where}`, resumable: false });
@@ -383,7 +596,15 @@ export async function repositoryRecords(o: {
 // The probe
 // ---------------------------------------------------------------------------
 
-export async function protectedStatus(le: Loaded, o: { repositoryRoot?: string | null; hooks?: StatusProbeHooks; nowMs?: number } = {}): Promise<ProtectedStatus> {
+/** The repository's state from its records: `misconfigured` when a required record is known not to be in force; else
+ * `unknown` when a required record could not be verified from this account (Step 7.2: not established); else `ready`. */
+export function repositoryStateOf(records: readonly RecordState[]): RepositoryState {
+  if (records.some((r) => r.required && r.state !== "in_force" && r.state !== "unverified")) return "misconfigured";
+  if (records.some((r) => r.required && r.state === "unverified")) return "unknown";
+  return "ready";
+}
+
+export async function protectedStatus(le: Loaded, o: { repositoryRoot?: string | null; hooks?: StatusProbeHooks; nowMs?: number; fix?: FixEvidenceReader } = {}): Promise<ProtectedStatus> {
   const testHooks = le.env.testHooks?.custodian;
   const platform = testHooks?.platform ?? process.platform;
   const engine = { version: TOOL_VERSION, protocol: CUSTODIAN_PROTOCOL_VERSION };
@@ -432,8 +653,9 @@ export async function protectedStatus(le: Loaded, o: { repositoryRoot?: string |
       }
       if (!section) repository = { root, state: "unknown", read_on: on, records: [] };
       else {
-        const records = await repositoryRecords({ platform, root, repoKey, section, grants, hashFile: o.hooks?.hashFile ?? sha256OfFile, ...(o.hooks?.exists ? { exists: o.hooks.exists } : {}), ...(o.hooks?.builtAt ? { builtAt: o.hooks.builtAt } : {}), ...(o.hooks?.installedRuntime ? { installedRuntime: o.hooks.installedRuntime } : {}), nowMs: o.nowMs ?? Date.now(), implementerHome: on === "implementer" ? (le.dataHome ?? null) : null });
-        repository = { root, state: records.some((r) => r.required && r.state !== "in_force") ? "misconfigured" : "ready", read_on: on, records };
+        const observed = await observeStoredSelfTests(le, { platform, root, on, section, ...(o.fix ? { fix: o.fix } : {}) });
+        const records = await repositoryRecords({ platform, root, repoKey, section, grants, hashFile: o.hooks?.hashFile ?? sha256OfFile, ...(o.hooks?.exists ? { exists: o.hooks.exists } : {}), ...(o.hooks?.builtAt ? { builtAt: o.hooks.builtAt } : {}), ...(o.hooks?.installedRuntime ? { installedRuntime: o.hooks.installedRuntime } : {}), nowMs: o.nowMs ?? Date.now(), implementerHome: on === "implementer" ? (le.dataHome ?? null) : null, s1: observed.s1, fix: observed.fix });
+        repository = { root, state: repositoryStateOf(records), read_on: on, records, protected_path: observed.path };
         for (const r of records) if (r.restore && (r.required || r.state !== "missing")) next.push(r.restore);
       }
     }

@@ -29,6 +29,14 @@ import { selfOwner } from "../store/owner.js";
 import { linuxOperatorRepo } from "./operator-trust.js";
 import { runConfigCli } from "./config-commands.js";
 import { runLoopCli } from "./loop-commands.js";
+import { fixEvidenceReader } from "./status-fix-evidence.js";
+import { probeCodex } from "../agents/codex/probe.js";
+import { codexInstallationPath, operatorConfigSection } from "../engine/config-authority.js";
+import { fixBackendFor } from "../engine/fix-confirmation.js";
+import { confirmedFixSelfTest, reviewBackends } from "../engine/protected-config.js";
+import type { ConfigSection } from "../custodian/protocol.js";
+import { caseKey } from "../workspace/paths.js";
+import { resolve } from "node:path";
 import type { CliIo } from "./cli.js";
 
 export interface SetupArgs {
@@ -94,6 +102,7 @@ export function renderStatus(s: ProtectedStatus): string[] {
     const r = s.repository;
     out.push(`repository ${r.root}: ${r.state.toUpperCase()}${r.read_on ? ` (the custodian's records, read on the ${r.read_on} surface)` : ""}`);
     if (r.state === "unknown" && !r.records.length) out.push("  the custodian must answer before its records can be shown");
+    if (r.state === "unknown" && r.records.length) out.push("  not established from this account: a record marked UNVERIFIED was not compared here (it is neither in force nor known to be wrong); its command compares it");
     for (const x of r.records) {
       const tag = x.state === "in_force" ? "in force" : x.state.toUpperCase().replace("_", " ");
       out.push(`  ${RECORD_LABEL[x.record].padEnd(25)} ${tag.padEnd(9)} ${x.detail}${x.required ? "" : " [optional]"}`);
@@ -111,7 +120,7 @@ export function renderStatus(s: ProtectedStatus): string[] {
 async function status(le: Loaded, a: SetupArgs, io: CliIo): Promise<number> {
   const raw = a.one("--repo");
   const root = raw ? await repositoryOf(le, raw) : null;
-  const s = await protectedStatus(le, { repositoryRoot: root });
+  const s = await protectedStatus(le, { repositoryRoot: root, fix: fixEvidenceReader(le) });
   if (a.has("--json")) io.out(JSON.stringify(s, null, 2));
   else renderStatus(s).forEach((l) => io.out(l));
   return s.state === "ready" && (!s.repository || s.repository.state === "ready") ? 0 : 1;
@@ -199,11 +208,26 @@ interface Proposals {
   repository: string | null;
   s1: string | null;
   fix: string | null;
+  /** Step 7.2: the self-test proposals' payloads, to tell whether the custodian already holds their confirmation (only
+   * to skip a step; the step's own reader validates a proposal fully before anything is recorded). */
+  payloads: { s1: Record<string, unknown> | null; fix: Record<string, unknown> | null };
+}
+
+/** Step 7.2: whether the custodian holds a usable confirmation of exactly the record a self-test proposal names — for S1
+ * the identity `confirmedSelfTest` checks (its record digest included), for FIX the delegation's predicate. */
+export function proposalConfirmed(section: ConfigSection, payload: Record<string, unknown> | null): boolean {
+  if (!payload) return false;
+  const str = (k: string): string | null => (typeof payload[k] === "string" ? (payload[k] as string) : null);
+  if (payload["mode"] === "FIX") {
+    const [selftestId, codexSha256, profileDigest] = [str("selftestId"), str("codexSha256"), str("profileDigest")];
+    return selftestId !== null && codexSha256 !== null && profileDigest !== null && confirmedFixSelfTest(section, { selftestId, codexSha256, profileDigest }) !== undefined;
+  }
+  return section.selftestConfirmations.some((c) => c.usable && c.mode === "S1" && c.recordDigest === str("recordDigest") && c.selftestId === str("selftestId") && c.codexVersion === str("codexVersion") && c.backend === str("backend") && c.profileDigest === str("profileDigest"));
 }
 
 /** Route each --proposal-file by what it proposes (the step's own reader validates it fully). */
 async function proposalsOf(files: readonly string[]): Promise<Proposals> {
-  const p: Proposals = { repository: null, s1: null, fix: null };
+  const p: Proposals = { repository: null, s1: null, fix: null, payloads: { s1: null, fix: null } };
   for (const f of files) {
     let o: { recordKind?: unknown; payload?: { mode?: unknown } };
     try {
@@ -215,15 +239,25 @@ async function proposalsOf(files: readonly string[]): Promise<Proposals> {
     if (!slot) throw new DomainError("INVALID_ARGUMENT", `${f} is not a configuration proposal (repository or self-test confirmation). Nothing was recorded.`);
     if (p[slot]) throw new DomainError("INVALID_ARGUMENT", `two proposal files propose the same record (${p[slot]} and ${f}). Nothing was recorded.`);
     p[slot] = f;
+    if (slot !== "repository" && o.payload && typeof o.payload === "object") p.payloads[slot] = o.payload as Record<string, unknown>;
   }
   return p;
 }
 
 type Step = { key: string; title: string; run: () => Promise<number> } | { key: string; title: string; blocked: string };
 
+/** What one setup run learned between steps (Step 7.2). */
+interface SetupRun {
+  /** O-1: the repository's re-confirmation was refused CONFIG_MISMATCH in this run; it is never retried in it. */
+  reconfirmRefused: boolean;
+  /** Whether the custodian already holds a usable confirmation of the S1 / FIX proposal passed (Linux handoff). */
+  covered: { s1: boolean; fix: boolean };
+}
+
 /** The next step for the records as the custodian reports them now, or null when nothing is left. */
-function nextStep(le: Loaded, a: SetupArgs, io: CliIo, root: string, s: ProtectedStatus, props: Proposals, installed: string | null): Step | null {
+function nextStep(le: Loaded, a: SetupArgs, io: CliIo, root: string, s: ProtectedStatus, props: Proposals, installed: string | null, run: SetupRun): Step | null {
   const recs = s.repository!.records;
+  const pp = s.repository!.protected_path ?? null;
   const rec = (n: RecordState["record"]) => recs.find((r) => r.record === n)!;
   const resume = a.has("--resume");
   const linux = process.platform === "linux" && !le.env.testHooks;
@@ -242,7 +276,8 @@ function nextStep(le: Loaded, a: SetupArgs, io: CliIo, root: string, s: Protecte
   // A runtime an upgrade replaced is approved anew FIRST: a re-confirmation covering it would be refused (CONFIG_MISMATCH).
   const approveRuntime = wanted(runtime) && runtime.state !== "lapsed";
   // A lapsed repository record is re-confirmed with every lapsed global record it rests on, in one rendering.
-  if (!approveRuntime && repo.state === "lapsed") return { key: "reconfirm", title: "re-confirm the repository's configuration (and the global records that lapsed with it)", run: config("reconfirm", {}) };
+  // O-1: once refused CONFIG_MISMATCH in this run, it is not offered again (the configuration is set again below).
+  if (!approveRuntime && repo.state === "lapsed" && !run.reconfirmRefused) return { key: "reconfirm", title: "re-confirm the repository's configuration (and the global records that lapsed with it)", run: config("reconfirm", {}) };
   if (runtime.state === "lapsed") {
     const id = /runtime (\S+)/.exec(runtime.detail)?.[1];
     return { key: "reconfirm-runtime", title: "re-confirm the engine runtime approval", run: config("reconfirm-runtime", {}, id ? [id] : []) };
@@ -260,20 +295,90 @@ function nextStep(le: Loaded, a: SetupArgs, io: CliIo, root: string, s: Protecte
   if (wanted(repo) || repo.state === "changed") {
     if (resume && repo.state === "missing") return null;
     if (linux && !props.repository) return { key: "set", title: "set the repository's protected configuration", blocked: `the implementer writes its proposal first (code-parley config propose --repo ${root} --out <file>); pass it with --proposal-file <file>` };
-    return { key: "set", title: "set the repository's protected configuration (the approved checks, the capture rules and the Codex installation)", run: config("set", { "--proposal-file": props.repository ?? undefined, "--codex": a.one("--codex") }) };
+    // After a refused re-confirmation (O-1) the held installation is measured again by default (a reinstall in place).
+    const codex = a.one("--codex") ?? (run.reconfirmRefused ? pp?.codex_path : undefined);
+    return { key: "set", title: `set the repository's protected configuration${run.reconfirmRefused ? " again (the custodian refused its re-confirmation)" : ""} (the approved checks, the capture rules and the Codex installation)`, run: config("set", { "--proposal-file": props.repository ?? undefined, "--codex": codex }) };
   }
-  if (wanted(iso)) {
-    if (linux && !props.s1) return { key: "confirm-selftest", title: "confirm the S1 self-test", blocked: `the implementer runs \`code-parley codex selftest\` and writes its proposal (code-parley config propose-selftest --repo ${root} --out <file>); pass it with --proposal-file <file>` };
-    // On Windows a lapsed S1 confirmation is re-confirmed with the repository's record; one still lapsed alone is confirmed anew.
-    return { key: "confirm-selftest", title: "confirm the stored S1 self-test (the basis of Codex's isolation in protected reviews)", run: config("confirm-selftest", { "--proposal-file": props.s1 ?? undefined, "--backend": a.one("--backend"), "--codex": a.one("--codex") }) };
-  }
-  if (a.has("--fix") && wanted(rec("fix_confirmation"))) {
-    if (linux && !props.fix) return { key: "confirm-fix", title: "confirm the FIX self-test", blocked: `the implementer runs \`code-parley codex fix-selftest\` and writes its proposal (code-parley config propose-selftest --fix --repo ${root} --out <file>); pass it with --proposal-file <file>` };
-    return { key: "confirm-fix", title: "confirm the stored FIX self-test (delegated fixes)", run: config("confirm-selftest", { "--proposal-file": props.fix ?? undefined, "--backend": a.one("--backend"), "--codex": a.one("--codex") }, [], props.fix ? [] : ["--fix"]) };
+  for (const fix of [false, true]) {
+    if (fix && !a.has("--fix")) continue;
+    const step = selftestStep(fix);
+    if (step) return step;
   }
   const grant = rec("loop_grant");
   if (!a.has("--no-grant") && grant.state !== "in_force" && (!resume || grant.resumable)) {
     return { key: "allow", title: "grant automated loops for this repository (the originating Claude Code session keeps working on its own within the grant)", run: () => runLoopCli({ cmd: "allow", refs: [], ...flags({ "--repo": root }) }, io) };
+  }
+  return null;
+
+  /** Step 7.2: the S1 (or, with --fix, FIX) confirmation step for the record protected execution would use. */
+  function selftestStep(fix: boolean): Step | null {
+    const r = rec(fix ? "fix_confirmation" : "isolation");
+    const key = fix ? "confirm-fix" : "confirm-selftest";
+    const title = fix ? "confirm the stored FIX self-test (delegated fixes)" : "confirm the stored S1 self-test (the basis of Codex's isolation in protected reviews)";
+    const prop = fix ? props.fix : props.s1;
+    if (r.state === "in_force") return null;
+    // The custodian already holds a usable confirmation of exactly the proposed record: nothing to record here (the
+    // implementer's own status verifies that it is the stored record).
+    if (prop && run.covered[fix ? "fix" : "s1"]) return null;
+    if (r.state === "unverified") {
+      // Not established from this account (Linux by design; a Windows operator without --home): only a proposal the
+      // implementer made is confirmed; otherwise the implementer's own status compares it (setup ends with exit 3).
+      // Never confirmed blindly.
+      if (!prop) return null;
+    } else if (!wanted(r)) return null;
+    const cmd = fix ? "fix-selftest" : "selftest";
+    if (linux && !prop) return { key, title: `confirm the ${fix ? "FIX" : "S1"} self-test`, blocked: `the implementer runs \`code-parley codex ${cmd}\` and writes its proposal (code-parley config propose-selftest${fix ? " --fix" : ""} --repo ${root} --out <file>); pass it with --proposal-file <file>` };
+    // A stored record that is missing or did not pass cannot be confirmed: the implementer runs the self-test first.
+    if (!prop && r.state === "unconfirmed" && (r.reason === "record_missing" || r.reason === "record_failed")) {
+      const b = fix ? pp?.fix_backend : pp?.s1_backends[0];
+      return { key, title, blocked: `${r.detail}. The implementer runs \`code-parley codex ${cmd}${b ? ` --backend ${b}` : ""}\` first (in an interactive desktop session), then run setup again` };
+    }
+    // The installation and backend protected execution uses, unless the operator named them (refused up front when
+    // they differ: explicitSelectionProblem). On Windows a lapsed S1 confirmation is re-confirmed with the repository's
+    // record; one still lapsed alone is confirmed anew.
+    const backend = a.one("--backend") ?? (fix ? pp?.fix_backend : pp?.s1_backends[0]) ?? undefined;
+    const codex = a.one("--codex") ?? pp?.codex_path ?? undefined;
+    return { key, title, run: config("confirm-selftest", { "--proposal-file": prop ?? undefined, "--backend": backend, "--codex": codex }, [], fix && !prop ? ["--fix"] : []) };
+  }
+}
+
+/**
+ * Step 7.2 (Q4): an explicitly selected Codex installation or backend that protected execution cannot use is refused
+ * before anything is recorded. Protected reviews and delegated fixes launch the approved installation (unless this run
+ * sets the configuration, which approves the named one); the backends are the execution path's own rules.
+ */
+async function explicitSelectionProblem(le: Loaded, a: SetupArgs, root: string, s: ProtectedStatus): Promise<string | null> {
+  const codex = a.one("--codex");
+  const backend = a.one("--backend");
+  if (!codex && !backend) return null;
+  const records = s.repository?.records ?? [];
+  const repo = records.find((r) => r.record === "repository");
+  const pp = s.repository?.protected_path ?? null;
+  // This run sets the configuration (and so approves the named installation) only for these states; a lapsed one is
+  // re-confirmed as held (after an O-1 refusal it is set again with the held installation by default).
+  const sets = repo !== undefined && (repo.state === "missing" || repo.state === "changed" || repo.state === "revoked");
+  const same = (x: string, y: string) => (process.platform === "win32" ? caseKey(resolve(x)) === caseKey(resolve(y)) : resolve(x) === resolve(y));
+  if (codex && pp && !sets && !same(codex, pp.codex_path)) {
+    return `--codex ${codex} is not the Codex installation the custodian approved for this repository (${pp.codex_path}); protected reviews and delegated fixes launch only that one. Omit --codex, or name it; another installation is approved by setting the configuration again (${operatorCli()} config set --repo ${root} --codex <codex>)`;
+  }
+  if (!backend) return null;
+  let exe: string;
+  try {
+    exe = codex ?? pp?.codex_path ?? (await codexInstallationPath(le, null)).path;
+  } catch (e) {
+    return `--backend ${backend} cannot be checked against the backends protected execution uses: no Codex installation is approved or named (${e instanceof Error ? e.message : String(e)}). Name it with --codex, or omit --backend`;
+  }
+  let probe;
+  try {
+    probe = await probeCodex({ configured: exe, sourceEnv: le.env.sourceEnv, testLauncher: le.env.testHooks?.review?.codexLauncher ?? null });
+  } catch (e) {
+    return `--backend ${backend} cannot be checked: the Codex installation ${exe} could not be probed (${e instanceof Error ? e.message : String(e)}). Omit --backend, or fix the installation first`;
+  }
+  const s1 = reviewBackends(process.platform, le.cfg.config.codex.windows_sandbox, probe);
+  if (!(s1 as string[]).includes(backend)) return `--backend ${backend} is not a backend a protected review uses with this Codex: ${s1.join(", ")} (the configured windows_sandbox, else the compatibility row's preference). Omit --backend, or name one of these`;
+  if (a.has("--fix")) {
+    const fixBackend = fixBackendFor(le.env.testHooks?.custodian?.platform ?? process.platform, le.cfg.config.codex.windows_sandbox ?? null, probe);
+    if (backend !== fixBackend) return `--backend ${backend} is not the backend a delegated fix runs on (${fixBackend}); with --fix, omit --backend so each confirmation uses its own`;
   }
   return null;
 }
@@ -286,9 +391,11 @@ async function setup(le: Loaded, a: SetupArgs, io: CliIo): Promise<number> {
   const props = await proposalsOf(a.many("--proposal-file"));
   io.out(`Setting up ${root} for protected runs${a.has("--resume") ? " (resume: only what lapsed, changed or was suspended)" : ""}. Each step shows the custodian's rendering of one record and asks for your typed confirmation; anything but "confirm" stops here and records nothing further.`);
   const done = new Set<string>();
+  const run: SetupRun = { reconfirmRefused: false, covered: { s1: false, fix: false } };
+  const fix = fixEvidenceReader(le);
   let n = 0;
-  for (;;) {
-    const s = await protectedStatus(le, { repositoryRoot: root });
+  for (let first = true; ; first = false) {
+    const s = await protectedStatus(le, { repositoryRoot: root, fix });
     if (s.state !== "ready") {
       s.explanation.forEach((l) => io.err(l));
       if (s.state === "busy") io.err(`Run setup again when the custodian answers (\`code-parley status\`).`);
@@ -305,11 +412,27 @@ async function setup(le: Loaded, a: SetupArgs, io: CliIo): Promise<number> {
       io.err(`setup records the operator's records on the operator surface, which this account does not reach. Run it as the operator: ${operatorCli()} setup --repo ${root}${process.platform === "win32" ? " in an elevated terminal" : ""}.`);
       return 1;
     }
-    const step = nextStep(le, a, io, root, s, props, le.env.testHooks ? null : await installedEngineRuntime());
+    if (first) {
+      // Q4: an explicit installation or backend protected execution cannot use is refused before anything is recorded.
+      const problem = await explicitSelectionProblem(le, a, root, s);
+      if (problem) {
+        io.err(`error INVALID_ARGUMENT: ${problem}. Nothing was recorded.`);
+        return 1;
+      }
+    }
+    // The Linux handoff: whether the custodian already holds the confirmation of a proposed self-test record.
+    if (props.payloads.s1 || props.payloads.fix) {
+      const section = await operatorConfigSection(le, root).catch(() => null);
+      run.covered = { s1: section !== null && proposalConfirmed(section, props.payloads.s1), fix: section !== null && proposalConfirmed(section, props.payloads.fix) };
+    }
+    const step = nextStep(le, a, io, root, s, props, le.env.testHooks ? null : await installedEngineRuntime(), run);
     if (!step) break;
     if (done.has(step.key)) {
       // A step that completed must change what the custodian reports; if it did not, stop rather than loop.
-      io.err(`The custodian still reports the record of step "${step.title}" as not in force after it was recorded. Stopping; \`code-parley status --repo ${root}\` shows the records.`);
+      const r = step.key === "confirm-selftest" ? s.repository!.records.find((x) => x.record === "isolation") : step.key === "confirm-fix" ? s.repository!.records.find((x) => x.record === "fix_confirmation") : undefined;
+      io.err(r && r.state === "unconfirmed"
+        ? `The confirmation was recorded, but the stored self-test protected execution uses is still not the confirmed one: ${r.detail}. Stopping; \`code-parley status --repo ${root}\` shows the records.`
+        : `The custodian still reports the record of step "${step.title}" as not in force after it was recorded. Stopping; \`code-parley status --repo ${root}\` shows the records.`);
       return 1;
     }
     n++;
@@ -323,6 +446,16 @@ async function setup(le: Loaded, a: SetupArgs, io: CliIo): Promise<number> {
     try {
       code = await step.run();
     } catch (e) {
+      if (isDomainError(e) && e.code === "CONFIG_MISMATCH" && step.key === "reconfirm" && !run.reconfirmRefused) {
+        // O-1: the custodian measured the held Codex installation again and it differs (a reinstall gives the same bytes
+        // a new file identity). Re-confirming cannot succeed; the next step sets the configuration again, with the
+        // custodian's fresh rendering and its own typed confirmation. The refused step is not retried in this run.
+        io.err(`error ${e.code}: ${e.message}`);
+        io.out("  The custodian refused the re-confirmation: what it measured now differs from what it holds. Nothing was recorded by this step; setup offers to set the configuration again instead.");
+        run.reconfirmRefused = true;
+        done.add(step.key);
+        continue;
+      }
       if (isDomainError(e)) {
         io.err(`error ${e.code}: ${e.message}`);
         remedyLines(e.code, process.platform, e.message).forEach((l) => io.err(l));
@@ -337,10 +470,18 @@ async function setup(le: Loaded, a: SetupArgs, io: CliIo): Promise<number> {
     }
     done.add(step.key);
   }
-  const s = await protectedStatus(le, { repositoryRoot: root });
+  const s = await protectedStatus(le, { repositoryRoot: root, fix });
   io.out("");
   renderStatus(s).forEach((l) => io.out(l));
   if (s.repository?.state === "ready") io.out(`${root} is set up for protected runs. ${n === 0 ? "Nothing needed recording." : ""}`.trim());
   if (s.state === "busy") io.out(BUSY_LIMITATION);
-  return s.repository?.state === "ready" ? 0 : 1;
+  if (s.repository?.state === "ready") return 0;
+  // Step 7.2 (Q1): the operator's own steps are done, but what only the implementer can read is not verified from this
+  // account. That is not an authorization failure and not readiness: the implementer's status makes the comparison.
+  const open = s.repository?.records.filter((r) => r.required && r.state !== "in_force") ?? [];
+  if (s.repository?.state === "unknown" && open.length && open.every((r) => r.state === "unverified")) {
+    io.out(`Operator configuration is complete; it is NOT verified from this account that the confirmations cover the implementer's stored self-tests (${open.map((r) => RECORD_LABEL[r.record]).join(", ")}). Verify: ${[...new Set(open.map((r) => r.restore).filter((x): x is string => x !== null))].join("; ")}.`);
+    return 3;
+  }
+  return 1;
 }

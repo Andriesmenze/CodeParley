@@ -95,7 +95,7 @@ const CATALOG: Partial<Record<ErrorCode, Entry>> = {
   }),
   CONFIG_MISMATCH: (p) => ({
     cause: "what is installed no longer matches what the operator approved (the Codex installation or the engine runtime changed, for example after an update or an upgrade)",
-    fix: `approve the new one: the operator runs \`${operator(p).cli} setup --repo <path>\` ${operator(p).where}; after a Codex update the implementer first runs \`code-parley codex selftest\`${p === "linux" ? " and `config propose` / `config propose-selftest`" : ""}`,
+    fix: `approve the new one: the operator runs \`${operator(p).cli} setup --repo <path>\` ${operator(p).where} (a re-confirmation refused this way is not retried: setup sets the configuration again, with its own confirmation${p === "linux" ? ", from the implementer's `config propose` file" : ""}); after a Codex update the implementer first runs \`code-parley codex selftest\`${p === "linux" ? " and `config propose` / `config propose-selftest`" : ""}`,
   }),
   STALE_CONFIG: () => ({
     cause: "the configuration changed between the rendering you saw and its confirmation, so the confirmation covered something that is no longer current",
@@ -116,10 +116,10 @@ const CATALOG: Partial<Record<ErrorCode, Entry>> = {
     fix: `an administrator runs ${installer(p, "grant-repository", { path: true })}`,
   }),
   CODEX_ISOLATION_UNAVAILABLE: (p) => ({
-    cause: "Codex's sandbox could not be confirmed for this review (the stored self-test failed or is missing, or on Linux its basis changed or it lapsed with the boot)",
+    cause: "Codex's sandbox could not be confirmed for this review (the stored self-test failed or is missing, the operator's confirmation covers another stored self-test than the current one, or on Linux its basis changed or it lapsed with the boot)",
     fix: p === "linux"
-      ? "the implementer runs `code-parley codex selftest`, then `code-parley config propose-selftest --repo <path> --out <file>`; the operator confirms it with `/usr/local/sbin/code-parley-operator setup --resume --repo <path> --proposal-file <file>`"
-      : "the implementer runs `code-parley codex selftest` in an interactive desktop session; `code-parley doctor` shows the result",
+      ? "`code-parley status --repo <path>` (as the implementer) names which; the implementer runs `code-parley codex selftest` if the record is missing, then `code-parley config propose-selftest --repo <path> --out <file>`; the operator confirms it with `/usr/local/sbin/code-parley-operator setup --resume --repo <path> --proposal-file <file>`"
+      : "`code-parley status --repo <path>` names which; the implementer runs `code-parley codex selftest` in an interactive desktop session if the record is missing or failed, and the operator confirms the stored one with `code-parley setup --resume --repo <path> --home <the implementer's data home>` in an elevated terminal",
   }),
   CODEX_INSTALLATION_UNSUPPORTED: () => ({
     cause: "the Codex installation named for protected reviews is not a form the custodian can measure (a launcher, a script or a link instead of the native executable)",

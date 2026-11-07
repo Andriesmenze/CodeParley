@@ -59,6 +59,7 @@ import { runFixCli } from "./fix-commands.js";
 import { runSetupCli } from "./setup-commands.js";
 import { doctor, protectedDoctor } from "../engine/doctor.js";
 import { renderStatus } from "./setup-commands.js";
+import { fixEvidenceReader } from "./status-fix-evidence.js";
 import { ensurePrivateDataHome, gitExeOf, loadEngine } from "../engine/engine-env.js";
 import { selfOwner as ownerForDoctor } from "../store/owner.js";
 import { readRepoProposals } from "../checks/proposals.js";
@@ -573,7 +574,7 @@ async function doctorCmd(p: Parsed, io: CliIo): Promise<number> {
   // Phase 6 Increment 3: --protected adds the custodian's state, the repository's operator records and the host facts.
   if (has(p, "--repo") && !has(p, "--protected")) throw new DomainError("INVALID_ARGUMENT", "doctor --repo needs --protected");
   const repoRaw = one(p, "--repo");
-  const prot = has(p, "--protected") ? await protectedDoctor(le, repoRaw ? await resolveGitTopLevel(await canonicalizePath(repoRaw), { gitExe: await gitExeOf(le) }) : null) : null;
+  const prot = has(p, "--protected") ? await protectedDoctor(le, repoRaw ? await resolveGitTopLevel(await canonicalizePath(repoRaw), { gitExe: await gitExeOf(le) }) : null, fixEvidenceReader(le)) : null;
   const ok = r.ok && (!prot || prot.problems.length === 0);
   if (has(p, "--json")) {
     io.out(JSON.stringify(prot ? { ...r, ok, protected: prot } : r, null, 2));
@@ -601,6 +602,7 @@ async function doctorCmd(p: Parsed, io: CliIo): Promise<number> {
     if (prot.readers_grant) io.out(`repository readers grant: ${prot.readers_grant.present === null ? "unknown" : prot.readers_grant.present ? "present" : "MISSING"} (${prot.readers_grant.detail})`);
     if (prot.linux) io.out(`linux: admitted filesystems ${prot.linux.admitted_filesystems ?? "unknown"}; Codex bubblewrap AppArmor profile file ${prot.linux.apparmor_profile_file ? "installed" : "not installed"}`);
     for (const pr of prot.problems) io.out(`PROBLEM: ${pr}`);
+    for (const nv of prot.not_verified) io.out(`NOT VERIFIED from this account: ${nv}`);
   }
   const count = r.problems.length + (prot?.problems.length ?? 0);
   io.out(ok ? "doctor: OK" : `doctor: ${count} problem(s)`);
