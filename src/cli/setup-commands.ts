@@ -30,7 +30,7 @@ import { linuxOperatorRepo } from "./operator-trust.js";
 import { runConfigCli } from "./config-commands.js";
 import { runLoopCli } from "./loop-commands.js";
 import { fixEvidenceReader } from "./status-fix-evidence.js";
-import { probeCodex } from "../agents/codex/probe.js";
+import { probeCodex, type CodexProbe } from "../agents/codex/probe.js";
 import { codexInstallationPath, operatorConfigSection } from "../engine/config-authority.js";
 import { fixBackendFor } from "../engine/fix-confirmation.js";
 import { confirmedFixSelfTest, reviewBackends } from "../engine/protected-config.js";
@@ -272,7 +272,6 @@ function nextStep(le: Loaded, a: SetupArgs, io: CliIo, root: string, s: Protecte
 
   const repo = rec("repository");
   const runtime = rec("engine_runtime");
-  const iso = rec("isolation");
   // A runtime an upgrade replaced is approved anew FIRST: a re-confirmation covering it would be refused (CONFIG_MISMATCH).
   const approveRuntime = wanted(runtime) && runtime.state !== "lapsed";
   // A lapsed repository record is re-confirmed with every lapsed global record it rests on, in one rendering.
@@ -368,7 +367,7 @@ async function explicitSelectionProblem(le: Loaded, a: SetupArgs, root: string, 
   } catch (e) {
     return `--backend ${backend} cannot be checked against the backends protected execution uses: no Codex installation is approved or named (${e instanceof Error ? e.message : String(e)}). Name it with --codex, or omit --backend`;
   }
-  let probe;
+  let probe: CodexProbe;
   try {
     probe = await probeCodex({ configured: exe, sourceEnv: le.env.sourceEnv, testLauncher: le.env.testHooks?.review?.codexLauncher ?? null });
   } catch (e) {
