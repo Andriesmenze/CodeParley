@@ -28,7 +28,7 @@ import { configSectionOf, CustodianGrants } from "../src/custodian/grants.js";
 import { CONFIG_VIEW_RUN, type ConfigSection, type HeldAcceptance, type HeldSelftestConfirmation } from "../src/custodian/protocol.js";
 import type { SelfTestRecord } from "../src/schemas/review.js";
 import type { IsolationDecision } from "../src/agents/codex/isolation.js";
-import type { SandboxBackend } from "../src/agents/codex/argv.js";
+import { backendsFor, type SandboxBackend } from "../src/agents/codex/argv.js";
 import type { Loaded } from "../src/engine/engine-env.js";
 import { supported } from "./helpers/git-fixture.js";
 import { okScenario, output } from "./helpers/review-fixture.js";
@@ -323,14 +323,19 @@ describe.skipIf(!supported)("Step 7.2 — F-S71-2 end to end: status agrees with
   it("S1 and FIX re-runs, a missing record, a revocation, a lapse and an S2 acceptance", async () => {
     const f = await contFixture(okScenario(output({ findings: [] })), { accounts: true });
     await storeFixtureSelfTest(f);
-    await rerunFix(f, "fix-selftest-1");
+    // The FIX legs need the delegation's backend to be one this host's operator CLI accepts. On a real host it always is;
+    // with this fixture's simulated Windows custodian on a Linux host it is not (the delegation selects mxc), so there the
+    // FIX legs are left to T8 (unit) and the Linux VM rows.
+    const probe = await probeCodex({ configured: f.codexExe, sourceEnv: process.env, testLauncher: { file: process.execPath, prefixArgs: [f.fakeScript] } });
+    const fixLegs = (backendsFor() as readonly string[]).includes(fixBackendFor(f.custodianPlatform, f.le.cfg.config.codex.windows_sandbox ?? null, probe));
+    if (fixLegs) await rerunFix(f, "fix-selftest-1");
     // With --fix no --backend (Q4: each confirmation uses the backend its own execution path selects).
-    const ok = await cli(f, ["setup", "--fix", "--repo", f.repo, ...(await setupArgs(f, false))], terminal());
+    const ok = await cli(f, ["setup", ...(fixLegs ? ["--fix"] : []), "--repo", f.repo, ...(await setupArgs(f, false))], terminal());
     expect(ok.code, ok.err).toBe(0);
-    expect(ok.out).toMatch(/confirm the stored FIX self-test/);
+    if (fixLegs) expect(ok.out).toMatch(/confirm the stored FIX self-test/);
     let s = await expectAgreement(f);
     expect(s.repository.state).toBe("ready");
-    expect(rowOf(s, "fix_confirmation").state).toBe("in_force");
+    expect(rowOf(s, "fix_confirmation").state).toBe(fixLegs ? "in_force" : "missing");
     expect(s.repository.protected_path).toMatchObject({ codex_path: expect.any(String), s1_backends: [await fixtureBackend(f)] });
 
     // T12 (F-S71-2): the S1 self-test is re-run after its confirmation: status says so, and enforcement agrees.
@@ -352,12 +357,14 @@ describe.skipIf(!supported)("Step 7.2 — F-S71-2 end to end: status agrees with
     expect(rowOf(s, "isolation").state).toBe("in_force");
 
     // T8: the FIX self-test is re-run: optional for readiness; setup --resume --fix confirms it.
-    await rerunFix(f, "fix-selftest-2");
-    s = await expectAgreement(f);
-    expect(rowOf(s, "fix_confirmation")).toMatchObject({ state: "unconfirmed", reason: "record_changed" });
-    expect(s.repository.state).toBe("ready");
-    expect((await cli(f, ["setup", "--resume", "--fix", "--repo", f.repo, "--no-grant"], terminal())).code).toBe(0);
-    expect(rowOf(await expectAgreement(f), "fix_confirmation").state).toBe("in_force");
+    if (fixLegs) {
+      await rerunFix(f, "fix-selftest-2");
+      s = await expectAgreement(f);
+      expect(rowOf(s, "fix_confirmation")).toMatchObject({ state: "unconfirmed", reason: "record_changed" });
+      expect(s.repository.state).toBe("ready");
+      expect((await cli(f, ["setup", "--resume", "--fix", "--repo", f.repo, "--no-grant"], terminal())).code).toBe(0);
+      expect(rowOf(await expectAgreement(f), "fix_confirmation").state).toBe("in_force");
+    }
 
     // T2: the stored S1 record is gone: setup cannot confirm it and names the self-test to run (nothing recorded).
     await removeS1(f);
