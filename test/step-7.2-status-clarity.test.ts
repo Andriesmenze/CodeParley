@@ -33,7 +33,6 @@ import type { Loaded } from "../src/engine/engine-env.js";
 import { supported } from "./helpers/git-fixture.js";
 import { okScenario, output } from "./helpers/review-fixture.js";
 import { cli, contFixture, fixtureBackend, operatorIo, storeFixtureSelfTest, syntheticRuntime, SYNTHETIC_RUNTIME_GIT, type ContFixture } from "./helpers/continuation-fixture.js";
-import { storeFixSelfTest_ } from "./helpers/delegated-fix.js";
 import { storeFixSelfTest, fixSelfTestKey } from "../src/agents/codex/fix-selftest.js";
 import { fixProfileDigest } from "../src/agents/codex/fix-profile.js";
 import { fixProfileFor } from "../src/engine/fix-confirmation.js";
@@ -205,8 +204,8 @@ function terminal(answers: string | string[] = "confirm") {
   return { ...io, prompt: async (q: string) => { const a = next(); return /"allow"/.test(q) ? (a === "confirm" ? "allow" : a) : a; } };
 }
 
-async function setupArgs(f: ContFixture): Promise<string[]> {
-  return ["--codex", f.codexExe, "--backend", await fixtureBackend(f), "--runtime", await syntheticRuntime(f.scratch), "--runtime-git", SYNTHETIC_RUNTIME_GIT, "--loops", "1", "--minutes", "60"];
+async function setupArgs(f: ContFixture, backend = true): Promise<string[]> {
+  return ["--codex", f.codexExe, ...(backend ? ["--backend", await fixtureBackend(f)] : []), "--runtime", await syntheticRuntime(f.scratch), "--runtime-git", SYNTHETIC_RUNTIME_GIT, "--loops", "1", "--minutes", "60"];
 }
 
 type Row = { record: string; state: string; detail: string; restore: string | null; reason?: string };
@@ -270,7 +269,8 @@ async function removeS1(f: ContFixture): Promise<void> {
 /** Store another cp_fix self-test record (a re-run: another self-test id) under the same key. */
 async function rerunFix(f: ContFixture, id: string): Promise<void> {
   const probe = await probeCodex({ configured: f.codexExe, sourceEnv: process.env, testLauncher: { file: process.execPath, prefixArgs: [f.fakeScript] } });
-  const backend = (await fixtureBackend(f)) as SandboxBackend;
+  // The delegation's own backend rule (on a Linux host with the simulated Windows custodian it differs from the review's).
+  const backend = fixBackendFor(f.custodianPlatform, f.le.cfg.config.codex.windows_sandbox ?? null, probe);
   const codexSha256 = sha(await readFile(f.codexExe));
   const profile = fixProfileFor(backend, probe, [join(f.dataHome, "fix-selftest-work", "tree"), join(f.dataHome, "fix-selftest-work", "scratch")], [probe.codexHome]);
   await storeFixSelfTest(storeLayout(f.dataHome).selftestDir, {
@@ -304,9 +304,14 @@ describe.skipIf(!supported)("Step 7.2 — observeStoredSelfTests: missing, inacc
     // T9b through status: a readable store without the record is a missing record (unconfirmed), not inaccessible.
     await removeS1(f);
     expect(rowOf((await statusJson(f)).s, "isolation")).toMatchObject({ state: "unconfirmed", reason: "record_missing" });
-    // T9a through status: the repository is unknown, never ready or misconfigured.
+    // T9a through status: a data home that does not exist is not established (Windows). On Linux the engine creates its
+    // own private data home when it loads (ensurePrivateDataHome, unchanged), so it is an empty, readable store there.
     const s = (await statusJson(f, join(f.scratch, "no-such-home"))).s;
-    expect(rowOf(s, "isolation")).toMatchObject({ state: "unverified", reason: "store_inaccessible" });
+    if (process.platform === "linux") expect(rowOf(s, "isolation")).toMatchObject({ state: "unconfirmed", reason: "record_missing" });
+    else {
+      expect(rowOf(s, "isolation")).toMatchObject({ state: "unverified", reason: "store_inaccessible" });
+      expect(s.repository.state).toBe("unknown");
+    }
   }, 240_000);
 });
 
@@ -318,8 +323,9 @@ describe.skipIf(!supported)("Step 7.2 — F-S71-2 end to end: status agrees with
   it("S1 and FIX re-runs, a missing record, a revocation, a lapse and an S2 acceptance", async () => {
     const f = await contFixture(okScenario(output({ findings: [] })), { accounts: true });
     await storeFixtureSelfTest(f);
-    await storeFixSelfTest_(f);
-    const ok = await cli(f, ["setup", "--fix", "--repo", f.repo, ...(await setupArgs(f))], terminal());
+    await rerunFix(f, "fix-selftest-1");
+    // With --fix no --backend (Q4: each confirmation uses the backend its own execution path selects).
+    const ok = await cli(f, ["setup", "--fix", "--repo", f.repo, ...(await setupArgs(f, false))], terminal());
     expect(ok.code, ok.err).toBe(0);
     expect(ok.out).toMatch(/confirm the stored FIX self-test/);
     let s = await expectAgreement(f);
